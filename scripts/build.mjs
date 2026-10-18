@@ -12,6 +12,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statS
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { iconFiles } from "./icon.mjs";
+import { FEEDS, feedFor } from "../src/core/campaigns.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
@@ -83,13 +84,20 @@ export async function buildSite() {
   cpSync(join(root, "CHANGELOG.md"), join(dist, "CHANGELOG.md"));
   for (const [path, data] of Object.entries(iconFiles())) write(join(dist, path), data);
 
+  // Campaign calendar feeds. Calendars that subscribe to these URLs pick up
+  // every redeploy. SITE_URL (for example https://graphics.example.org/) adds
+  // links back to the studio's drafts in each event; without it they are left out.
+  const buildDate = new Date(process.env.SOURCE_DATE_EPOCH ? Number(process.env.SOURCE_DATE_EPOCH) * 1000 : Date.now());
+  const siteUrl = process.env.SITE_URL || pkg.homepage || undefined;
+  for (const f of FEEDS) write(join(dist, f.file), feedFor(f, buildDate, { siteUrl, version: pkg.version }));
+
   // Service worker, with the app shell to precache and a cache name unique
   // to this build's contents.
   const shell = walk(dist)
     .map((p) => relative(dist, p).split("\\").join("/"))
     // The logo library (hundreds of files) is cached as each logo is used,
     // not up front; the CAMRA logo and the default branch are precached.
-    .filter((p) => !p.endsWith(".map") && p !== "_headers" && p !== "robots.txt" && !p.startsWith("assets/fonts/"))
+    .filter((p) => !p.endsWith(".map") && p !== "_headers" && p !== "robots.txt" && !p.startsWith("assets/fonts/") && !p.startsWith("calendar/"))
     .filter((p) => !/^assets\/logos\/(branches|regions|sub-brands|thumbs)\//.test(p) || p === "assets/logos/branches/central-manchester.png")
     .sort();
   const hash = createHash("sha256");

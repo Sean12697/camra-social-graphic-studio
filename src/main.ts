@@ -11,6 +11,7 @@ import { initExport, doDownload } from "./ui/export.ts";
 import { initDesigns, refreshDesigns, saveCurrent } from "./ui/designs-ui.ts";
 import { initLogoPicker } from "./ui/logos-ui.ts";
 import { initSettings, refreshSettings } from "./ui/settings-ui.ts";
+import { initCampaigns, refreshCampaigns } from "./ui/campaigns-ui.ts";
 import { onDataChanged } from "./ui/backup-ui.ts";
 import { initTips, startTips } from "./ui/tips.ts";
 import { registerServiceWorker } from "./ui/sw-register.ts";
@@ -27,6 +28,7 @@ async function boot(): Promise<void> {
   await initDesigns();
   initSettings();
   initLogoPicker();
+  initCampaigns();
   initTips();
   // Ctrl or Cmd + S saves the design instead of the browser's "save page".
   document.addEventListener("keydown", (e) => {
@@ -38,6 +40,7 @@ async function boot(): Promise<void> {
   onDataChanged(() => {
     refreshDesigns();
     refreshSettings();
+    refreshCampaigns();
   });
   document.documentElement.dataset.ready = "1";
   if (result.download) window.setTimeout(() => doDownload(result.zip), 120);

@@ -9,7 +9,9 @@
 declare const __PRECACHE__: string[];
 declare const __CACHE__: string;
 
-export {};
+import { CAMPAIGNS, dueAlerts, localYmd, normalisePrefs, normaliseState, pruneState } from "./core/campaigns.ts";
+import { kvGet, kvPut, openIdb } from "./ui/idb.ts";
+
 const sw = self as unknown as ServiceWorkerGlobalScope;
 const CACHE = __CACHE__;
 const PRECACHE = __PRECACHE__;
@@ -76,5 +78,47 @@ sw.addEventListener("fetch", (e) => {
           return Response.error();
         }),
       ),
+  );
+});
+
+// Background campaign reminders. Installed Chrome and Edge apps wake the
+// worker now and then (periodic background sync); it works out which
+// reminders are due from the bundled campaign list and the settings the page
+// saved, and shows each one once. Nothing is fetched.
+async function campaignCheck(): Promise<void> {
+  const db = await openIdb();
+  const rec = await kvGet<{ state?: unknown; prefs?: unknown }>(db, "campaignState");
+  const prefs = normalisePrefs(rec && rec.prefs);
+  if (!prefs.enabled || !prefs.system || Notification.permission !== "granted") return;
+  const today = localYmd(new Date());
+  const state = normaliseState(rec && rec.state);
+  const fresh = dueAlerts(CAMPAIGNS, today, prefs, state).filter((a) => !state.notified[a.key]);
+  if (!fresh.length) return;
+  for (const a of fresh) {
+    await sw.registration.showNotification(a.title, { body: a.body, tag: a.key, icon: "assets/icons/icon-192.png", data: { url: "./?campaign=" + a.entry.occ.campaign.id } });
+    state.notified[a.key] = true;
+  }
+  await kvPut(db, "campaignState", { state: pruneState(state, today), prefs });
+}
+
+sw.addEventListener("periodicsync", (e: Event) => {
+  const ev = e as ExtendableEvent & { tag?: string };
+  if (ev.tag === "campaign-reminders") ev.waitUntil(campaignCheck().catch(() => undefined));
+});
+
+// Tapping a reminder opens (or focuses) the studio at that campaign.
+sw.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const data = e.notification.data as { url?: string } | null;
+  const target = new URL((data && data.url) || "./", sw.registration.scope).href;
+  e.waitUntil(
+    sw.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      for (const c of list) {
+        if (c.url.split(/[?#]/)[0] === target.split(/[?#]/)[0] && "navigate" in c) {
+          return (c as WindowClient).navigate(target).then((w) => (w ? w.focus() : undefined));
+        }
+      }
+      return sw.clients.openWindow(target);
+    }),
   );
 });

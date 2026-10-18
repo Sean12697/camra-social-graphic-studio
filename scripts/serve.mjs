@@ -31,6 +31,7 @@ const TYPES = {
   ".md": "text/markdown; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
   ".zip": "application/zip",
+  ".ics": "text/calendar; charset=utf-8",
 };
 
 // Parses Cloudflare's _headers format: a path pattern line, then indented

@@ -41,7 +41,7 @@ test("logo search ignores case, accents and & versus and", () => {
 });
 
 test("every post type has a group and the new ones build sensibly", () => {
-  assert.equal(TEMPLATES.length, 22);
+  assert.equal(TEMPLATES.length, 23);
   for (const t of TEMPLATES) assert.ok(TEMPLATE_GROUPS.includes(t.group), t.id);
   assert.equal(templateById("countdown").build({ days: "1" }).title, "1 day to go");
   assert.equal(templateById("countdown").build({ days: "12" }).title, "12 days to go");

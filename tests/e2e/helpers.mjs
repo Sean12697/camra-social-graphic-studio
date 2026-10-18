@@ -6,8 +6,14 @@ import { iconPng } from "../../scripts/icon.mjs";
 const require = createRequire(import.meta.url);
 const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
 
-/** Opens the studio with tips already seen (unless asked) and waits for boot. */
-export async function openStudio(page, { query = "", tips = false, prefs = null, errors = null } = {}) {
+/**
+ * Opens the studio with tips already seen (unless asked) and waits for boot.
+ * Campaign reminders are off unless `campaigns` is set, so tests do not depend
+ * on the date they run; `now` fixes the date for the ones that do.
+ */
+export async function openStudio(page, { query = "", tips = false, prefs = null, errors = null, campaigns = false, now = null } = {}) {
+  if (!campaigns) prefs = { campaigns: { enabled: false }, ...(prefs || {}) };
+  if (now) await page.clock.setFixedTime(new Date(now));
   await page.addInitScript(
     ([seen, p]) => {
       if (sessionStorage.getItem("__init")) return;

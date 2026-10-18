@@ -6,11 +6,9 @@
 // falls back to localStorage, as the studio has always used.
 
 import type { Design, LibraryItem } from "../core/designs.ts";
+import { openIdb, req, txDone, type StoreName } from "./idb.ts";
 
 const NS = "camra-studio:";
-const DB_NAME = "camra-studio";
-const DB_VERSION = 1;
-type StoreName = "designs" | "library" | "kv";
 
 function lsRead<T>(key: string, fallback: T): T {
   try {
@@ -45,33 +43,6 @@ interface Backend {
   remove(store: StoreName, ids: string[]): Promise<void>;
   clear(store: StoreName): Promise<void>;
   readonly kind: "indexeddb" | "localstorage";
-}
-
-function req<T>(r: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    r.onsuccess = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
-  });
-}
-
-function txDone(tx: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
-  });
-}
-
-async function openIdb(): Promise<IDBDatabase> {
-  if (typeof indexedDB === "undefined") throw new Error("IndexedDB unavailable");
-  const open = indexedDB.open(DB_NAME, DB_VERSION);
-  open.onupgradeneeded = () => {
-    const db = open.result;
-    for (const name of ["designs", "library", "kv"]) {
-      if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: "id" });
-    }
-  };
-  return req(open);
 }
 
 function idbBackend(db: IDBDatabase): Backend {
@@ -147,6 +118,7 @@ let backend: Backend = lsBackend();
 let designs: Design[] = [];
 let library: LibraryItem[] = [];
 let customLogo: string | null = null;
+let kv = new Map<string, unknown>();
 
 /** Opens storage, migrating anything an earlier version kept in localStorage. */
 export async function initStore(): Promise<void> {
@@ -157,8 +129,9 @@ export async function initStore(): Promise<void> {
   }
   designs = await backend.getAll<Design>("designs");
   library = await backend.getAll<LibraryItem>("library");
-  const kv = await backend.getAll<{ id: string; value: unknown }>("kv");
-  const logo = kv.find((x) => x.id === "customLogo");
+  const kvRows = await backend.getAll<{ id: string; value: unknown }>("kv");
+  kv = new Map(kvRows.map((r) => [r.id, r.value]));
+  const logo = kvRows.find((x) => x.id === "customLogo");
   customLogo = logo && typeof logo.value === "string" ? logo.value : null;
 
   if (backend.kind === "indexeddb") {
@@ -227,6 +200,20 @@ export const store = {
     }
   },
 
+  /** A small value kept in the database (readable by the service worker too). */
+  getKv<T>(id: string): T | undefined {
+    return kv.get(id) as T | undefined;
+  },
+  async putKv(id: string, value: unknown): Promise<boolean> {
+    kv.set(id, value);
+    try {
+      await backend.put("kv", { id, value } as { id: string });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   getLibrary(): LibraryItem[] {
     return library.slice();
   },
@@ -277,6 +264,7 @@ export const store = {
     designs = [];
     library = [];
     customLogo = null;
+    kv = new Map();
     ["library", "prefs", "tipsSeen", "store-designs", "store-library", "store-kv"].forEach(lsRemove);
   },
 

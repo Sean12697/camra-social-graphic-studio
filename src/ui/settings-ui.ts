@@ -11,6 +11,8 @@ import { applyTheme, type ThemePref } from "./theme.ts";
 import { exportAll, pickImportFile } from "./backup-ui.ts";
 import { startTips } from "./tips.ts";
 import * as E from "./editor.ts";
+import { CATEGORIES, LEAD_OPTIONS } from "../core/campaigns.ts";
+import { backgroundActive, getPrefs as campaignPrefs, openCampaigns, resetReminders, setPrefs as setCampaignPrefs, setSystem, systemSupported } from "./campaigns-ui.ts";
 
 declare const __APP_VERSION__: string;
 
@@ -69,6 +71,52 @@ async function render(): Promise<void> {
       h("p", { class: "note" }, "Links always show exactly what was shared. Your default look applies when you open the studio without a link, or start a new post."),
     ),
   );
+
+  // Campaign reminders.
+  const cp = campaignPrefs();
+  const remind = h("input", { type: "checkbox", id: "campRemind" });
+  remind.checked = cp.enabled;
+  remind.addEventListener("change", async () => {
+    await setCampaignPrefs({ ...campaignPrefs(), enabled: remind.checked });
+    render();
+  });
+  const catBoxes = CATEGORIES.map((c) => {
+    const cb = h("input", { type: "checkbox", id: "campCat-" + c.id });
+    cb.checked = cp.categories.includes(c.id);
+    cb.disabled = !cp.enabled;
+    cb.addEventListener("change", () => {
+      const p = campaignPrefs();
+      p.categories = cb.checked ? Array.from(new Set(p.categories.concat(c.id))) : p.categories.filter((x) => x !== c.id);
+      setCampaignPrefs(p);
+    });
+    return h("label", { class: "check", for: cb.id }, cb, " " + c.label);
+  });
+  const lead = h("select", { id: "campLead" }, ...LEAD_OPTIONS.map(([v, l]) => h("option", { value: v }, l)));
+  lead.value = cp.leadDays ? String(cp.leadDays) : "";
+  lead.disabled = !cp.enabled;
+  lead.addEventListener("change", () => setCampaignPrefs({ ...campaignPrefs(), leadDays: lead.value ? Number(lead.value) : null }));
+  const sys = h("input", { type: "checkbox", id: "campSystem" });
+  sys.checked = cp.system && systemSupported() && Notification.permission === "granted";
+  sys.disabled = !cp.enabled || !systemSupported();
+  sys.addEventListener("change", async () => {
+    sys.checked = await setSystem(sys.checked);
+    render();
+  });
+  const bgNote = h("p", { class: "note" }, systemSupported() ? "Notifications arrive when you open the studio. Installed as an app in Chrome or Edge, it can also check while closed." : "This browser cannot show notifications; reminders still appear in the studio.");
+  if (sys.checked) backgroundActive().then((on) => { if (on) bgNote.textContent = "Notifications are on, including checks while the studio is closed."; });
+  const campaignsSection = section(
+    "Campaign reminders",
+    h("label", { class: "check", for: remind.id }, remind, " Remind me before national campaigns (to schedule posts) and while they are on"),
+    h("fieldset", { class: "field" }, h("legend", {}, "Remind me about"), ...catBoxes),
+    h("div", { class: "field" }, h("label", { for: lead.id }, "How far ahead"), lead),
+    h("label", { class: "check", for: sys.id }, sys, " Also show a system notification"),
+    bgNote,
+    h("div", { class: "row-actions" },
+      h("button", { type: "button", class: "ghost", onclick: () => { dlg().close(); openCampaigns(); } }, "Open Campaigns and calendar links"),
+      h("button", { type: "button", class: "ghost", onclick: async () => { await resetReminders(); notify("info", "Dismissed and snoozed reminders are back."); } }, "Bring back dismissed reminders"),
+    ),
+  );
+  body.append(campaignsSection);
 
   const tipsCb = h("input", { type: "checkbox" });
   tipsCb.checked = !store.tipsSeen();

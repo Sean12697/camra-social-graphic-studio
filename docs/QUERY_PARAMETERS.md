@@ -8,7 +8,7 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
 
 | Parameter | What it does |
 | --- | --- |
-| `type` | Post type. One of: `newcomer`, `award`, `whatson`, `social`, `hybrid`, `meeting`, `festival`, `pubfeature`, `beer`, `announcement`, `pubnews`, `locale`, `heritage`, `pubcampaign`, `gbg`, `campaignmonth`, `trip`, `countdown`, `volunteers`, `join`, `thanks`, `custom`. |
+| `type` | Post type. One of: `newcomer`, `award`, `whatson`, `social`, `hybrid`, `meeting`, `festival`, `pubfeature`, `beer`, `announcement`, `pubnews`, `locale`, `heritage`, `pubcampaign`, `gbg`, `campaignmonth`, `occasion`, `trip`, `countdown`, `volunteers`, `join`, `thanks`, `custom`. |
 | `branch` | Branch: `custom`, or one of the 217 branch ids in the logo catalogue, for example `central-manchester`. Every id is listed in docs/LOGOS.md, and the branch picker shows them all. |
 | `branchName` | Custom branch name (with `branch=custom`). |
 | `branchLogo` | URL of a white branch-logo PNG (with `branch=custom`). Needs permissive CORS for downloads. Included in share links when the logo came from a URL (an uploaded file cannot travel in a link). |
@@ -50,6 +50,7 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
 | `download` | Set to `1` to export the selected sizes automatically on load. |
 | `zip` | With `download=1`, set to `1` to deliver every selected size as one ZIP file instead of separate PNGs (or `0` to force separate PNGs). Defaults to your download format setting. |
 | `docs` | Set to `1` to open this reference on load. |
+| `campaign` | Opens the Campaigns panel at one campaign, with its drafts. One of: `mild-month`, `cider-perry-month`, `gbg-launch`, `members-weekend`, `camra-birthday`, `tryanuary`, `beer-day-britain`, `world-cider-day`, `ipa-day`, `international-beer-day`, `cask-ale-week`, `stout-day`, `small-business-saturday`, `burns-night`, `st-davids-day`, `st-patricks-day`, `st-georges-day`, `st-andrews-day`. Any other value opens the full list. Calendar reminders link here. |
 | `branchOnCampaign` | Set to `1` to show the branch logo instead of the CAMRA logo on campaign posts (One to Try, Real Cider and Perry). Off-brand but allowed: campaigns should normally show the CAMRA logo, so a warning appears. |
 | `brand` | Set to `1` to open the brand guidelines panel on load. |
 | `tagline` | Tagline to show: one of the two approved taglines (`Pubs, Pints, People.` or `Campaigning for pubs, pints and people since 1971`), or `none` to hide it (the tagline is optional). Anything else keeps the default tagline and shows a notice. Defaults to `Pubs, Pints, People.` |
@@ -192,6 +193,21 @@ List fields take a URL-encoded JSON array of objects, for example `events=[{"nam
 | Parameter | Type |
 | --- | --- |
 | `campaignName` | suggest (Mild Month, Cider and Perry Month, Community Pubs Month, Cask Ale Week) |
+| `phase` (optional) | select (, soon, countdown, now, today, last, thanks) |
+| `dates` (optional) | text |
+| `days` (optional) | text |
+| `heading` (optional) | text |
+| `note` (optional) | textarea |
+| `pubs` | list: URL-encoded JSON array of objects with keys pub, detail |
+
+### Beer or pub day (IPA Day, St George's Day) (`type=occasion`)
+
+| Parameter | Type |
+| --- | --- |
+| `occasion` | suggest (Cask Ale Week, Tryanuary, Beer Day Britain, World Cider Day, International IPA Day, International Beer Day, International Stout Day, Small Business Saturday, CAMRA's birthday, Burns Night, St David's Day, St Patrick's Day, St George's Day, St Andrew's Day) |
+| `phase` (optional) | select (, soon, countdown, now, today, last, thanks) |
+| `dates` (optional) | text |
+| `days` (optional) | text |
 | `heading` (optional) | text |
 | `note` (optional) | textarea |
 | `pubs` | list: URL-encoded JSON array of objects with keys pub, detail |

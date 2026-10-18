@@ -89,6 +89,59 @@ function isCider(text: string): boolean {
   return /cider|perry/i.test(text || "");
 }
 
+// Stages for campaign and celebration-day posts, so one post type covers the
+// countdown, the launch, the last week and the thank you afterwards.
+const PHASES: Array<[string, string]> = [
+  ["", "No stage (just the campaign)"],
+  ["soon", "Coming soon"],
+  ["countdown", "Countdown (days to go)"],
+  ["now", "On now"],
+  ["today", "Today"],
+  ["last", "Last week"],
+  ["thanks", "Thank you (afterwards)"],
+];
+const PHASE_EYEBROW: Record<string, string> = { soon: "COMING SOON", now: "ON NOW", today: "TODAY", last: "LAST WEEK", thanks: "THANK YOU" };
+
+const OCCASIONS = [
+  "Cask Ale Week",
+  "Tryanuary",
+  "Beer Day Britain",
+  "World Cider Day",
+  "International IPA Day",
+  "International Beer Day",
+  "International Stout Day",
+  "Small Business Saturday",
+  "CAMRA's birthday",
+  "Burns Night",
+  "St David's Day",
+  "St Patrick's Day",
+  "St George's Day",
+  "St Andrew's Day",
+];
+
+// The eyebrow, title, subtitle and lines for a post with an optional stage.
+// With no stage set the post looks exactly as it did before stages existed.
+function phased(v: Values, name: string): Layout {
+  const phase = str(v, "phase");
+  const dates = str(v, "dates");
+  const note = str(v, "note") ? [str(v, "note")] : [];
+  if (phase === "countdown") {
+    const d = str(v, "days").trim();
+    return {
+      eyebrow: name.toUpperCase(),
+      title: d ? d + (d === "1" ? " day to go" : " days to go") : str(v, "heading") || "Coming soon",
+      subtitle: dates || (d ? str(v, "heading") : ""),
+      lines: note,
+    };
+  }
+  return {
+    eyebrow: PHASE_EYEBROW[phase] || name.toUpperCase(),
+    title: str(v, "heading") || name,
+    subtitle: dates,
+    lines: note,
+  };
+}
+
 export const TEMPLATES: Template[] = [
   {
     id: "newcomer",
@@ -627,6 +680,9 @@ export const TEMPLATES: Template[] = [
     defaultIcon: "beer",
     fields: [
       { key: "campaignName", label: "Campaign", type: "suggest", options: ["Mild Month", "Cider and Perry Month", "Community Pubs Month", "Cask Ale Week"] },
+      { key: "phase", label: "Stage", type: "select", optional: true, options: PHASES },
+      { key: "dates", label: "Dates", type: "text", optional: true },
+      { key: "days", label: "Days to go (for a countdown)", type: "text", optional: true },
       { key: "heading", label: "Heading", type: "text", optional: true },
       { key: "note", label: "Message", type: "textarea", optional: true },
       {
@@ -643,9 +699,7 @@ export const TEMPLATES: Template[] = [
       const name = str(v, "campaignName") || "CAMRA campaign";
       const cider = isCider(name);
       return {
-        eyebrow: name.toUpperCase(),
-        title: str(v, "heading") || name,
-        lines: str(v, "note") ? [str(v, "note")] : [],
+        ...phased(v, name),
         list: list(v, "pubs").map(function (p) {
           return { primary: p.pub || "", secondary: p.detail || "" };
         }),
@@ -654,6 +708,46 @@ export const TEMPLATES: Template[] = [
         cider: cider,
         campaign: true,
         campaignName: cider ? "Real Cider and Perry" : name,
+      };
+    },
+  },
+  {
+    id: "occasion",
+    label: "Beer or pub day (IPA Day, St George's Day)",
+    accentKey: "watermelon",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "party-popper",
+    fields: [
+      { key: "occasion", label: "Day or week", type: "suggest", options: OCCASIONS },
+      { key: "phase", label: "Stage", type: "select", optional: true, options: PHASES },
+      { key: "dates", label: "Date", type: "text", optional: true },
+      { key: "days", label: "Days to go (for a countdown)", type: "text", optional: true },
+      { key: "heading", label: "Heading", type: "text", optional: true },
+      { key: "note", label: "Message", type: "textarea", optional: true },
+      {
+        key: "pubs",
+        label: "Pubs taking part",
+        type: "list",
+        itemFields: [
+          { key: "pub", label: "Pub" },
+          { key: "detail", label: "What's on", optional: true },
+        ],
+      },
+    ],
+    build(v: Values): Layout {
+      const name = str(v, "occasion") || "Beer day";
+      // A branch post about the day, so the branch logo leads; cider days
+      // still take the cider Blue.
+      const cider = isCider(name);
+      return {
+        ...phased(v, name),
+        list: list(v, "pubs").map(function (p) {
+          return { primary: p.pub || "", secondary: p.detail || "" };
+        }),
+        listStyle: "events" as const,
+        accentKey: cider ? "blue" : "watermelon",
+        cider: cider,
       };
     },
   },
@@ -826,7 +920,7 @@ const GROUPS: Record<string, string> = {
   newcomer: "Pubs", pubfeature: "Pubs", pubnews: "Pubs", locale: "Pubs", heritage: "Pubs", pubcampaign: "Pubs",
   award: "Awards", hybrid: "Awards", gbg: "Awards",
   whatson: "Events", social: "Events", trip: "Events", festival: "Events", countdown: "Events", meeting: "Events",
-  beer: "Drinks and campaigns", campaignmonth: "Drinks and campaigns",
+  beer: "Drinks and campaigns", campaignmonth: "Drinks and campaigns", occasion: "Drinks and campaigns",
   announcement: "Branch news", volunteers: "Branch news", join: "Branch news", thanks: "Branch news",
   custom: "Your own",
 };

@@ -26,10 +26,12 @@
   </div>
   <nav class="topnav" aria-label="Studio">
     <button type="button" class="nav-btn" id="designsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-designs"></span>Designs</button>
+    <button type="button" class="nav-btn" id="campaignsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-campaigns"></span>Campaigns<span class="count-badge" aria-hidden="true" hidden></span></button>
     <button type="button" class="nav-btn" id="settingsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-settings"></span>Settings</button>
     <button type="button" class="nav-btn" id="helpBtn" aria-label="Show tips"><span aria-hidden="true" class="ico ico-help"></span>Tips</button>
   </nav>
 </header>
+<section class="campaign-alerts" id="campaignAlerts" aria-label="Campaign reminders" hidden></section>
 <main class="layout" id="main" tabindex="-1">
   <form class="controls" id="controls" aria-label="Graphic settings" novalidate>
     <details class="group" data-group="post" open>
@@ -419,6 +421,14 @@
     <button type="button" class="icon-btn" data-close aria-label="Close logo picker">×</button>
   </div>
   <div class="dlg-body" id="logoBody"></div>
+</dialog>
+
+<dialog id="campaignsDialog" class="dlg dlg-wide" aria-labelledby="campaignsTitle">
+  <div class="dlg-head">
+    <h2 id="campaignsTitle">Campaigns</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Close campaigns">×</button>
+  </div>
+  <div class="dlg-body" id="campaignsBody"></div>
 </dialog>
 
 <dialog id="settingsDialog" class="dlg" aria-labelledby="settingsTitle">

@@ -4,6 +4,7 @@
 // (shareLink in app.js) and to build this reference, so the three can never
 // drift apart. Field, size and icon parameters are generated from the live
 // configuration (templates.js, presets.js, icons.js) in the same way.
+import { CAMPAIGNS } from "./campaigns.ts";
 import { CONFIG } from "./config.ts";
 import { escapeHtml as esc } from "./html.ts";
 import { ICON_NAMES } from "./icons.ts";
@@ -113,6 +114,9 @@ export const PARAM_DEFS: ParamDef[] = [
   { key: "download", doc: "Set to <code>1</code> to export the selected sizes automatically on load." },
   { key: "zip", doc: "With <code>download=1</code>, set to <code>1</code> to deliver every selected size as one ZIP file instead of separate PNGs (or <code>0</code> to force separate PNGs). Defaults to your download format setting." },
   { key: "docs", doc: "Set to <code>1</code> to open this reference on load." },
+  { key: "campaign", doc: function(){
+      return "Opens the Campaigns panel at one campaign, with its drafts. One of: " + CAMPAIGNS.map(function(c){ return "<code>" + esc(c.id) + "</code>"; }).join(", ") + ". Any other value opens the full list. Calendar reminders link here.";
+    } },
   { key: "branchOnCampaign", doc: "Set to <code>1</code> to show the branch logo instead of the CAMRA logo on campaign posts (One to Try, Real Cider and Perry). Off-brand but allowed: campaigns should normally show the CAMRA logo, so a warning appears." },
   { key: "brand", doc: "Set to <code>1</code> to open the brand guidelines panel on load." },
   { key: "tagline", doc: "Tagline to show: one of the two approved taglines (<code>Pubs, Pints, People.</code> or <code>Campaigning for pubs, pints and people since 1971</code>), or <code>none</code> to hide it (the tagline is optional). Anything else keeps the default tagline and shows a notice. Defaults to <code>Pubs, Pints, People.</code>" },
