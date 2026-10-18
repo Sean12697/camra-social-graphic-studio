@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.5.0
+
+### Added
+- Content calendar: a month view and a list of what is coming up, with planned posts and the national campaigns side by side. Pick a day to see its posts and campaigns, plan a new post on it, or move the open post to it. Arrow keys, Page Up and Page Down move around the month.
+- Post text and date: a new group in the editor for the words that go with the graphic (with character counts against X, Bluesky, Threads, Instagram and LinkedIn limits and a copy button) and the day and time to post it. Save to calendar keeps the whole post, its text and every image on this device, so it can be changed right up to the day.
+- Planned posts can be opened, copied, marked as posted, moved to another day or time, taken off the calendar or deleted from the calendar, and the plan can be downloaded as an .ics file for any calendar app.
+- Campaign drafts arrive with suggested post text and hashtags and a suggested day (a week before for countdowns, the first day, the last week, the day after). Plan all drafts in my calendar adds a campaign's whole set in one go, without duplicates, and moving a countdown keeps its days to go in step.
+- A reminder and a count on Calendar when posts are due today, plus earlier ones not yet marked as posted; system notifications include them when turned on.
+- Saved designs show their planned date and can be filtered by Planned, Not on the calendar or Posted, and sorted by date to post.
+- Settings: weeks start on Monday or Sunday, and reminders for planned posts on or off.
+- `copy` and `calendar` link parameters.
+
+### Changed
+- Images that came from a link are copied into saved designs where the host allows it, and saved designs open from those local copies first.
+
 ## 2.4.0
 
 ### Added

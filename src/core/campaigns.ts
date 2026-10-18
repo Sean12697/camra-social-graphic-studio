@@ -324,7 +324,7 @@ export function dueAlerts(list: Campaign[], today: string, prefs: CampaignPrefs,
 export function pruneState(state: AlertState, today: string): AlertState {
   const minYear = parts(today).y - 1;
   const keep = (k: string) => {
-    const y = Number(k.split(":")[1]);
+    const y = parseInt(k.split(":")[1], 10);
     return !Number.isFinite(y) || y >= minYear;
   };
   const f = <T>(r: Record<string, T>) => Object.fromEntries(Object.entries(r).filter(([k]) => keep(k)));
@@ -377,7 +377,21 @@ export function draftParams(d: Draft, o: Occurrence, today: string): URLSearchPa
   });
   if (d.icon) qp.set("icon", d.icon);
   qp.set("sizes", d.sizes || DEFAULT_SIZES);
+  if (!qp.has("copy")) qp.set("copy", draftCopy(d, o, t));
   return qp;
+}
+
+/** Suggested post text for a draft: its message (or the campaign and dates) and the hashtags. */
+export function draftCopy(d: Draft, o: Occurrence, t: Record<string, string> = tokens(o, o.start)): string {
+  const v = d.values;
+  const pick = (k: string) => (typeof v[k] === "string" ? fillTokens(v[k] as string, t) : "");
+  const days = pick("days");
+  const what = pick("event") || pick("campaignName") || pick("occasion") || o.campaign.name;
+  const lead = days ? days + (days === "1" ? " day" : " days") + " to go: " + what : pick("heading") || what;
+  const msg = pick("note") || pick("body").replace(/\n/g, " ");
+  const when = t.dates && !msg.includes(t.dates) ? (o.start === o.end ? "On " + t.start + "." : t.dates + ".") : "";
+  const tags = hashtags(o).join(" ");
+  return [lead + (/[.!?]$/.test(lead) ? "" : "."), [msg, when].filter(Boolean).join(" "), tags].filter(Boolean).join("\n\n");
 }
 
 /** The draft that suits the moment: before it starts, while it is on, or after. */
@@ -395,7 +409,7 @@ export const PHASE_LABELS: Record<DraftPhase, string> = { before: "Before", star
 
 // --- iCalendar (RFC 5545) ---
 
-function icsText(s: string): string {
+export function icsText(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
@@ -422,7 +436,7 @@ export function foldLine(line: string): string {
   return out.join("\r\n ");
 }
 
-function stamp(d: Date): string {
+export function stamp(d: Date): string {
   return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
 

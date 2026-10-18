@@ -7,6 +7,7 @@
 import { createZip, readZip } from "./zip.ts";
 import { bytesToDataUrl, dataUrlToBytes, extForMime, mimeForName } from "./files.ts";
 import { newId, type Design, type LibraryItem } from "./designs.ts";
+import { isHm, isYmd } from "./calendar.ts";
 
 export const BUNDLE_FORMAT = "camra-studio-backup";
 export const BUNDLE_SCHEMA = 1;
@@ -127,7 +128,19 @@ export function cleanDesign(v: unknown): Design | string {
     updatedAt: str(v.updatedAt) || str(v.createdAt) || now,
     deletedAt: str(v.deletedAt),
     sample: v.sample === true,
+    postOn: isYmd(v.postOn) ? v.postOn : null,
+    postAt: isYmd(v.postOn) && isHm(v.postAt) ? v.postAt : null,
+    postedAt: str(v.postedAt),
+    campaign: cleanRef(v.campaign),
   };
+}
+
+function cleanRef(v: unknown): Design["campaign"] {
+  if (!isObj(v)) return null;
+  const id = str(v.id);
+  const draft = str(v.draft);
+  const year = typeof v.year === "number" && Number.isInteger(v.year) ? v.year : null;
+  return id && draft && year ? { id, draft, year } : null;
 }
 
 export function cleanLibraryItem(v: unknown): LibraryItem | string {

@@ -3,7 +3,8 @@
 // design to Recently deleted, where it can be restored for TRASH_DAYS days.
 
 import { TEMPLATES, templateById } from "../core/templates.ts";
-import { defaultDesignName, duplicateDesign, newId, purgeExpired, queryDesigns, TRASH_DAYS, type Design, type DesignSort } from "../core/designs.ts";
+import { defaultDesignName, duplicateDesign, newId, purgeExpired, queryDesigns, TRASH_DAYS, type Design, type DesignSort, type PlanFilter } from "../core/designs.ts";
+import { planLabel, planStatus, retimeParams, todayYmd } from "../core/calendar.ts";
 import { cleanDesign } from "../core/bundle.ts";
 import { byId, h, option, relativeTime } from "./dom.ts";
 import { closeDialog, confirmDialog, openDialog, promptDialog } from "./dialog.ts";
@@ -14,7 +15,15 @@ import { exportSelection, pickImportFile } from "./backup-ui.ts";
 import demoSeed from "../../seeds/demo.json";
 
 const dlg = () => byId<HTMLDialogElement>("designsDialog");
-const view = { q: "", type: "", sort: "updated" as DesignSort, trash: false, selected: new Set<string>() };
+const view = { q: "", type: "", plan: "" as PlanFilter, sort: "updated" as DesignSort, trash: false, selected: new Set<string>() };
+const changed: Array<() => void> = [];
+/** Called whenever saved designs change from this panel, so the calendar can follow. */
+export function onDesignsChanged(fn: () => void): void {
+  changed.push(fn);
+}
+function emitChanged(): void {
+  changed.forEach((f) => f());
+}
 
 function typeLabel(id: string): string {
   const t = templateById(id);
@@ -22,17 +31,18 @@ function typeLabel(id: string): string {
 }
 
 /** Saves the current form, as a new design or over the one it was opened from. */
-export async function saveCurrent(): Promise<void> {
+export async function saveCurrent(): Promise<Design | null> {
   const layout = E.buildLayout();
   const current = E.state.currentDesignId ? store.getDesign(E.state.currentDesignId) : undefined;
   const suggested = current && !current.deletedAt ? current.name : defaultDesignName(layout.title, E.currentTemplate().label);
+  const snap = E.captureForm();
+  const when = snap.postOn ? " It is planned for " + planLabel({ postOn: snap.postOn, postAt: snap.postAt } as Design) + "." : "";
   const res = await promptDialog(
     current && !current.deletedAt
-      ? { title: "Save design", label: "Design name", value: suggested, confirmLabel: "Update this design", secondaryLabel: "Save as a new design" }
-      : { title: "Save design", label: "Design name", value: suggested, confirmLabel: "Save design" },
+      ? { title: snap.postOn ? "Save planned post" : "Save design", label: "Design name", value: suggested, confirmLabel: "Update this design", secondaryLabel: "Save as a new design", note: when }
+      : { title: snap.postOn ? "Save planned post" : "Save design", label: "Design name", value: suggested, confirmLabel: snap.postOn ? "Save to calendar" : "Save design", note: when },
   );
-  if (!res) return;
-  const snap = E.captureForm();
+  if (!res) return null;
   const now = new Date().toISOString();
   const update = !!(current && !current.deletedAt && !res.secondary);
   const d: Design = {
@@ -46,15 +56,44 @@ export async function saveCurrent(): Promise<void> {
     createdAt: update && current ? current.createdAt : now,
     updatedAt: now,
     deletedAt: null,
+    postOn: snap.postOn || null,
+    postAt: snap.postAt || null,
+    // Moving a post to another day means it has not been posted yet.
+    postedAt: update && current && current.postedAt && current.postOn === snap.postOn ? current.postedAt : null,
+    campaign: snap.campaign || null,
   };
   if (!(await store.putDesigns([d]))) {
     notify("error", "Could not save: this browser's storage is full. Delete some saved designs or library items (Settings shows how much is used), then try again.");
-    return;
+    return null;
   }
   E.state.currentDesignId = d.id;
   E.state.dirty = false;
-  notify("success", (update ? "Updated " : "Saved ") + d.name + ".", { action: { label: "View designs", run: openDesigns } });
+  const planned = d.postOn ? " Planned for " + planLabel(d) + "." : "";
+  notify("success", (update ? "Updated " : "Saved ") + d.name + "." + planned, { action: d.postOn ? { label: "Open calendar", run: () => openCalendarHook(d.postOn as string) } : { label: "View designs", run: openDesigns } });
   if (dlg().open) render();
+  emitChanged();
+  return d;
+}
+
+let openCalendarHook: (day: string) => void = () => undefined;
+export function setCalendarOpener(fn: (day: string) => void): void {
+  openCalendarHook = fn;
+}
+
+/** Saves changes to designs made outside the editor (the calendar). */
+export async function updateDesigns(items: Design[]): Promise<boolean> {
+  const ok = await store.putDesigns(items);
+  if (ok) {
+    if (dlg().open) render();
+    emitChanged();
+  }
+  return ok;
+}
+
+/** Moves a planned post to another day (or off the calendar), keeping a campaign countdown right. */
+export function replan(d: Design, postOn: string | null, postAt: string | null = d.postAt || null): Design {
+  const params = postOn && d.campaign ? retimeParams(d.params, d.campaign, d.postOn, postOn) : d.params;
+  return { ...d, params, postOn, postAt: postOn ? postAt : null, postedAt: postOn === d.postOn ? d.postedAt || null : null, updatedAt: new Date().toISOString() };
 }
 
 export async function confirmReplace(): Promise<boolean> {
@@ -67,13 +106,14 @@ export async function confirmReplace(): Promise<boolean> {
   });
 }
 
-async function openDesign(d: Design): Promise<void> {
-  if (!(await confirmReplace())) return;
-  await E.restoreForm({ params: d.params, photo: d.photo || null, logo: d.logo || null });
+export async function openDesign(d: Design): Promise<boolean> {
+  if (!(await confirmReplace())) return false;
+  await E.restoreForm({ params: d.params, photo: d.photo || null, logo: d.logo || null, postOn: d.postOn, postAt: d.postAt, campaign: d.campaign });
   E.state.currentDesignId = d.sample ? null : d.id;
   E.state.dirty = false;
   closeDialog(dlg());
   notify("info", "Opened " + d.name + ".");
+  return true;
 }
 
 export async function newPost(): Promise<void> {
@@ -89,6 +129,7 @@ async function rename(d: Design): Promise<void> {
   const res = await promptDialog({ title: "Rename design", label: "Design name", value: d.name, confirmLabel: "Rename" });
   if (!res || res.value === d.name) return;
   await store.putDesigns([{ ...d, name: res.value, updatedAt: new Date().toISOString() }]);
+  emitChanged();
   render();
 }
 
@@ -104,6 +145,7 @@ async function moveToTrash(items: Design[]): Promise<void> {
   const now = new Date().toISOString();
   const before = items.map((d) => ({ ...d }));
   await store.putDesigns(items.map((d) => ({ ...d, deletedAt: now })));
+  emitChanged();
   items.forEach((d) => view.selected.delete(d.id));
   if (items.some((d) => d.id === E.state.currentDesignId)) E.state.currentDesignId = null;
   render();
@@ -114,6 +156,7 @@ async function moveToTrash(items: Design[]): Promise<void> {
       run: async () => {
         await store.putDesigns(before);
         render();
+        emitChanged();
       },
     },
   });
@@ -121,6 +164,7 @@ async function moveToTrash(items: Design[]): Promise<void> {
 
 async function restore(items: Design[]): Promise<void> {
   await store.putDesigns(items.map((d) => ({ ...d, deletedAt: null })));
+  emitChanged();
   items.forEach((d) => view.selected.delete(d.id));
   notify("success", items.length === 1 ? "Restored " + items[0].name + "." : "Restored " + items.length + " designs.");
   render();
@@ -137,6 +181,7 @@ async function purge(items: Design[]): Promise<void> {
   });
   if (!ok) return;
   await store.removeDesigns(items.map((d) => d.id));
+  emitChanged();
   items.forEach((d) => view.selected.delete(d.id));
   notify("info", "Deleted " + what + " permanently.");
   render();
@@ -181,6 +226,8 @@ function designCard(d: Design): HTMLElement {
   });
   const thumb = d.thumb ? h("img", { src: d.thumb, alt: "", width: 72, height: 72, loading: "lazy" }) : h("span", { class: "thumb-ph", "aria-hidden": "true" });
   const when = view.trash && d.deletedAt ? "Deleted " + relativeTime(d.deletedAt) : "Updated " + relativeTime(d.updatedAt);
+  const st = planStatus(d, todayYmd());
+  const planBadge = st === "unplanned" ? null : h("span", { class: "badge plan " + st }, st === "posted" ? "Posted" : st === "overdue" ? "Not posted yet" : st === "today" ? "Post today" : "Planned");
   const actions = view.trash
     ? [
         h("button", { type: "button", class: "btn", onclick: () => restore([d]) }, "Restore"),
@@ -200,8 +247,8 @@ function designCard(d: Design): HTMLElement {
     h(
       "div",
       { class: "design-main" },
-      h("p", { class: "design-name", title: d.name }, d.name, d.sample ? h("span", { class: "badge" }, "Sample") : null, d.id === E.state.currentDesignId ? h("span", { class: "badge" }, "Open") : null),
-      h("p", { class: "design-meta" }, typeLabel(d.typeId) + " \u00b7 " + when),
+      h("p", { class: "design-name", title: d.name }, d.name, d.sample ? h("span", { class: "badge" }, "Sample") : null, d.id === E.state.currentDesignId ? h("span", { class: "badge" }, "Open") : null, planBadge),
+      h("p", { class: "design-meta" }, typeLabel(d.typeId) + " \u00b7 " + (d.postOn ? planLabel(d) + " \u00b7 " : "") + when),
       h("div", { class: "design-actions" }, ...actions),
     ),
   );
@@ -239,13 +286,19 @@ function render(): void {
     view.type = type.value;
     render();
   });
-  const sort = h("select", { id: "designSort", "aria-label": "Sort designs" }, option("updated", "Recently updated"), option("created", "Recently created"), option("name", "Name A to Z"));
+  const plan = h("select", { id: "designPlan", "aria-label": "Filter by calendar" }, option("", "Planned or not"), option("planned", "Planned, not posted"), option("unplanned", "Not on the calendar"), option("posted", "Posted"));
+  plan.value = view.plan;
+  plan.addEventListener("change", () => {
+    view.plan = plan.value as PlanFilter;
+    render();
+  });
+  const sort = h("select", { id: "designSort", "aria-label": "Sort designs" }, option("updated", "Recently updated"), option("created", "Recently created"), option("planned", "Date to post"), option("name", "Name A to Z"));
   sort.value = view.sort;
   sort.addEventListener("change", () => {
     view.sort = sort.value as DesignSort;
     render();
   });
-  body.append(h("div", { class: "toolbar", role: "search" }, search, type, sort));
+  body.append(h("div", { class: "toolbar", role: "search" }, search, type, plan, sort));
   body.append(h("h3", { class: "sr-only" }, view.trash ? "Recently deleted" : "Your designs"));
 
   if (view.trash) {
@@ -279,8 +332,8 @@ function render(): void {
 
   if (list.length) {
     body.append(h("ul", { class: "design-list" }, ...list.map(designCard)));
-  } else if (view.q || view.type) {
-    body.append(h("div", { class: "empty" }, h("p", {}, "No designs match that search."), h("button", { type: "button", class: "ghost", onclick: () => { view.q = ""; view.type = ""; render(); } }, "Clear search")));
+  } else if (view.q || view.type || view.plan) {
+    body.append(h("div", { class: "empty" }, h("p", {}, "No designs match that search."), h("button", { type: "button", class: "ghost", onclick: () => { view.q = ""; view.type = ""; view.plan = ""; render(); } }, "Clear search")));
   } else if (view.trash) {
     body.append(h("div", { class: "empty" }, h("p", {}, "Nothing in Recently deleted.")));
   } else {

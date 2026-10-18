@@ -83,7 +83,7 @@ export function confirmDialog(o: ConfirmOptions): Promise<boolean> {
 }
 
 /** Asks for a single line of text (a design name). Resolves null on cancel. */
-export function promptDialog(o: { title: string; label: string; value: string; confirmLabel: string; secondaryLabel?: string }): Promise<{ value: string; secondary: boolean } | null> {
+export function promptDialog(o: { title: string; label: string; value: string; confirmLabel: string; secondaryLabel?: string; note?: string }): Promise<{ value: string; secondary: boolean } | null> {
   const d = byId<HTMLDialogElement>("promptDialog");
   const form = byId<HTMLFormElement>("promptForm");
   const input = byId<HTMLInputElement>("promptInput");
@@ -96,6 +96,9 @@ export function promptDialog(o: { title: string; label: string; value: string; c
   second.textContent = o.secondaryLabel || "";
   second.hidden = !o.secondaryLabel;
   input.value = o.value;
+  const note = byId("promptNote");
+  note.textContent = o.note || "";
+  note.hidden = !o.note;
   err.textContent = "";
   input.removeAttribute("aria-invalid");
   return new Promise((resolve) => {

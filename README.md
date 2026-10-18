@@ -8,9 +8,17 @@ An unofficial, static, browser-based studio for making on-brand CAMRA social gra
 
 ## What it does
 
-Pick one of 23 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved, shared as links and backed up.
+Pick one of 23 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, write the text that goes with it, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved, planned in a content calendar, shared as links and backed up.
 
 ![Logo picker](docs/screenshots/logos-dark.png)
+
+## Content calendar
+
+Under Post text and date, write the words that go with the graphic (the counter shows which platforms it fits) and pick the day, and optionally the time, to post it. Save to calendar stores the whole post as a saved design with that date: every form setting, the text, and local copies of every image, so the post can be reopened and changed at any point before the day. The text travels in share links as `copy`; the date stays on this device.
+
+The Calendar button opens a month view and a list of what is coming up. Planned posts and campaigns sit side by side; choosing a day shows both, with buttons to open, copy the text of, mark as posted, move or remove each post, and to plan a new one. Campaign drafts can be planned in one go from Campaigns, each on a suggested day, and a countdown recounts its days to go when moved. On the day, a reminder appears under the top bar and Calendar shows a count. The plan can be downloaded as an .ics file for any calendar app; unlike the campaign feeds it is a snapshot, because the plan only exists in this browser.
+
+![Content calendar](docs/screenshots/calendar-dark.png)
 
 ## Campaigns
 

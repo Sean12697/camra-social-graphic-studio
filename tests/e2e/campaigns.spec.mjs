@@ -28,7 +28,9 @@ test("reminders appear before a campaign and a draft fills the form", async ({ p
   await page.locator("#confirmOk").click();
   await expect(dlg).toBeHidden();
   await expect(page.locator("#postType")).toHaveValue("campaignmonth");
-  await expect(await fieldByLabel(page, "Days to go (for a countdown)")).toHaveValue("21");
+  // Suggested for a week before it starts, counting down from that day.
+  await expect(page.locator("#postOn")).toHaveValue("2027-04-24");
+  await expect(await fieldByLabel(page, "Days to go (for a countdown)")).toHaveValue("7");
   await expect(await fieldByLabel(page, "Dates")).toHaveValue("1 to 31 May");
   await expect(branch).toHaveValue(other);
 });
@@ -55,7 +57,7 @@ test("a reminder shows while the campaign is on", async ({ page }) => {
   await expect(banner).toContainText("12 days left, until Saturday 31 July");
 });
 
-test("the Campaigns panel lists drafts, deep links and saves drafts to designs", async ({ page }) => {
+test("the Campaigns panel lists drafts, deep links and plans drafts in the calendar", async ({ page }) => {
   await openStudio(page, { campaigns: true, now: APRIL, query: "?campaign=gbg-launch" });
   const dlg = page.locator("#campaignsDialog");
   await expect(dlg).toBeVisible();
@@ -68,11 +70,14 @@ test("the Campaigns panel lists drafts, deep links and saves drafts to designs",
   await expect(dlg.getByRole("link", { name: "Download the .ics file" })).toHaveAttribute("href", "calendar/campaigns.ics");
 
   const mild = dlg.locator('[data-campaign="mild-month"]').first();
-  await mild.getByRole("button", { name: "Save all 4 drafts to my designs" }).click();
-  await expect(page.locator("#notices")).toContainText("Saved 4 drafts for Mild Month");
-  await page.locator("#notices").getByRole("button", { name: "View designs" }).click();
-  await expect(page.locator("#designsDialog")).toContainText("Mild Month 2027: Countdown");
-  await expect(page.locator("#designsDialog")).toContainText("Mild Month 2027: Thank you");
+  await mild.getByRole("button", { name: "Plan all 4 in my calendar" }).click();
+  await expect(page.locator("#notices")).toContainText("Planned 4 posts for Mild Month");
+  await page.locator("#notices").getByRole("button", { name: "Open calendar" }).click();
+  const cal = page.locator("#calendarDialog");
+  await expect(cal).toBeVisible();
+  // The countdown goes out a week before, counting down from that day.
+  await expect(cal.locator("#calDayTitle")).toHaveText("Saturday 24 April 2027");
+  await expect(cal.locator(".cal-day-panel")).toContainText("Mild Month 2027: Countdown");
 });
 
 test("turning reminders off in Settings hides the banner", async ({ page }) => {

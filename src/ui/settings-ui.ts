@@ -12,7 +12,8 @@ import { exportAll, pickImportFile } from "./backup-ui.ts";
 import { startTips } from "./tips.ts";
 import * as E from "./editor.ts";
 import { CATEGORIES, LEAD_OPTIONS } from "../core/campaigns.ts";
-import { backgroundActive, getPrefs as campaignPrefs, openCampaigns, resetReminders, setPrefs as setCampaignPrefs, setSystem, systemSupported } from "./campaigns-ui.ts";
+import { calendarPrefs, setCalendarPrefs } from "./calendar-ui.ts";
+import { backgroundActive, getPrefs as campaignPrefs, openCampaigns, refreshCampaigns, resetReminders, setPrefs as setCampaignPrefs, setSystem, systemSupported } from "./campaigns-ui.ts";
 
 declare const __APP_VERSION__: string;
 
@@ -117,6 +118,22 @@ async function render(): Promise<void> {
     ),
   );
   body.append(campaignsSection);
+
+  const calp = calendarPrefs();
+  const postRem = h("input", { type: "checkbox", id: "postRemind" });
+  postRem.checked = prefs.postReminders !== false;
+  postRem.addEventListener("change", () => {
+    store.setPref("postReminders", postRem.checked);
+    refreshCampaigns();
+  });
+  body.append(
+    section(
+      "Content calendar",
+      radioGroup("weekStartPref", "Weeks start on", [["1", "Monday"], ["0", "Sunday"]], String(calp.weekStart), (v) => setCalendarPrefs({ weekStart: v === "0" ? 0 : 1 })),
+      h("label", { class: "check", for: postRem.id }, postRem, " Remind me on the day a planned post is due"),
+      h("p", { class: "note" }, "Planned posts are saved designs with a date, so they are included in backups."),
+    ),
+  );
 
   const tipsCb = h("input", { type: "checkbox" });
   tipsCb.checked = !store.tipsSeen();

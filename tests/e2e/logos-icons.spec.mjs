@@ -54,7 +54,7 @@ test("the icon picker, position, pattern and colour", async ({ page }) => {
   await page.locator("#promptOk").click();
   await page.keyboard.press("Escape");
   await page.locator("#designsBtn").click();
-  await page.getByRole("button", { name: /^Open / }).first().click();
+  await page.locator("#designsDialog").getByRole("button", { name: /^Open / }).first().click();
   await expect(page.locator("#iconPos")).toHaveValue("pattern");
   await expect(page.locator("#iconColor")).toHaveValue("white");
   await expect(page.locator('input[name="iconPick"][value="bus"]')).toBeChecked();

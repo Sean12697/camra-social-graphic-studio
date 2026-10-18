@@ -23,6 +23,14 @@ export interface Design {
   deletedAt?: string | null;
   /** True for the bundled sample designs. */
   sample?: boolean;
+  /** Content calendar: the day to post it (YYYY-MM-DD), if planned. */
+  postOn?: string | null;
+  /** Content calendar: the time to post it (HH:MM, local), optional. */
+  postAt?: string | null;
+  /** Content calendar: when it was marked as posted. */
+  postedAt?: string | null;
+  /** The campaign draft it was planned from, if any. */
+  campaign?: { id: string; year: number; draft: string } | null;
 }
 
 export interface LibraryItem {
@@ -36,11 +44,13 @@ export interface LibraryItem {
 /** Days a deleted design stays in Recently deleted before it is purged. */
 export const TRASH_DAYS = 30;
 
-export type DesignSort = "updated" | "created" | "name";
+export type DesignSort = "updated" | "created" | "name" | "planned";
+export type PlanFilter = "" | "planned" | "unplanned" | "posted";
 
 export interface DesignQuery {
   q?: string;
   type?: string;
+  plan?: PlanFilter;
   sort?: DesignSort;
   trash?: boolean;
 }
@@ -78,6 +88,9 @@ export function queryDesigns(list: Design[], q: DesignQuery = {}): Design[] {
   const out = list.filter((d) => {
     if (!!d.deletedAt !== !!q.trash) return false;
     if (q.type && d.typeId !== q.type) return false;
+    if (q.plan === "planned" && (!d.postOn || d.postedAt)) return false;
+    if (q.plan === "unplanned" && d.postOn) return false;
+    if (q.plan === "posted" && !d.postedAt) return false;
     if (!words.length) return true;
     const hay = searchText(d);
     return words.every((w) => hay.includes(w));
@@ -86,6 +99,7 @@ export function queryDesigns(list: Design[], q: DesignQuery = {}): Design[] {
   out.sort((a, b) => {
     if (sort === "name") return a.name.localeCompare(b.name, undefined, { sensitivity: "base", numeric: true });
     if (sort === "created") return b.createdAt.localeCompare(a.createdAt);
+    if (sort === "planned") return (a.postOn || "9999").localeCompare(b.postOn || "9999") || (a.postAt || "99").localeCompare(b.postAt || "99") || b.updatedAt.localeCompare(a.updatedAt);
     return b.updatedAt.localeCompare(a.updatedAt);
   });
   return out;
@@ -110,6 +124,7 @@ export function duplicateDesign(d: Design, existing: Design[], now: Date = new D
     updatedAt: iso,
     deletedAt: null,
     sample: false,
+    postedAt: null,
   };
 }
 

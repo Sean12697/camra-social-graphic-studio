@@ -41,3 +41,17 @@
 | Scheduled rebuild so estimated dates refresh without a code change | Medium | Low | Proposed: needs a Cloudflare deploy hook |
 | Pull confirmed dates from CAMRA's site automatically | Medium | High | Rejected: no API, and the site must stay static |
 | Push notifications from a server | Low | High | Rejected: the site stays static and private |
+
+## Round 4
+
+| Idea | Value | Effort | Status |
+| --- | --- | --- | --- |
+| Content calendar with month and list views | High | Medium | Built |
+| Post text stored with the design, with platform limits | High | Low | Built |
+| Local copies of linked images in saved posts | Medium | Low | Built |
+| Campaign drafts planned on suggested days, countdowns that follow a move | High | Medium | Built |
+| Drag a post to another day in the month view | Medium | Medium | Proposed: Move covers it accessibly for now |
+| Per-platform text (a short X version and a long Instagram one) | Medium | Medium | Proposed |
+| Week view with times | Low | Medium | Proposed |
+| Post directly to social platforms | High | High | Rejected: needs a server and platform accounts; the site stays static |
+| Shared team calendar across devices | High | High | Rejected for now: needs a backend; backups move plans between devices |

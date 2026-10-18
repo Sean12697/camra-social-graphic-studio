@@ -26,6 +26,7 @@
   </div>
   <nav class="topnav" aria-label="Studio">
     <button type="button" class="nav-btn" id="designsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-designs"></span>Designs</button>
+    <button type="button" class="nav-btn" id="calendarBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-calendar"></span>Calendar<span class="count-badge" aria-hidden="true" hidden></span></button>
     <button type="button" class="nav-btn" id="campaignsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-campaigns"></span>Campaigns<span class="count-badge" aria-hidden="true" hidden></span></button>
     <button type="button" class="nav-btn" id="settingsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-settings"></span>Settings</button>
     <button type="button" class="nav-btn" id="helpBtn" aria-label="Show tips"><span aria-hidden="true" class="ico ico-help"></span>Tips</button>
@@ -285,6 +286,31 @@
       </div>
     </details>
 
+    <details class="group" data-group="copy" open>
+      <summary><h2>Post text and date</h2><span class="group-hint" id="copyHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Write the text that goes with the graphic when you post it. It is saved with the design and travels in share links, so it is ready to paste on the day.">
+          <label for="postCopy">Post text</label>
+          <textarea id="postCopy" rows="5" placeholder="The words you will post with the graphic, hashtags included" aria-describedby="copyCount"></textarea>
+          <p class="note copy-count" id="copyCount"></p>
+          <div class="row-actions"><button type="button" class="ghost" id="copyPostText">Copy post text</button></div>
+        </div>
+        <fieldset class="field" data-tip="Pick the day you mean to post it, then save it to the calendar. You get a reminder on the day, and you can change the post right up to then.">
+          <legend>When to post it (content calendar)</legend>
+          <div class="plan-row">
+            <div class="plan-cell"><label for="postOn">Date</label><input type="date" id="postOn"></div>
+            <div class="plan-cell"><label for="postAt">Time (optional)</label><input type="time" id="postAt"></div>
+          </div>
+          <p class="note" id="planNote" aria-live="polite"></p>
+          <div class="row-actions">
+            <button type="button" class="btn" id="planSave">Save to calendar</button>
+            <button type="button" class="ghost" id="clearPlan">Clear the date</button>
+            <button type="button" class="ghost" id="openCalendar">Open the calendar</button>
+          </div>
+        </fieldset>
+      </div>
+    </details>
+
     <details class="group" data-group="export" open>
       <summary><h2>Export and share</h2><span class="group-hint" id="exportHint"></span></summary>
       <div class="group-body">
@@ -423,6 +449,14 @@
   <div class="dlg-body" id="logoBody"></div>
 </dialog>
 
+<dialog id="calendarDialog" class="dlg dlg-wide dlg-calendar" aria-labelledby="calendarTitle">
+  <div class="dlg-head">
+    <h2 id="calendarTitle">Content calendar</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Close the calendar">×</button>
+  </div>
+  <div class="dlg-body" id="calendarBody"></div>
+</dialog>
+
 <dialog id="campaignsDialog" class="dlg dlg-wide" aria-labelledby="campaignsTitle">
   <div class="dlg-head">
     <h2 id="campaignsTitle">Campaigns</h2>
@@ -465,6 +499,7 @@
         <input type="text" id="promptInput" maxlength="200" autocomplete="off" aria-describedby="promptError">
         <p class="field-error" id="promptError" aria-live="polite"></p>
       </div>
+      <p class="note" id="promptNote" hidden></p>
     </div>
     <div class="dlg-foot">
       <button type="button" class="ghost" data-close>Cancel</button>

@@ -50,6 +50,8 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
 | `download` | Set to `1` to export the selected sizes automatically on load. |
 | `zip` | With `download=1`, set to `1` to deliver every selected size as one ZIP file instead of separate PNGs (or `0` to force separate PNGs). Defaults to your download format setting. |
 | `docs` | Set to `1` to open this reference on load. |
+| `calendar` | Opens the content calendar, at a day when given as `YYYY-MM-DD`. Reminders for planned posts link here. |
+| `copy` | The post text: the words posted alongside the graphic, shown under Post text and date. Saved with designs and carried in share links. The day to post it is not part of links; it stays in your own content calendar. |
 | `campaign` | Opens the Campaigns panel at one campaign, with its drafts. One of: `mild-month`, `cider-perry-month`, `gbg-launch`, `members-weekend`, `camra-birthday`, `tryanuary`, `beer-day-britain`, `world-cider-day`, `ipa-day`, `international-beer-day`, `cask-ale-week`, `stout-day`, `small-business-saturday`, `burns-night`, `st-davids-day`, `st-patricks-day`, `st-georges-day`, `st-andrews-day`. Any other value opens the full list. Calendar reminders link here. |
 | `branchOnCampaign` | Set to `1` to show the branch logo instead of the CAMRA logo on campaign posts (One to Try, Real Cider and Perry). Off-brand but allowed: campaigns should normally show the CAMRA logo, so a warning appears. |
 | `brand` | Set to `1` to open the brand guidelines panel on load. |

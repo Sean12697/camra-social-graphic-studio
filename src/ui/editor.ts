@@ -18,6 +18,8 @@ import { byId, fileToDataUrl, h, option, reveal } from "./dom.ts";
 import { notify } from "./notices.ts";
 import { store } from "./store.ts";
 
+import { copyCheck, copyLength, isHm, isYmd, type CampaignRef } from "../core/calendar.ts";
+
 type Sel = HTMLSelectElement;
 type Inp = HTMLInputElement;
 
@@ -103,6 +105,12 @@ export const el = {
   sizesHint: byId("sizesHint"),
   libraryHint: byId("libraryHint"),
   exportHint: byId("exportHint"),
+  copyHint: byId("copyHint"),
+  postCopy: byId<HTMLTextAreaElement>("postCopy"),
+  copyCount: byId("copyCount"),
+  postOn: byId<Inp>("postOn"),
+  postAt: byId<Inp>("postAt"),
+  planNote: byId("planNote"),
 };
 
 const canvas = byId<HTMLCanvasElement>("frame");
@@ -125,6 +133,10 @@ export const state = {
   currentDesignId: null as string | null,
   /** True once the user has changed the form since it was loaded or saved. */
   dirty: false,
+  /** The campaign draft the form was started from, kept when it is saved. */
+  campaignRef: null as CampaignRef | null,
+  /** Saved designs carry local copies of their images; prefer those to the network. */
+  localCopies: false,
 };
 
 const listeners: Array<() => void> = [];
@@ -443,6 +455,7 @@ export function redrawNow(): void {
 // Short summaries beside each group heading, so a collapsed group still says
 // what it holds.
 function updateHints(layout: Layout): void {
+  el.copyHint.textContent = (el.postCopy.value.trim() ? "Text written" : "No text") + (isYmd(el.postOn.value) ? ", planned" : "");
   el.postHint.textContent = currentTemplate().label.replace(/\s*\(.*\)$/, "") + (layout.title ? ": " + layout.title : "");
   el.mediaHint.textContent = state.photoImg ? "Photo added" : el.presetIcon.value === "none" ? "No icon" : "Icon: " + el.presetIcon.value;
   const n = selectedPresets().length;
@@ -845,6 +858,7 @@ export function serialize(opts: { download?: boolean } = {}): URLSearchParams {
   }
   if (el.tagline.value !== CONFIG.tagline) qp.set("tagline", el.tagline.value === "" ? "none" : el.tagline.value);
   if (el.campaignBranch.checked && !el.campaignWrap.classList.contains("hidden")) qp.set("branchOnCampaign", "1");
+  if (el.postCopy.value.trim()) qp.set("copy", el.postCopy.value);
   if (opts.download) qp.set("download", "1");
   return qp;
 }
@@ -929,6 +943,8 @@ export function applyParams(qp: URLSearchParams): ApplyResult {
   if (qp.has("tagline")) applyTagline(qp.get("tagline") || "");
 
   if (qp.get("photo")) state.photoUrl = qp.get("photo");
+  if (qp.has("copy")) el.postCopy.value = (qp.get("copy") || "").slice(0, 10000);
+  updateCopyCount();
 
   if (qp.get("docs") === "1") openAccordion(el.docsBtn, el.docsPanel);
   if (qp.get("brand") === "1") {
@@ -1016,8 +1032,28 @@ export function resetForm(opts: { personal: boolean }): void {
     const p = store.getPrefs();
     if (p.styleDefaults) applyLook(p.styleDefaults);
   }
+  el.postCopy.value = "";
+  el.postOn.value = "";
+  el.postAt.value = "";
+  state.campaignRef = null;
+  state.localCopies = false;
+  updateCopyCount();
   state.currentDesignId = null;
   state.dirty = false;
+}
+
+/** The character count under the post text, against each platform's limit. */
+export function updateCopyCount(): void {
+  const text = el.postCopy.value;
+  const n = copyLength(text);
+  if (!n) {
+    el.copyCount.textContent = "Limits: X 280, Bluesky 300, Threads 500, Instagram 2,200, LinkedIn 3,000 characters.";
+    el.copyCount.classList.remove("over");
+    return;
+  }
+  const over = copyCheck(text).filter((c) => c.over > 0);
+  el.copyCount.textContent = n + (n === 1 ? " character." : " characters.") + (over.length ? " Too long for " + over.map((c) => c.platform + " (" + c.limit + ")").join(", ") + "." : " Fits every platform.");
+  el.copyCount.classList.toggle("over", over.length > 0);
 }
 
 function clearPhotoState(): void {
@@ -1047,17 +1083,37 @@ export interface FormSnapshot {
   params: string;
   photo: string | null;
   logo: string | null;
+  /** Content calendar plan; absent means leave the plan fields empty. */
+  postOn?: string | null;
+  postAt?: string | null;
+  campaign?: CampaignRef | null;
+}
+
+// A local copy of an image that came from a link, so a saved post can be
+// rebuilt later even if the original goes away. Hosts that block
+// cross-origin use cannot be copied; the link is kept either way.
+function localCopy(img: Img | null): string | null {
+  if (!img) return null;
+  try {
+    return imageToDataUrl(img, 1600, "image/jpeg", 0.9);
+  } catch {
+    return null;
+  }
 }
 
 export function captureForm(): FormSnapshot {
+  const custom = el.branch.value === "custom";
   return {
     params: serialize().toString(),
-    photo: state.photoImg && !state.photoUrl ? state.photoData : null,
-    logo: el.branch.value === "custom" && !state.customLogoUrl ? state.customLogoData : null,
+    photo: state.photoImg ? (state.photoUrl ? state.photoData || localCopy(state.photoImg) : state.photoData) : null,
+    logo: custom ? (state.customLogoUrl ? localCopy(state.customLogoImg) : state.customLogoData) : null,
+    postOn: isYmd(el.postOn.value) ? el.postOn.value : null,
+    postAt: isYmd(el.postOn.value) && isHm(el.postAt.value) ? el.postAt.value : null,
+    campaign: state.campaignRef,
   };
 }
 
-/** Replaces the form with a snapshot, loading its images. */
+/** Replaces the form with a snapshot, loading its images (local copies first). */
 export async function restoreForm(s: FormSnapshot): Promise<void> {
   resetForm({ personal: false });
   const qp = new URLSearchParams(s.params);
@@ -1065,6 +1121,10 @@ export async function restoreForm(s: FormSnapshot): Promise<void> {
   applyParams(qp);
   if (s.logo) state.customLogoData = s.logo;
   if (s.photo) state.photoData = s.photo;
+  state.localCopies = !!(s.logo || s.photo);
+  el.postOn.value = s.postOn && isYmd(s.postOn) ? s.postOn : "";
+  el.postAt.value = el.postOn.value && s.postAt && isHm(s.postAt) ? s.postAt : "";
+  state.campaignRef = s.campaign || null;
   await loadAssets();
   updatePhotoControls();
   redrawNow();
@@ -1243,10 +1303,12 @@ export async function loadAssets(): Promise<void> {
   if (el.branch.value !== "custom") {
     jobs.push(loadImg(currentBranch().logo).then((im) => void (state.branchLogoImg = im)));
   }
-  if (state.customLogoUrl) jobs.push(loadImgCors(state.customLogoUrl).then((im) => void (state.customLogoImg = im)));
+  if (state.localCopies && state.customLogoData) jobs.push(loadImg(state.customLogoData).then((im) => void (state.customLogoImg = im)));
+  else if (state.customLogoUrl) jobs.push(loadImgCors(state.customLogoUrl).then((im) => void (state.customLogoImg = im)));
   else if (state.customLogoData) jobs.push(loadImg(state.customLogoData).then((im) => void (state.customLogoImg = im)));
   else state.customLogoImg = null;
-  if (state.photoUrl) {
+  if (state.localCopies && state.photoData) jobs.push(loadImg(state.photoData).then((im) => void (state.photoImg = im)));
+  else if (state.photoUrl) {
     jobs.push(
       loadImgCors(state.photoUrl).then((im) => {
         state.photoImg = im;
@@ -1265,6 +1327,10 @@ function wireEvents(): void {
   el.reframeWrap.addEventListener("input", markDirty);
   el.reframeWrap.addEventListener("change", markDirty);
   el.controls.addEventListener("submit", (e) => e.preventDefault());
+  el.postCopy.addEventListener("input", () => {
+    updateCopyCount();
+    redraw();
+  });
 
   el.postType.addEventListener("change", async () => {
     store.setPref("postType", el.postType.value);

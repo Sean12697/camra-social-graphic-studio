@@ -114,6 +114,8 @@ export const PARAM_DEFS: ParamDef[] = [
   { key: "download", doc: "Set to <code>1</code> to export the selected sizes automatically on load." },
   { key: "zip", doc: "With <code>download=1</code>, set to <code>1</code> to deliver every selected size as one ZIP file instead of separate PNGs (or <code>0</code> to force separate PNGs). Defaults to your download format setting." },
   { key: "docs", doc: "Set to <code>1</code> to open this reference on load." },
+  { key: "calendar", doc: "Opens the content calendar, at a day when given as <code>YYYY-MM-DD</code>. Reminders for planned posts link here." },
+  { key: "copy", doc: "The post text: the words posted alongside the graphic, shown under Post text and date. Saved with designs and carried in share links. The day to post it is not part of links; it stays in your own content calendar." },
   { key: "campaign", doc: function(){
       return "Opens the Campaigns panel at one campaign, with its drafts. One of: " + CAMPAIGNS.map(function(c){ return "<code>" + esc(c.id) + "</code>"; }).join(", ") + ". Any other value opens the full list. Calendar reminders link here.";
     } },

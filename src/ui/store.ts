@@ -112,6 +112,7 @@ export type Prefs = Record<string, unknown> & {
   downloadFormat?: "png" | "zip";
   styleDefaults?: string;
   groups?: Record<string, boolean>;
+  postReminders?: boolean;
 };
 
 let backend: Backend = lsBackend();

@@ -1,0 +1,2724 @@
+From 210f8e2cd84ba23d542361e560efb44223209464 Mon Sep 17 00:00:00 2001
+From: Sean O'Mahoney <22508776+Sean12697@users.noreply.github.com>
+Date: Sun, 18 Oct 2026 17:11:03 +0000
+Subject: [PATCH] v2.4.0: campaign reminders, drafts and live calendar feeds
+
+---
+ CHANGELOG.md                  |  11 +
+ README.md                     |  23 +-
+ docs/CAMPAIGNS.md             |  60 ++++
+ docs/DIVERGENT_THINKING.md    |  15 +-
+ docs/QUERY_PARAMETERS.md      |  18 +-
+ package.json                  |   2 +-
+ public/_headers               |   6 +
+ scripts/build.mjs             |  10 +-
+ scripts/docs.mjs              |   5 +-
+ scripts/serve.mjs             |   1 +
+ src/core/campaigns.ts         | 599 ++++++++++++++++++++++++++++++++++
+ src/core/data/campaigns.json  | 253 ++++++++++++++
+ src/core/params.ts            |   4 +
+ src/core/templates.ts         | 102 +++++-
+ src/index.html                |  10 +
+ src/main.ts                   |   3 +
+ src/styles/campaigns.css      |  50 +++
+ src/styles/main.css           |   1 +
+ src/sw.ts                     |  46 ++-
+ src/ui/campaigns-ui.ts        | 513 +++++++++++++++++++++++++++++
+ src/ui/designs-ui.ts          |   2 +-
+ src/ui/idb.ts                 |  47 +++
+ src/ui/settings-ui.ts         |  48 +++
+ src/ui/store.ts               |  52 ++-
+ tests/e2e/campaigns.spec.mjs  | 107 ++++++
+ tests/e2e/helpers.mjs         |  10 +-
+ tests/unit/campaigns.test.mjs | 245 ++++++++++++++
+ tests/unit/v23.test.mjs       |   2 +-
+ 28 files changed, 2194 insertions(+), 51 deletions(-)
+ create mode 100644 docs/CAMPAIGNS.md
+ create mode 100644 src/core/campaigns.ts
+ create mode 100644 src/core/data/campaigns.json
+ create mode 100644 src/styles/campaigns.css
+ create mode 100644 src/ui/campaigns-ui.ts
+ create mode 100644 src/ui/idb.ts
+ create mode 100644 tests/e2e/campaigns.spec.mjs
+ create mode 100644 tests/unit/campaigns.test.mjs
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index af7f6ce..6c349fb 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,16 @@
+ # Changelog
+ 
++## 2.4.0
++
++### Added
++- Campaigns: 18 national and annual campaigns and days (Mild Month, Cider and Perry Month, Good Beer Guide launch, Members' Weekend, CAMRA's birthday, Cask Ale Week, Tryanuary, Beer Day Britain, World Cider Day, IPA Day, International Beer Day, International Stout Day, Small Business Saturday and the national days), with dates worked out for any year and confirmed dates where they are published.
++- Reminders under the top bar before each campaign (time to schedule posts) and while it is on, with Get drafts, Remind me later and Dismiss, and a count on the new Campaigns button.
++- Campaigns panel: what is on now, coming up and further ahead, suggested hashtags, and ready-made drafts for each campaign that open with your branch and default look and the dates and days to go filled in. Drafts can be saved to your designs in one go.
++- Calendar feeds built with the site (`calendar/campaigns.ics`, `camra.ics`, `planning.ics`) with subscribe links for Google Calendar, Outlook and Apple Calendar, plus a single-event download per campaign.
++- Settings for reminders: on or off, which kinds of campaign, how far ahead, optional system notifications (with background checks in installed Chrome and Edge apps), and bringing back dismissed reminders.
++- National campaign posts gain Stage, Dates and Days to go fields (coming soon, countdown, on now, today, last week, thank you), and a Beer or pub day post type does the same with the branch logo.
++- `campaign` link parameter, which opens the panel at one campaign, and generated `docs/CAMPAIGNS.md`.
++
+ ## 2.3.0
+ 
+ ### Added
+diff --git a/README.md b/README.md
+index c0eeaeb..beb639f 100644
+--- a/README.md
++++ b/README.md
+@@ -8,10 +8,20 @@ An unofficial, static, browser-based studio for making on-brand CAMRA social gra
+ 
+ ## What it does
+ 
+-Pick one of 22 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved, shared as links and backed up.
++Pick one of 23 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved, shared as links and backed up.
+ 
+ ![Logo picker](docs/screenshots/logos-dark.png)
+ 
++## Campaigns
++
++The studio knows the national and annual campaigns branches post about: Mild Month, Cider and Perry Month, the Good Beer Guide launch, Members' Weekend, Cask Ale Week, Beer Day Britain and more, listed in [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md). Before each one starts (two to six weeks ahead, depending on the campaign) a reminder appears under the top bar so there is time to schedule posts, and another appears while it is on. Each reminder opens the Campaigns panel, where every campaign has ready-made drafts (countdown, launch, last week, thank you) that open in the editor with your branch and default look, the dates and days to go already filled in.
++
++Reminders can be snoozed, dismissed, muted per campaign, or limited to CAMRA campaigns, beer and pub days or national days in Settings. Turning on system notifications shows them as device notifications too; an installed copy in Chrome or Edge can also check while closed. Everything is worked out on the device from the bundled list.
++
++The build publishes the same list as calendar feeds in `calendar/`: `campaigns.ics` (everything), `camra.ics` (CAMRA only) and `planning.ics` (a reminder on the day to start scheduling, for calendars such as Google that ignore alarms in subscribed feeds). Subscribe from the Campaigns panel and the calendar stays in sync with every redeploy. Set `SITE_URL` (for example `https://graphics.example.org/`) in the build environment to add a link back to each campaign's drafts in the events.
++
++To add a campaign or confirm a year's dates, edit `src/core/data/campaigns.json` and run `npm run docs`.
++
+ ## Quick start
+ 
+ ```sh
+@@ -24,15 +34,18 @@ npm run test:e2e   # Playwright (npx playwright install chromium first)
+ 
+ ## Deploying on Cloudflare
+ 
+-Set the build command to `npm run build` and the output directory to `dist`. Node 22 is read from `.nvmrc`. `public/_headers` sets the CSP and caching.
++Set the build command to `npm run build` and the output directory to `dist`. Node 22 is read from `.nvmrc`. `public/_headers` sets the CSP and caching, and serves the calendar feeds as `text/calendar`. Optionally set the `SITE_URL` environment variable to the site's address so calendar events link back to the studio.
+ 
+ ## Architecture
+ 
+ ```mermaid
+ flowchart LR
+-  core["src/core: templates, renderer, params, brand, zip, backups"] --> ui["src/ui: editor, designs, export, settings"]
++  core["src/core: templates, renderer, params, brand, campaigns, zip, backups"] --> ui["src/ui: editor, designs, campaigns, export, settings"]
++  core --> sw["src/sw.ts: offline cache, background reminders"]
+   ui --> store[("IndexedDB and localStorage")]
+-  build["scripts/build.mjs"] --> dist["dist/ static site"]
++  sw --> store
++  build["scripts/build.mjs"] --> dist["dist/ static site and calendar/*.ics"]
++  core --> build
+ ```
+ 
+ `src/core` has no DOM dependencies and is unit tested in Node. The query parameter reference is generated into [docs/QUERY_PARAMETERS.md](docs/QUERY_PARAMETERS.md) by `npm run docs` from the same schema the app uses.
+@@ -43,7 +56,7 @@ flowchart LR
+ 
+ ## Data
+ 
+-Saved designs, the content library and the remembered logo live in this browser's IndexedDB; settings in localStorage. Backups are ZIP files with `manifest.json`, `designs.json`, `library.json`, optional `prefs.json` and an `assets/` folder. `seeds/demo.json` holds the sample designs and `seeds/test.json` the edge-case fixtures used by the tests.
++Saved designs, the content library, the remembered logo and which reminders were dismissed live in this browser's IndexedDB; settings (including campaign reminder settings) in localStorage. Backups are ZIP files with `manifest.json`, `designs.json`, `library.json`, optional `prefs.json` and an `assets/` folder. `seeds/demo.json` holds the sample designs and `seeds/test.json` the edge-case fixtures used by the tests.
+ 
+ ## Screenshots
+ 
+diff --git a/docs/CAMPAIGNS.md b/docs/CAMPAIGNS.md
+new file mode 100644
+index 0000000..2a2f274
+--- /dev/null
++++ b/docs/CAMPAIGNS.md
+@@ -0,0 +1,60 @@
++# Campaigns
++
++The studio knows these national and annual campaigns. It reminds you in the studio before each one (to schedule posts) and while it is on, offers ready-made drafts, and publishes them as calendar feeds you can subscribe to. This file is generated from `src/core/data/campaigns.json` by `npm run docs`.
++
++## Calendar feeds
++
++The build writes these to `dist/calendar/`, covering last year and the next three. Subscribe to the hosted URL (not a downloaded copy) and your calendar keeps itself up to date whenever the site is redeployed.
++
++| Feed | What it holds |
++| --- | --- |
++| `calendar/campaigns.ics` | CAMRA campaigns, beer and pub days and national days, with a reminder when it is time to schedule posts. |
++| `calendar/camra.ics` | CAMRA's own campaigns and dates only, with a reminder when it is time to schedule posts. |
++| `calendar/planning.ics` | One all-day reminder before each CAMRA campaign and beer day, on the day to start scheduling posts. Works in calendars that ignore alarms in subscribed feeds, such as Google Calendar. |
++
++## CAMRA campaigns and dates
++
++| Campaign | When | Reminder | Drafts |
++| --- | --- | --- | --- |
++| [Mild Month](https://camra.org.uk/promotional-campaigns) (`mild-month`) | All of May | 28 days before | Countdown, It's here, Last week, Thank you |
++| [Cider and Perry Month](https://camra.org.uk/promotional-campaigns/cider-and-perry-months) (`cider-perry-month`) | All of July | 28 days before | Countdown, It's here, Last week, Thank you |
++| [Good Beer Guide launch](https://camra.org.uk/good-beer-guide) (`gbg-launch`) | The fourth Thursday of September (estimated). Confirmed 2025: Thursday 25 September; 2026: Thursday 24 September | 28 days before | Countdown, Launch event, Our pubs in the Guide |
++| [CAMRA Members' Weekend and AGM](https://camra.org.uk/members-weekend) (`members-weekend`) | The third Friday of April, for 3 days (estimated). Confirmed 2026: 17 to 19 April, St Albans; 2027: 16 to 18 April, Chester | 42 days before | Countdown, See you there |
++| CAMRA's birthday (`camra-birthday`) | 16 March | 14 days before | Happy birthday, Join us |
++
++## Beer and pub days
++
++| Campaign | When | Reminder | Drafts |
++| --- | --- | --- | --- |
++| Tryanuary (`tryanuary`) | All of January | 21 days before | It's here |
++| [Beer Day Britain](https://www.beerdaybritain.co.uk/) (`beer-day-britain`) | 15 June | 14 days before | Countdown, On the day |
++| [World Cider Day](https://www.worldciderday.com/) (`world-cider-day`) | 3 June | 14 days before | On the day |
++| International IPA Day (`ipa-day`) | The first Thursday of August | 14 days before | On the day |
++| International Beer Day (`international-beer-day`) | The first Friday of August | 14 days before | On the day |
++| [Cask Ale Week](https://caskaleweek.co.uk/) (`cask-ale-week`) | The third Thursday of September, for 11 days (estimated). Confirmed 2026: 17 to 27 September | 28 days before | Countdown, It's here, Thank you |
++| International Stout Day (`stout-day`) | The first Thursday of November | 14 days before | On the day |
++| [Small Business Saturday](https://smallbusinesssaturdayuk.com/) (`small-business-saturday`) | The first Saturday of December | 14 days before | On the day |
++
++## National days (reminders off by default)
++
++| Campaign | When | Reminder | Drafts |
++| --- | --- | --- | --- |
++| Burns Night (`burns-night`) | 25 January | 10 days before | On the day |
++| St David's Day (`st-davids-day`) | 1 March | 10 days before | On the day |
++| St Patrick's Day (`st-patricks-day`) | 17 March | 10 days before | On the day |
++| St George's Day (`st-georges-day`) | 23 April | 10 days before | On the day |
++| St Andrew's Day (`st-andrews-day`) | 30 November | 10 days before | On the day |
++
++## Editing
++
++Add or change a campaign in `src/core/data/campaigns.json`. A `rule` gives the date in any year: `month` (the whole month), `fixed` (a day of the year) or `nthWeekday` (for example the last Thursday of September, with `n: -1`). Mark a rule `estimate` when it follows the pattern of recent years rather than a fixed definition, and add `confirmed` dates for a year once they are announced. Draft values can use these tokens:
++
++| Token | Becomes |
++| --- | --- |
++| `{year}` | the year it happens |
++| `{edition}` | the year after, as Good Beer Guide editions are named |
++| `{dates}` | the date range, for example 1 to 31 May |
++| `{start} and {end}` | the first and last day, for example Thursday 24 September |
++| `{days}` | days to go from the day the draft is used |
++| `{venue} and {where}` | the host city, and "in" plus the host city, when confirmed |
++| `{age} and {ordinal}` | CAMRA's age that year, as a number and as 55th |
+diff --git a/docs/DIVERGENT_THINKING.md b/docs/DIVERGENT_THINKING.md
+index 11ab984..04d7245 100644
+--- a/docs/DIVERGENT_THINKING.md
++++ b/docs/DIVERGENT_THINKING.md
+@@ -10,7 +10,7 @@
+ | Alt text generator | High | Low | Built |
+ | Light theme | Medium | Low | Built |
+ | Multiple branches preconfigured from a JSON file | High | Low | Built (logo catalogue) |
+-| Post scheduling reminders via calendar file export | Medium | Medium | Proposed |
++| Post scheduling reminders via calendar file export | Medium | Medium | Built (round 3) |
+ | Branch brand kit sharing (logo plus default look in one link) | High | Medium | Proposed |
+ | Vue or Nuxt rewrite of the form layer | Medium | High | Proposed |
+ | LLM copywriting | Medium | Medium | Rejected: not wanted |
+@@ -28,3 +28,16 @@
+ | Branch kit link (branch, region and default look in one link) | High | Low | Proposed |
+ | Carousel export (several slides from one What's On list) | Medium | Medium | Proposed |
+ | Upload your own icon as a white PNG | Medium | Low | Proposed |
++
++## Round 3
++
++| Idea | Value | Effort | Status |
++| --- | --- | --- | --- |
++| Campaign reminders before and during each campaign | High | Medium | Built |
++| Ready-made drafts per campaign with dates filled in | High | Medium | Built |
++| Live calendar feeds built with the site | High | Low | Built |
++| System notifications and background checks | Medium | Medium | Built (installed Chrome and Edge only while closed) |
++| Your own branch dates (festival, AGM) in reminders and an exported feed | High | Medium | Proposed |
++| Scheduled rebuild so estimated dates refresh without a code change | Medium | Low | Proposed: needs a Cloudflare deploy hook |
++| Pull confirmed dates from CAMRA's site automatically | Medium | High | Rejected: no API, and the site must stay static |
++| Push notifications from a server | Low | High | Rejected: the site stays static and private |
+diff --git a/docs/QUERY_PARAMETERS.md b/docs/QUERY_PARAMETERS.md
+index 34f8a6b..88a5104 100644
+--- a/docs/QUERY_PARAMETERS.md
++++ b/docs/QUERY_PARAMETERS.md
+@@ -8,7 +8,7 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
+ 
+ | Parameter | What it does |
+ | --- | --- |
+-| `type` | Post type. One of: `newcomer`, `award`, `whatson`, `social`, `hybrid`, `meeting`, `festival`, `pubfeature`, `beer`, `announcement`, `pubnews`, `locale`, `heritage`, `pubcampaign`, `gbg`, `campaignmonth`, `trip`, `countdown`, `volunteers`, `join`, `thanks`, `custom`. |
++| `type` | Post type. One of: `newcomer`, `award`, `whatson`, `social`, `hybrid`, `meeting`, `festival`, `pubfeature`, `beer`, `announcement`, `pubnews`, `locale`, `heritage`, `pubcampaign`, `gbg`, `campaignmonth`, `occasion`, `trip`, `countdown`, `volunteers`, `join`, `thanks`, `custom`. |
+ | `branch` | Branch: `custom`, or one of the 217 branch ids in the logo catalogue, for example `central-manchester`. Every id is listed in docs/LOGOS.md, and the branch picker shows them all. |
+ | `branchName` | Custom branch name (with `branch=custom`). |
+ | `branchLogo` | URL of a white branch-logo PNG (with `branch=custom`). Needs permissive CORS for downloads. Included in share links when the logo came from a URL (an uploaded file cannot travel in a link). |
+@@ -50,6 +50,7 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
+ | `download` | Set to `1` to export the selected sizes automatically on load. |
+ | `zip` | With `download=1`, set to `1` to deliver every selected size as one ZIP file instead of separate PNGs (or `0` to force separate PNGs). Defaults to your download format setting. |
+ | `docs` | Set to `1` to open this reference on load. |
++| `campaign` | Opens the Campaigns panel at one campaign, with its drafts. One of: `mild-month`, `cider-perry-month`, `gbg-launch`, `members-weekend`, `camra-birthday`, `tryanuary`, `beer-day-britain`, `world-cider-day`, `ipa-day`, `international-beer-day`, `cask-ale-week`, `stout-day`, `small-business-saturday`, `burns-night`, `st-davids-day`, `st-patricks-day`, `st-georges-day`, `st-andrews-day`. Any other value opens the full list. Calendar reminders link here. |
+ | `branchOnCampaign` | Set to `1` to show the branch logo instead of the CAMRA logo on campaign posts (One to Try, Real Cider and Perry). Off-brand but allowed: campaigns should normally show the CAMRA logo, so a warning appears. |
+ | `brand` | Set to `1` to open the brand guidelines panel on load. |
+ | `tagline` | Tagline to show: one of the two approved taglines (`Pubs, Pints, People.` or `Campaigning for pubs, pints and people since 1971`), or `none` to hide it (the tagline is optional). Anything else keeps the default tagline and shows a notice. Defaults to `Pubs, Pints, People.` |
+@@ -192,6 +193,21 @@ List fields take a URL-encoded JSON array of objects, for example `events=[{"nam
+ | Parameter | Type |
+ | --- | --- |
+ | `campaignName` | suggest (Mild Month, Cider and Perry Month, Community Pubs Month, Cask Ale Week) |
++| `phase` (optional) | select (, soon, countdown, now, today, last, thanks) |
++| `dates` (optional) | text |
++| `days` (optional) | text |
++| `heading` (optional) | text |
++| `note` (optional) | textarea |
++| `pubs` | list: URL-encoded JSON array of objects with keys pub, detail |
++
++### Beer or pub day (IPA Day, St George's Day) (`type=occasion`)
++
++| Parameter | Type |
++| --- | --- |
++| `occasion` | suggest (Cask Ale Week, Tryanuary, Beer Day Britain, World Cider Day, International IPA Day, International Beer Day, International Stout Day, Small Business Saturday, CAMRA's birthday, Burns Night, St David's Day, St Patrick's Day, St George's Day, St Andrew's Day) |
++| `phase` (optional) | select (, soon, countdown, now, today, last, thanks) |
++| `dates` (optional) | text |
++| `days` (optional) | text |
+ | `heading` (optional) | text |
+ | `note` (optional) | textarea |
+ | `pubs` | list: URL-encoded JSON array of objects with keys pub, detail |
+diff --git a/package.json b/package.json
+index 4ecb123..8013380 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "camra-social-graphic-studio",
+-  "version": "2.3.0",
++  "version": "2.4.0",
+   "description": "An unofficial, browser-based studio for making on-brand CAMRA social graphics. Nothing is uploaded.",
+   "private": true,
+   "type": "module",
+diff --git a/public/_headers b/public/_headers
+index 42c924c..67065f7 100644
+--- a/public/_headers
++++ b/public/_headers
+@@ -22,3 +22,9 @@
+ 
+ /manifest.webmanifest
+   Content-Type: application/manifest+json
++
++# Campaign calendar feeds: calendar apps poll these, so keep them fresh.
++/calendar/*
++  Content-Type: text/calendar; charset=utf-8
++  Cache-Control: public, max-age=3600
++  Access-Control-Allow-Origin: *
+diff --git a/scripts/build.mjs b/scripts/build.mjs
+index d52da53..1b308e4 100644
+--- a/scripts/build.mjs
++++ b/scripts/build.mjs
+@@ -12,6 +12,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statS
+ import { dirname, join, relative } from "node:path";
+ import { fileURLToPath } from "node:url";
+ import { iconFiles } from "./icon.mjs";
++import { FEEDS, feedFor } from "../src/core/campaigns.ts";
+ 
+ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+ const dist = join(root, "dist");
+@@ -83,13 +84,20 @@ export async function buildSite() {
+   cpSync(join(root, "CHANGELOG.md"), join(dist, "CHANGELOG.md"));
+   for (const [path, data] of Object.entries(iconFiles())) write(join(dist, path), data);
+ 
++  // Campaign calendar feeds. Calendars that subscribe to these URLs pick up
++  // every redeploy. SITE_URL (for example https://graphics.example.org/) adds
++  // links back to the studio's drafts in each event; without it they are left out.
++  const buildDate = new Date(process.env.SOURCE_DATE_EPOCH ? Number(process.env.SOURCE_DATE_EPOCH) * 1000 : Date.now());
++  const siteUrl = process.env.SITE_URL || pkg.homepage || undefined;
++  for (const f of FEEDS) write(join(dist, f.file), feedFor(f, buildDate, { siteUrl, version: pkg.version }));
++
+   // Service worker, with the app shell to precache and a cache name unique
+   // to this build's contents.
+   const shell = walk(dist)
+     .map((p) => relative(dist, p).split("\\").join("/"))
+     // The logo library (hundreds of files) is cached as each logo is used,
+     // not up front; the CAMRA logo and the default branch are precached.
+-    .filter((p) => !p.endsWith(".map") && p !== "_headers" && p !== "robots.txt" && !p.startsWith("assets/fonts/"))
++    .filter((p) => !p.endsWith(".map") && p !== "_headers" && p !== "robots.txt" && !p.startsWith("assets/fonts/") && !p.startsWith("calendar/"))
+     .filter((p) => !/^assets\/logos\/(branches|regions|sub-brands|thumbs)\//.test(p) || p === "assets/logos/branches/central-manchester.png")
+     .sort();
+   const hash = createHash("sha256");
+diff --git a/scripts/docs.mjs b/scripts/docs.mjs
+index 5b626c0..1eb81f1 100644
+--- a/scripts/docs.mjs
++++ b/scripts/docs.mjs
+@@ -1,5 +1,6 @@
+ // Generates the docs that must match the code: docs/QUERY_PARAMETERS.md from
+-// the parameter schema, docs/LOGOS.md from the logo catalogue and
++// the parameter schema, docs/LOGOS.md from the logo catalogue,
++// docs/CAMPAIGNS.md from the campaign list and
+ // docs/assets/logo.svg from the icon definition.
+ //   node scripts/docs.mjs           write them
+ //   node scripts/docs.mjs --check   fail if the committed copies are stale (CI)
+@@ -9,11 +10,13 @@ import { dirname, join } from "node:path";
+ import { fileURLToPath } from "node:url";
+ import { docsMarkdown, logosMarkdown } from "../src/core/params.ts";
+ import { iconSvg } from "./icon.mjs";
++import { campaignsMarkdown } from "../src/core/campaigns.ts";
+ 
+ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+ const files = {
+   "docs/QUERY_PARAMETERS.md": docsMarkdown(),
+   "docs/LOGOS.md": logosMarkdown(),
++  "docs/CAMPAIGNS.md": campaignsMarkdown(),
+   "docs/assets/logo.svg": iconSvg(),
+ };
+ const check = process.argv.includes("--check");
+diff --git a/scripts/serve.mjs b/scripts/serve.mjs
+index 4c73eb8..28a04ae 100644
+--- a/scripts/serve.mjs
++++ b/scripts/serve.mjs
+@@ -31,6 +31,7 @@ const TYPES = {
+   ".md": "text/markdown; charset=utf-8",
+   ".txt": "text/plain; charset=utf-8",
+   ".zip": "application/zip",
++  ".ics": "text/calendar; charset=utf-8",
+ };
+ 
+ // Parses Cloudflare's _headers format: a path pattern line, then indented
+diff --git a/src/core/campaigns.ts b/src/core/campaigns.ts
+new file mode 100644
+index 0000000..a3d32bf
+--- /dev/null
++++ b/src/core/campaigns.ts
+@@ -0,0 +1,599 @@
++// National and annual campaigns: the catalogue, the dates each one falls on in
++// any year, which reminders are due, the ready-made drafts and the iCalendar
++// feed. Pure functions with no DOM, shared by the app, the service worker and
++// the build (which writes the static .ics feeds).
++//
++// Dates are plain calendar days ("YYYY-MM-DD"), never instants, so time zones
++// and clock changes cannot move a campaign by a day.
++
++import data from "./data/campaigns.json" with { type: "json" };
++
++export type CategoryId = "camra" | "beer" | "national";
++export type DraftPhase = "before" | "start" | "end" | "after";
++
++export interface Category {
++  id: CategoryId;
++  label: string;
++  /** The label as it reads mid-sentence. */
++  phrase: string;
++  defaultOn: boolean;
++}
++
++export type Rule =
++  | { kind: "month"; month: number }
++  | { kind: "fixed"; month: number; day: number; days?: number }
++  | { kind: "nthWeekday"; month: number; weekday: number; n: number; days?: number; estimate?: boolean };
++
++export interface Draft {
++  id: string;
++  name: string;
++  phase: DraftPhase;
++  /** Post type id. */
++  type: string;
++  icon?: string;
++  sizes?: string;
++  values: Record<string, string | Array<Record<string, string>>>;
++}
++
++export interface Campaign {
++  id: string;
++  name: string;
++  category: CategoryId;
++  summary: string;
++  url?: string;
++  hashtags?: string[];
++  rule: Rule;
++  confirmed?: Record<string, { start: string; end: string; venue?: string }>;
++  leadDays: number;
++  drafts: Draft[];
++}
++
++export interface Occurrence {
++  campaign: Campaign;
++  year: number;
++  start: string;
++  end: string;
++  /** True when the dates follow the pattern of earlier years and are not yet confirmed. */
++  estimated: boolean;
++  venue?: string;
++}
++
++export const CATEGORIES = data.categories as Category[];
++export const CAMPAIGNS = data.campaigns as unknown as Campaign[];
++export const DEFAULT_SIZES = "ig-square,ig-story,fb-landscape";
++/** CAMRA was founded on 16 March 1971. */
++export const CAMRA_FOUNDED = 1971;
++
++export function campaignById(id: string | null | undefined): Campaign | undefined {
++  return CAMPAIGNS.find((c) => c.id === id);
++}
++
++// --- calendar days ---
++
++const DAY = 86400000;
++const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
++const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
++
++function pad(n: number): string {
++  return (n < 10 ? "0" : "") + n;
++}
++
++export function ymd(y: number, m: number, d: number): string {
++  return y + "-" + pad(m) + "-" + pad(d);
++}
++
++/** Today in the device's own time zone, as YYYY-MM-DD. */
++export function localYmd(now: Date = new Date()): string {
++  return ymd(now.getFullYear(), now.getMonth() + 1, now.getDate());
++}
++
++function toUtc(s: string): number {
++  const [y, m, d] = s.split("-").map(Number);
++  return Date.UTC(y, m - 1, d);
++}
++
++function fromUtc(t: number): string {
++  const d = new Date(t);
++  return ymd(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
++}
++
++export function addDays(s: string, n: number): string {
++  return fromUtc(toUtc(s) + n * DAY);
++}
++
++/** Whole days from a to b (positive when b is later). */
++export function daysBetween(a: string, b: string): number {
++  return Math.round((toUtc(b) - toUtc(a)) / DAY);
++}
++
++function daysInMonth(y: number, m: number): number {
++  return new Date(Date.UTC(y, m, 0)).getUTCDate();
++}
++
++/** The nth weekday (0 Sunday to 6 Saturday) of a month; n = -1 is the last one. */
++export function nthWeekday(y: number, m: number, weekday: number, n: number): string {
++  if (n < 0) {
++    const last = daysInMonth(y, m);
++    const wd = new Date(Date.UTC(y, m - 1, last)).getUTCDay();
++    return ymd(y, m, last - ((wd - weekday + 7) % 7));
++  }
++  const wd1 = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
++  return ymd(y, m, 1 + ((weekday - wd1 + 7) % 7) + (n - 1) * 7);
++}
++
++function parts(s: string): { y: number; m: number; d: number; wd: number } {
++  const [y, m, d] = s.split("-").map(Number);
++  return { y, m, d, wd: new Date(Date.UTC(y, m - 1, d)).getUTCDay() };
++}
++
++/** "Thursday 24 September" */
++export function longDate(s: string): string {
++  const p = parts(s);
++  return WEEKDAYS[p.wd] + " " + p.d + " " + MONTHS[p.m - 1];
++}
++
++/** "Thu 24 Sep" */
++export function shortDate(s: string): string {
++  const p = parts(s);
++  return WEEKDAYS[p.wd].slice(0, 3) + " " + p.d + " " + MONTHS[p.m - 1].slice(0, 3);
++}
++
++/** "1 to 31 May", "30 April to 2 May", or the long date for a single day. */
++export function rangeLabel(start: string, end: string, withYear = false): string {
++  const a = parts(start);
++  const b = parts(end);
++  const yr = withYear ? " " + b.y : "";
++  if (start === end) return longDate(start) + yr;
++  if (a.m === b.m && a.y === b.y) return a.d + " to " + b.d + " " + MONTHS[a.m - 1] + yr;
++  return a.d + " " + MONTHS[a.m - 1] + (a.y !== b.y ? " " + a.y : "") + " to " + b.d + " " + MONTHS[b.m - 1] + yr;
++}
++
++export function ordinal(n: number): string {
++  const t = n % 100;
++  if (t >= 11 && t <= 13) return n + "th";
++  return n + (["th", "st", "nd", "rd"][n % 10] || "th");
++}
++
++// --- occurrences ---
++
++export function occurrence(c: Campaign, year: number): Occurrence {
++  const conf = c.confirmed && c.confirmed[String(year)];
++  if (conf) return { campaign: c, year, start: conf.start, end: conf.end, estimated: false, venue: conf.venue };
++  const r = c.rule;
++  let start: string;
++  let end: string;
++  if (r.kind === "month") {
++    start = ymd(year, r.month, 1);
++    end = ymd(year, r.month, daysInMonth(year, r.month));
++  } else if (r.kind === "fixed") {
++    start = ymd(year, r.month, r.day);
++    end = addDays(start, (r.days || 1) - 1);
++  } else {
++    start = nthWeekday(year, r.month, r.weekday, r.n);
++    end = addDays(start, (r.days || 1) - 1);
++  }
++  return { campaign: c, year, start, end, estimated: r.kind === "nthWeekday" && !!r.estimate };
++}
++
++/** Every occurrence of the given campaigns from one year to another, in date order. */
++export function occurrencesBetween(list: Campaign[], fromYear: number, toYear: number): Occurrence[] {
++  const out: Occurrence[] = [];
++  for (let y = fromYear; y <= toYear; y++) list.forEach((c) => out.push(occurrence(c, y)));
++  return out.sort((a, b) => a.start.localeCompare(b.start) || a.campaign.name.localeCompare(b.campaign.name));
++}
++
++export type Status = "live" | "soon" | "later" | "past";
++
++export interface TimelineEntry {
++  occ: Occurrence;
++  status: Status;
++  /** Days until it starts (negative once started). */
++  daysToStart: number;
++  /** Days left including today, while it is on. */
++  daysLeft: number;
++}
++
++/** What is on now and what is coming up in the next `horizon` days. */
++export function timeline(list: Campaign[], today: string, horizon = 366, leadOverride: number | null = null): TimelineEntry[] {
++  const y = parts(today).y;
++  const last = addDays(today, horizon);
++  return occurrencesBetween(list, y - 1, y + 2)
++    .filter((o) => o.end >= today && o.start <= last)
++    .map((occ) => {
++      const daysToStart = daysBetween(today, occ.start);
++      const live = occ.start <= today && today <= occ.end;
++      const lead = leadOverride || occ.campaign.leadDays;
++      const status: Status = live ? "live" : daysToStart <= lead ? "soon" : "later";
++      return { occ, status, daysToStart, daysLeft: live ? daysBetween(today, occ.end) + 1 : 0 };
++    });
++}
++
++// --- reminders ---
++
++export interface CampaignPrefs {
++  /** Show reminders in the studio. */
++  enabled: boolean;
++  categories: CategoryId[];
++  /** Days of warning before a campaign starts; null uses each campaign's own. */
++  leadDays: number | null;
++  /** Also show a system notification (when the browser allows it). */
++  system: boolean;
++  /** Campaign ids with reminders turned off. */
++  muted: string[];
++}
++
++export interface AlertState {
++  dismissed: Record<string, boolean>;
++  /** Reminder key to the day it shows again. */
++  snoozed: Record<string, string>;
++  /** Reminder keys already sent as a system notification. */
++  notified: Record<string, boolean>;
++}
++
++export const DEFAULT_PREFS: CampaignPrefs = {
++  enabled: true,
++  categories: CATEGORIES.filter((c) => c.defaultOn).map((c) => c.id),
++  leadDays: null,
++  system: false,
++  muted: [],
++};
++
++export const LEAD_OPTIONS: Array<[string, string]> = [
++  ["", "Each campaign's own (10 days to 6 weeks)"],
++  ["7", "1 week"],
++  ["14", "2 weeks"],
++  ["28", "4 weeks"],
++  ["42", "6 weeks"],
++];
++
++/** Fills in anything missing or malformed with the defaults. */
++export function normalisePrefs(raw: unknown): CampaignPrefs {
++  const p = (raw && typeof raw === "object" ? raw : {}) as Partial<CampaignPrefs>;
++  const known = new Set(CATEGORIES.map((c) => c.id));
++  return {
++    enabled: typeof p.enabled === "boolean" ? p.enabled : DEFAULT_PREFS.enabled,
++    categories: Array.isArray(p.categories) ? p.categories.filter((c) => known.has(c)) : DEFAULT_PREFS.categories.slice(),
++    leadDays: typeof p.leadDays === "number" && p.leadDays > 0 && p.leadDays <= 120 ? Math.round(p.leadDays) : null,
++    system: p.system === true,
++    muted: Array.isArray(p.muted) ? p.muted.filter((m) => typeof m === "string") : [],
++  };
++}
++
++export function emptyState(): AlertState {
++  return { dismissed: {}, snoozed: {}, notified: {} };
++}
++
++export function normaliseState(raw: unknown): AlertState {
++  const s = (raw && typeof raw === "object" ? raw : {}) as Partial<AlertState>;
++  const obj = (x: unknown) => (x && typeof x === "object" && !Array.isArray(x) ? (x as Record<string, never>) : {});
++  return { dismissed: { ...obj(s.dismissed) }, snoozed: { ...obj(s.snoozed) }, notified: { ...obj(s.notified) } };
++}
++
++export type AlertPhase = "prep" | "live";
++
++export interface Alert {
++  key: string;
++  phase: AlertPhase;
++  entry: TimelineEntry;
++  title: string;
++  body: string;
++}
++
++export function alertKey(o: Occurrence, phase: AlertPhase): string {
++  return o.campaign.id + ":" + o.year + ":" + phase;
++}
++
++/** The words of a reminder, shared by the banner and system notifications. */
++export function alertText(e: TimelineEntry, phase: AlertPhase): { title: string; body: string } {
++  const o = e.occ;
++  const name = o.campaign.name;
++  const oneDay = o.start === o.end;
++  const est = o.estimated ? " (date estimated)" : "";
++  if (phase === "live") {
++    if (oneDay) return { title: name + " is today", body: "Your drafts are ready if you still need a post." };
++    const left = e.daysLeft === 1 ? "Last day today." : e.daysLeft + " days left, until " + longDate(o.end) + ".";
++    return { title: name + " is on now", body: left + " Your drafts are ready if you still need a post." };
++  }
++  const when = e.daysToStart === 1 ? "tomorrow" : "in " + e.daysToStart + " days";
++  return {
++    title: name + (oneDay ? " is " : " starts ") + when,
++    body: "On " + longDate(o.start) + est + ". Time to schedule your posts.",
++  };
++}
++
++/** Reminders due today: one before each campaign (to schedule posts) and one while it is on. */
++export function dueAlerts(list: Campaign[], today: string, prefs: CampaignPrefs, state: AlertState): Alert[] {
++  if (!prefs.enabled) return [];
++  const cats = new Set(prefs.categories);
++  const muted = new Set(prefs.muted);
++  const active = list.filter((c) => cats.has(c.category) && !muted.has(c.id));
++  const out: Alert[] = [];
++  timeline(active, today, 120, prefs.leadDays).forEach((entry) => {
++    if (entry.status === "later") return;
++    const phase: AlertPhase = entry.status === "live" ? "live" : "prep";
++    const key = alertKey(entry.occ, phase);
++    if (state.dismissed[key]) return;
++    const until = state.snoozed[key];
++    if (until && until > today) return;
++    out.push({ key, phase, entry, ...alertText(entry, phase) });
++  });
++  return out.sort((a, b) => (a.phase === b.phase ? a.entry.occ.start.localeCompare(b.entry.occ.start) : a.phase === "live" ? -1 : 1));
++}
++
++/** Drops state for campaigns that ended more than a year ago, so it never grows without bound. */
++export function pruneState(state: AlertState, today: string): AlertState {
++  const minYear = parts(today).y - 1;
++  const keep = (k: string) => {
++    const y = Number(k.split(":")[1]);
++    return !Number.isFinite(y) || y >= minYear;
++  };
++  const f = <T>(r: Record<string, T>) => Object.fromEntries(Object.entries(r).filter(([k]) => keep(k)));
++  return { dismissed: f(state.dismissed), snoozed: f(state.snoozed), notified: f(state.notified) };
++}
++
++// --- drafts ---
++
++/** The values the {tokens} in drafts and hashtags are replaced with. */
++export function tokens(o: Occurrence, today: string): Record<string, string> {
++  const days = Math.max(1, daysBetween(today, o.start));
++  const age = o.year - CAMRA_FOUNDED;
++  return {
++    year: String(o.year),
++    edition: String(o.year + 1),
++    dates: rangeLabel(o.start, o.end),
++    start: longDate(o.start),
++    end: longDate(o.end),
++    days: String(days),
++    venue: o.venue || "",
++    where: o.venue ? "in " + o.venue : "",
++    age: String(age),
++    ordinal: ordinal(age),
++  };
++}
++
++export function fillTokens(s: string, t: Record<string, string>): string {
++  return s
++    .replace(/\{(\w+)\}/g, (m, k: string) => (Object.prototype.hasOwnProperty.call(t, k) ? t[k] : m))
++    .replace(/[ \t]{2,}/g, " ")
++    .replace(/ +([.,:])/g, "$1")
++    .split("\n")
++    .map((l) => l.trim())
++    .join("\n");
++}
++
++export function hashtags(o: Occurrence): string[] {
++  const t = tokens(o, o.start);
++  return (o.campaign.hashtags || []).map((h) => fillTokens(h, t));
++}
++
++/** A draft as the query string a share link or saved design uses (without a branch). */
++export function draftParams(d: Draft, o: Occurrence, today: string): URLSearchParams {
++  const t = tokens(o, today);
++  const qp = new URLSearchParams();
++  qp.set("type", d.type);
++  Object.entries(d.values).forEach(([k, v]) => {
++    if (Array.isArray(v)) qp.set(k, JSON.stringify(v.map((row) => Object.fromEntries(Object.entries(row).map(([rk, rv]) => [rk, fillTokens(rv, t)])))));
++    else qp.set(k, fillTokens(v, t));
++  });
++  if (d.icon) qp.set("icon", d.icon);
++  qp.set("sizes", d.sizes || DEFAULT_SIZES);
++  return qp;
++}
++
++/** The draft that suits the moment: before it starts, while it is on, or after. */
++export function suggestedDraft(e: TimelineEntry): Draft | undefined {
++  const drafts = e.occ.campaign.drafts;
++  const want: DraftPhase[] = e.status === "live" ? (e.daysLeft <= 7 && e.occ.start !== e.occ.end && daysBetween(e.occ.start, e.occ.end) > 7 ? ["end", "start"] : ["start"]) : ["before", "start"];
++  for (const p of want) {
++    const d = drafts.find((x) => x.phase === p);
++    if (d) return d;
++  }
++  return drafts[0];
++}
++
++export const PHASE_LABELS: Record<DraftPhase, string> = { before: "Before", start: "When it starts", end: "Near the end", after: "Afterwards" };
++
++// --- iCalendar (RFC 5545) ---
++
++function icsText(s: string): string {
++  return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
++}
++
++/** Folds a content line to 75 octets, never splitting a character. */
++export function foldLine(line: string): string {
++  const enc = new TextEncoder();
++  if (enc.encode(line).length <= 75) return line;
++  const out: string[] = [];
++  let cur = "";
++  let bytes = 0;
++  let limit = 75;
++  for (const ch of line) {
++    const n = enc.encode(ch).length;
++    if (bytes + n > limit) {
++      out.push(cur);
++      cur = "";
++      bytes = 0;
++      limit = 74;
++    }
++    cur += ch;
++    bytes += n;
++  }
++  out.push(cur);
++  return out.join("\r\n ");
++}
++
++function stamp(d: Date): string {
++  return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
++}
++
++const compact = (s: string) => s.replace(/-/g, "");
++
++export interface FeedOptions {
++  name: string;
++  description: string;
++  /** DTSTAMP for every event: the build time. */
++  now: Date;
++  /** Absolute URL of the studio, for links back to the drafts. Optional. */
++  siteUrl?: string;
++  /** "events": the campaigns themselves, with alarms. "planning": one reminder on the day to start scheduling posts. */
++  kind?: "events" | "planning";
++  leadOverride?: number | null;
++  version?: string;
++}
++
++export const UID_DOMAIN = "camra-graphics-studio";
++
++/** A complete iCalendar file for the given occurrences. */
++export function buildIcs(list: Occurrence[], o: FeedOptions): string {
++  const kind = o.kind || "events";
++  const lines: string[] = [
++    "BEGIN:VCALENDAR",
++    "VERSION:2.0",
++    "PRODID:-//Sean O'Mahoney//CAMRA Social Graphics Studio " + (o.version || "") + "//EN",
++    "CALSCALE:GREGORIAN",
++    "METHOD:PUBLISH",
++    "X-WR-CALNAME:" + icsText(o.name),
++    "X-WR-CALDESC:" + icsText(o.description),
++    "X-WR-TIMEZONE:Europe/London",
++    "REFRESH-INTERVAL;VALUE=DURATION:P1D",
++    "X-PUBLISHED-TTL:P1D",
++  ];
++  const ts = stamp(o.now);
++  list.forEach((occ) => {
++    const c = occ.campaign;
++    const lead = o.leadOverride || c.leadDays;
++    const link = o.siteUrl ? o.siteUrl.replace(/\/?$/, "/") + "?campaign=" + encodeURIComponent(c.id) : "";
++    const tags = hashtags(occ);
++    const desc = [
++      c.summary,
++      occ.estimated ? "Date estimated from earlier years. Check the official announcement." : "",
++      occ.venue ? "Where: " + occ.venue + "." : "",
++      tags.length ? "Suggested hashtags: " + tags.join(" ") : "",
++      c.url ? "More: " + c.url : "",
++      link ? "Ready-made graphics: " + link : "",
++    ].filter(Boolean).join("\n\n");
++    lines.push("BEGIN:VEVENT");
++    if (kind === "planning") {
++      const day = addDays(occ.start, -lead);
++      lines.push(
++        "UID:" + c.id + "-" + occ.year + "-plan@" + UID_DOMAIN,
++        "DTSTAMP:" + ts,
++        "DTSTART;VALUE=DATE:" + compact(day),
++        "DTEND;VALUE=DATE:" + compact(addDays(day, 1)),
++        "SUMMARY:" + icsText("Schedule posts: " + c.name + " (" + shortDate(occ.start) + ")"),
++        "DESCRIPTION:" + icsText(c.name + " " + (occ.start === occ.end ? "is" : "starts") + " on " + longDate(occ.start) + ", in " + lead + " days. Time to prepare and schedule your posts.\n\n" + desc),
++      );
++    } else {
++      lines.push(
++        "UID:" + c.id + "-" + occ.year + "@" + UID_DOMAIN,
++        "DTSTAMP:" + ts,
++        "DTSTART;VALUE=DATE:" + compact(occ.start),
++        "DTEND;VALUE=DATE:" + compact(addDays(occ.end, 1)),
++        "SUMMARY:" + icsText(c.name + (occ.estimated ? " (date estimated)" : "")),
++        "DESCRIPTION:" + icsText(desc),
++        "STATUS:" + (occ.estimated ? "TENTATIVE" : "CONFIRMED"),
++      );
++    }
++    lines.push("CATEGORIES:" + icsText(CATEGORIES.find((x) => x.id === c.category)?.label || c.category));
++    if (c.url) lines.push("URL:" + c.url);
++    lines.push("TRANSP:TRANSPARENT");
++    if (kind === "events") {
++      lines.push(
++        "BEGIN:VALARM",
++        "ACTION:DISPLAY",
++        "DESCRIPTION:" + icsText(c.name + " " + (occ.start === occ.end ? "is" : "starts") + " in " + lead + " days: time to schedule your posts"),
++        "TRIGGER:-P" + lead + "D",
++        "END:VALARM",
++        "BEGIN:VALARM",
++        "ACTION:DISPLAY",
++        "DESCRIPTION:" + icsText(c.name + (occ.start === occ.end ? " is today" : " starts today")),
++        "TRIGGER:PT9H",
++        "END:VALARM",
++      );
++    }
++    lines.push("END:VEVENT");
++  });
++  lines.push("END:VCALENDAR");
++  return lines.map(foldLine).join("\r\n") + "\r\n";
++}
++
++export interface Feed {
++  file: string;
++  name: string;
++  /** Label for the feed picker. */
++  short: string;
++  description: string;
++  kind: "events" | "planning";
++  categories: CategoryId[];
++}
++
++/** The static feeds the build writes to calendar/. */
++export const FEEDS: Feed[] = [
++  { file: "calendar/campaigns.ics", short: "Everything", name: "CAMRA campaigns and beer days", description: "CAMRA campaigns, beer and pub days and national days, with a reminder when it is time to schedule posts. From the unofficial CAMRA Social Graphics Studio.", kind: "events", categories: ["camra", "beer", "national"] },
++  { file: "calendar/camra.ics", short: "CAMRA only", name: "CAMRA campaigns", description: "CAMRA's own campaigns and dates only, with a reminder when it is time to schedule posts. From the unofficial CAMRA Social Graphics Studio.", kind: "events", categories: ["camra"] },
++  { file: "calendar/planning.ics", short: "Planning reminders", name: "CAMRA campaigns: schedule your posts", description: "One all-day reminder before each CAMRA campaign and beer day, on the day to start scheduling posts. Works in calendars that ignore alarms in subscribed feeds, such as Google Calendar.", kind: "planning", categories: ["camra", "beer"] },
++];
++
++export function feedFor(f: Feed, buildDate: Date, o: { siteUrl?: string; version?: string } = {}): string {
++  const y = buildDate.getUTCFullYear();
++  const cats = new Set(f.categories);
++  const occs = occurrencesBetween(CAMPAIGNS.filter((c) => cats.has(c.category)), y - 1, y + 3);
++  return buildIcs(occs, { name: f.name, description: f.description, now: buildDate, siteUrl: o.siteUrl, kind: f.kind, version: o.version });
++}
++
++/** docs/CAMPAIGNS.md: every campaign, its date rule and its drafts. */
++export function campaignsMarkdown(): string {
++  const out: string[] = [];
++  out.push("# Campaigns");
++  out.push("");
++  out.push("The studio knows these national and annual campaigns. It reminds you in the studio before each one (to schedule posts) and while it is on, offers ready-made drafts, and publishes them as calendar feeds you can subscribe to. This file is generated from `src/core/data/campaigns.json` by `npm run docs`.");
++  out.push("");
++  out.push("## Calendar feeds");
++  out.push("");
++  out.push("The build writes these to `dist/calendar/`, covering last year and the next three. Subscribe to the hosted URL (not a downloaded copy) and your calendar keeps itself up to date whenever the site is redeployed.");
++  out.push("");
++  out.push("| Feed | What it holds |");
++  out.push("| --- | --- |");
++  FEEDS.forEach((f) => out.push("| `" + f.file + "` | " + f.description.replace(/ From the unofficial CAMRA Social Graphics Studio\./, "") + " |"));
++  CATEGORIES.forEach((cat) => {
++    out.push("");
++    out.push("## " + cat.label + (cat.defaultOn ? "" : " (reminders off by default)"));
++    out.push("");
++    out.push("| Campaign | When | Reminder | Drafts |");
++    out.push("| --- | --- | --- | --- |");
++    CAMPAIGNS.filter((c) => c.category === cat.id).forEach((c) => {
++      const conf = Object.entries(c.confirmed || {}).map(([y, v]) => y + ": " + rangeLabel(v.start, v.end) + (v.venue ? ", " + v.venue : "")).join("; ");
++      const name = c.url ? "[" + c.name + "](" + c.url + ")" : c.name;
++      out.push("| " + name + " (`" + c.id + "`) | " + ruleText(c.rule) + (conf ? ". Confirmed " + conf : "") + " | " + c.leadDays + " days before | " + c.drafts.map((d) => d.name).join(", ") + " |");
++    });
++  });
++  out.push("");
++  out.push("## Editing");
++  out.push("");
++  out.push("Add or change a campaign in `src/core/data/campaigns.json`. A `rule` gives the date in any year: `month` (the whole month), `fixed` (a day of the year) or `nthWeekday` (for example the last Thursday of September, with `n: -1`). Mark a rule `estimate` when it follows the pattern of recent years rather than a fixed definition, and add `confirmed` dates for a year once they are announced. Draft values can use these tokens:");
++  out.push("");
++  out.push("| Token | Becomes |");
++  out.push("| --- | --- |");
++  const ex: Array<[string, string]> = [
++    ["{year}", "the year it happens"],
++    ["{edition}", "the year after, as Good Beer Guide editions are named"],
++    ["{dates}", "the date range, for example 1 to 31 May"],
++    ["{start} and {end}", "the first and last day, for example Thursday 24 September"],
++    ["{days}", "days to go from the day the draft is used"],
++    ["{venue} and {where}", "the host city, and \"in\" plus the host city, when confirmed"],
++    ["{age} and {ordinal}", "CAMRA's age that year, as a number and as 55th"],
++  ];
++  ex.forEach(([k, v]) => out.push("| `" + k + "` | " + v + " |"));
++  out.push("");
++  return out.join("\n");
++}
++
++const NTH = ["", "first", "second", "third", "fourth", "fifth"];
++
++export function ruleText(r: Rule): string {
++  if (r.kind === "month") return "All of " + MONTHS[r.month - 1];
++  if (r.kind === "fixed") return r.day + " " + MONTHS[r.month - 1] + (r.days && r.days > 1 ? " for " + r.days + " days" : "");
++  const which = r.n < 0 ? "last" : NTH[r.n] || r.n + "th";
++  const base = "The " + which + " " + WEEKDAYS[r.weekday] + " of " + MONTHS[r.month - 1] + (r.days && r.days > 1 ? ", for " + r.days + " days" : "");
++  return base + (r.estimate ? " (estimated)" : "");
++}
+diff --git a/src/core/data/campaigns.json b/src/core/data/campaigns.json
+new file mode 100644
+index 0000000..ff718af
+--- /dev/null
++++ b/src/core/data/campaigns.json
+@@ -0,0 +1,253 @@
++{
++  "note": "Known national and annual campaigns. Rules generate the dates for any year; confirmed entries override a rule for one year. Rules marked estimate follow the pattern of recent years and should be checked each year. Draft values may use the tokens listed in docs/CAMPAIGNS.md. Run npm run docs after editing.",
++  "categories": [
++    { "id": "camra", "label": "CAMRA campaigns and dates", "phrase": "CAMRA campaigns and dates", "defaultOn": true },
++    { "id": "beer", "label": "Beer and pub days", "phrase": "beer and pub days", "defaultOn": true },
++    { "id": "national", "label": "National days", "phrase": "national days", "defaultOn": false }
++  ],
++  "campaigns": [
++    {
++      "id": "mild-month",
++      "name": "Mild Month",
++      "category": "camra",
++      "summary": "CAMRA's month-long celebration of mild every May: make yours a Mild this May. Branches run mild trails and pubs put a mild on the bar.",
++      "url": "https://camra.org.uk/promotional-campaigns",
++      "hashtags": ["#MildMay", "#MildMonth"],
++      "rule": { "kind": "month", "month": 5 },
++      "leadDays": 28,
++      "drafts": [
++        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "campaignmonth", "icon": "beer", "values": { "campaignName": "Mild Month", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "Make yours a Mild this May." } },
++        { "id": "on-now", "name": "It's here", "phase": "start", "type": "campaignmonth", "icon": "beer", "values": { "campaignName": "Mild Month", "phase": "now", "heading": "Make yours a Mild this May", "dates": "{dates}", "note": "Ask for a mild at the bar all month.", "pubs": [{ "pub": "Pub name", "detail": "Which mild is on" }, { "pub": "Pub name", "detail": "Which mild is on" }] } },
++        { "id": "last-week", "name": "Last week", "phase": "end", "type": "campaignmonth", "icon": "beer", "values": { "campaignName": "Mild Month", "phase": "last", "heading": "Last week of Mild Month", "note": "There is still time to make yours a mild." } },
++        { "id": "thanks", "name": "Thank you", "phase": "after", "type": "campaignmonth", "icon": "heart", "values": { "campaignName": "Mild Month", "phase": "thanks", "heading": "Thanks for drinking mild", "note": "Thank you to every pub that put a mild on the bar this May." } }
++      ]
++    },
++    {
++      "id": "cider-perry-month",
++      "name": "Cider and Perry Month",
++      "category": "camra",
++      "summary": "CAMRA's month-long celebration of real cider and perry, held every July since 2025 (it used to run in May and October). Ask for #NotFromConcentrate real cider or perry.",
++      "url": "https://camra.org.uk/promotional-campaigns/cider-and-perry-months",
++      "hashtags": ["#CiderandPerryMonth", "#NotFromConcentrate"],
++      "rule": { "kind": "month", "month": 7 },
++      "leadDays": 28,
++      "drafts": [
++        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "campaignmonth", "icon": "apple", "values": { "campaignName": "Cider and Perry Month", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "A month of real cider and perry at your local." } },
++        { "id": "on-now", "name": "It's here", "phase": "start", "type": "campaignmonth", "icon": "apple", "values": { "campaignName": "Cider and Perry Month", "phase": "now", "heading": "Cider and Perry Month", "dates": "{dates}", "note": "Ask for #NotFromConcentrate real cider or perry at the bar.", "pubs": [{ "pub": "Pub name", "detail": "Ciders and perries on" }, { "pub": "Pub name", "detail": "Ciders and perries on" }] } },
++        { "id": "last-week", "name": "Last week", "phase": "end", "type": "campaignmonth", "icon": "pear", "values": { "campaignName": "Cider and Perry Month", "phase": "last", "heading": "Last week of Cider and Perry Month", "note": "There is still time to try a real cider or perry." } },
++        { "id": "thanks", "name": "Thank you", "phase": "after", "type": "campaignmonth", "icon": "heart", "values": { "campaignName": "Cider and Perry Month", "phase": "thanks", "heading": "Thanks for a month of real cider", "note": "Thank you to every pub and producer who joined in this July." } }
++      ]
++    },
++    {
++      "id": "gbg-launch",
++      "name": "Good Beer Guide launch",
++      "category": "camra",
++      "summary": "Publication day for the next edition of CAMRA's Good Beer Guide, usually a Thursday in late September. Branches hold launch events and celebrate the pubs that made it in.",
++      "url": "https://camra.org.uk/good-beer-guide",
++      "hashtags": ["#GoodBeerGuide", "#GBG{edition}"],
++      "rule": { "kind": "nthWeekday", "month": 9, "weekday": 4, "n": 4, "days": 1, "estimate": true },
++      "confirmed": {
++        "2025": { "start": "2025-09-25", "end": "2025-09-25" },
++        "2026": { "start": "2026-09-24", "end": "2026-09-24" }
++      },
++      "leadDays": 28,
++      "drafts": [
++        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "countdown", "icon": "book-open", "values": { "event": "The {edition} Good Beer Guide", "days": "{days}", "date": "Out {start}" } },
++        { "id": "launch-event", "name": "Launch event", "phase": "before", "type": "announcement", "icon": "book-open", "values": { "heading": "Good Beer Guide {edition} launch", "body": "Join us on {start} to celebrate the new Guide.\nPick up a copy and raise a glass to the pubs that made it in." } },
++        { "id": "in-the-guide", "name": "Our pubs in the Guide", "phase": "start", "type": "gbg", "icon": "book-open", "values": { "heading": "In the {edition} Good Beer Guide", "edition": "Out now", "pubs": [{ "pub": "Pub name", "town": "Town" }, { "pub": "Pub name", "town": "Town" }, { "pub": "Pub name", "town": "Town" }] } }
++      ]
++    },
++    {
++      "id": "members-weekend",
++      "name": "CAMRA Members' Weekend and AGM",
++      "category": "camra",
++      "summary": "CAMRA's annual gathering in April: the AGM, Conference, National Executive election results and the Members' Bar, in a different host city each year.",
++      "url": "https://camra.org.uk/members-weekend",
++      "hashtags": ["#CAMRAMembersWeekend"],
++      "rule": { "kind": "nthWeekday", "month": 4, "weekday": 5, "n": 3, "days": 3, "estimate": true },
++      "confirmed": {
++        "2026": { "start": "2026-04-17", "end": "2026-04-19", "venue": "St Albans" },
++        "2027": { "start": "2027-04-16", "end": "2027-04-18", "venue": "Chester" }
++      },
++      "leadDays": 42,
++      "drafts": [
++        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "countdown", "icon": "users", "values": { "event": "CAMRA Members' Weekend {where}", "days": "{days}", "date": "{dates}" } },
++        { "id": "see-you-there", "name": "See you there", "phase": "before", "type": "announcement", "icon": "users", "values": { "heading": "See you at Members' Weekend", "body": "{dates} {where}.\nThe AGM, Conference and the Members' Bar." } }
++      ]
++    },
++    {
++      "id": "camra-birthday",
++      "name": "CAMRA's birthday",
++      "category": "camra",
++      "summary": "CAMRA was founded on 16 March 1971. A good excuse to thank members and invite new ones.",
++      "hashtags": ["#CAMRA"],
++      "rule": { "kind": "fixed", "month": 3, "day": 16 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "birthday", "name": "Happy birthday", "phase": "start", "type": "occasion", "icon": "party-popper", "values": { "occasion": "CAMRA's birthday", "phase": "today", "heading": "Happy {ordinal} birthday, CAMRA", "note": "Campaigning for pubs, pints and people since 16 March 1971." } },
++        { "id": "join", "name": "Join us", "phase": "start", "type": "join", "icon": "user-plus", "values": { "heading": "Join the campaign", "benefits": [{ "benefit": "{age} years of campaigning", "detail": "for pubs, pints and people" }, { "benefit": "Free or discounted entry", "detail": "to CAMRA beer festivals" }, { "benefit": "Have your say", "detail": "on the pubs and beers we champion" }], "link": "camra.org.uk/join" } }
++      ]
++    },
++    {
++      "id": "tryanuary",
++      "name": "Tryanuary",
++      "category": "beer",
++      "summary": "An independent campaign, running since 2015 and supported by SIBA, that asks people to try a new beer, pub or brewery in January instead of going dry.",
++      "hashtags": ["#Tryanuary"],
++      "rule": { "kind": "month", "month": 1 },
++      "leadDays": 21,
++      "drafts": [
++        { "id": "on-now", "name": "It's here", "phase": "start", "type": "occasion", "icon": "sparkles", "values": { "occasion": "Tryanuary", "phase": "now", "heading": "Try something new this January", "dates": "{dates}", "note": "Support pubs and breweries through the quietest month: try a new beer, pub or brewery." } }
++      ]
++    },
++    {
++      "id": "beer-day-britain",
++      "name": "Beer Day Britain",
++      "category": "beer",
++      "summary": "The UK's national beer day, every 15 June (the day Magna Carta was sealed). The National Cheers to Beer toast is at 7pm.",
++      "url": "https://www.beerdaybritain.co.uk/",
++      "hashtags": ["#BeerDayBritain", "#CheersToBeer"],
++      "rule": { "kind": "fixed", "month": 6, "day": 15 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "occasion", "icon": "pint", "values": { "occasion": "Beer Day Britain", "phase": "countdown", "days": "{days}", "dates": "{start}", "note": "Join the National Cheers to Beer at 7pm." } },
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "pint", "values": { "occasion": "Beer Day Britain", "phase": "today", "heading": "Cheers to Beer", "dates": "{start}, 7pm", "note": "Raise a glass at your local at 7pm for the National Cheers to Beer." } }
++      ]
++    },
++    {
++      "id": "world-cider-day",
++      "name": "World Cider Day",
++      "category": "beer",
++      "summary": "An international day for cider every 3 June, started by German cider houses in 2013.",
++      "url": "https://www.worldciderday.com/",
++      "hashtags": ["#WorldCiderDay"],
++      "rule": { "kind": "fixed", "month": 6, "day": 3 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "apple", "values": { "occasion": "World Cider Day", "phase": "today", "heading": "Happy World Cider Day", "note": "Ask for a real cider or perry at the bar." } }
++      ]
++    },
++    {
++      "id": "ipa-day",
++      "name": "International IPA Day",
++      "category": "beer",
++      "summary": "A worldwide day for India pale ale, on the first Thursday of August.",
++      "hashtags": ["#IPADay"],
++      "rule": { "kind": "nthWeekday", "month": 8, "weekday": 4, "n": 1, "days": 1 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "hops", "values": { "occasion": "International IPA Day", "phase": "today", "heading": "Happy IPA Day", "note": "Which IPA are you raising today?" } }
++      ]
++    },
++    {
++      "id": "international-beer-day",
++      "name": "International Beer Day",
++      "category": "beer",
++      "summary": "A worldwide celebration of beer and the people who brew and serve it, on the first Friday of August.",
++      "hashtags": ["#InternationalBeerDay"],
++      "rule": { "kind": "nthWeekday", "month": 8, "weekday": 5, "n": 1, "days": 1 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "beer", "values": { "occasion": "International Beer Day", "phase": "today", "heading": "Happy International Beer Day", "note": "Raise a glass to the brewers and the bar staff." } }
++      ]
++    },
++    {
++      "id": "cask-ale-week",
++      "name": "Cask Ale Week",
++      "category": "beer",
++      "summary": "The industry's annual celebration of cask beer, run by Cask Marque and supported by CAMRA. Ten days in late September (17 to 27 September in 2026).",
++      "url": "https://caskaleweek.co.uk/",
++      "hashtags": ["#CaskAleWeek"],
++      "rule": { "kind": "nthWeekday", "month": 9, "weekday": 4, "n": 3, "days": 11, "estimate": true },
++      "confirmed": {
++        "2026": { "start": "2026-09-17", "end": "2026-09-27" }
++      },
++      "leadDays": 28,
++      "drafts": [
++        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "occasion", "icon": "barrel", "values": { "occasion": "Cask Ale Week", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "Celebrate Britain's national drink at your local." } },
++        { "id": "on-now", "name": "It's here", "phase": "start", "type": "occasion", "icon": "barrel", "values": { "occasion": "Cask Ale Week", "phase": "now", "heading": "Cask Ale Week", "dates": "{dates}", "note": "Try a pint of cask at one of these pubs.", "pubs": [{ "pub": "Pub name", "detail": "What's on" }, { "pub": "Pub name", "detail": "What's on" }] } },
++        { "id": "thanks", "name": "Thank you", "phase": "after", "type": "occasion", "icon": "heart", "values": { "occasion": "Cask Ale Week", "phase": "thanks", "heading": "Thanks for celebrating cask", "note": "Thank you to every pub and brewery that joined in." } }
++      ]
++    },
++    {
++      "id": "stout-day",
++      "name": "International Stout Day",
++      "category": "beer",
++      "summary": "A worldwide day for stout and porter, on the first Thursday of November.",
++      "hashtags": ["#InternationalStoutDay"],
++      "rule": { "kind": "nthWeekday", "month": 11, "weekday": 4, "n": 1, "days": 1 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "mug", "values": { "occasion": "International Stout Day", "phase": "today", "heading": "Happy International Stout Day", "note": "Stout or porter: what is on the bar near you?" } }
++      ]
++    },
++    {
++      "id": "small-business-saturday",
++      "name": "Small Business Saturday",
++      "category": "beer",
++      "summary": "The UK's day for supporting small, local businesses, on the first Saturday of December. Independent pubs and breweries are small businesses too.",
++      "url": "https://smallbusinesssaturdayuk.com/",
++      "hashtags": ["#SmallBizSatUK"],
++      "rule": { "kind": "nthWeekday", "month": 12, "weekday": 6, "n": 1, "days": 1 },
++      "leadDays": 14,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "store", "values": { "occasion": "Small Business Saturday", "phase": "today", "heading": "Shop small, drink local", "note": "Your local pub is a small business too. Pop in this Small Business Saturday." } }
++      ]
++    },
++    {
++      "id": "burns-night",
++      "name": "Burns Night",
++      "category": "national",
++      "summary": "Robert Burns's birthday, 25 January.",
++      "rule": { "kind": "fixed", "month": 1, "day": 25 },
++      "leadDays": 10,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "utensils", "values": { "occasion": "Burns Night", "phase": "today", "heading": "Happy Burns Night", "note": "Haggis, neeps and a pint of Scottish ale." } }
++      ]
++    },
++    {
++      "id": "st-davids-day",
++      "name": "St David's Day",
++      "category": "national",
++      "summary": "The patron saint's day of Wales, 1 March.",
++      "rule": { "kind": "fixed", "month": 3, "day": 1 },
++      "leadDays": 10,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St David's Day", "phase": "today", "heading": "Happy St David's Day", "note": "Raise a glass of Welsh beer or cider at your local." } }
++      ]
++    },
++    {
++      "id": "st-patricks-day",
++      "name": "St Patrick's Day",
++      "category": "national",
++      "summary": "The patron saint's day of Ireland, 17 March.",
++      "rule": { "kind": "fixed", "month": 3, "day": 17 },
++      "leadDays": 10,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St Patrick's Day", "phase": "today", "heading": "Happy St Patrick's Day", "note": "Stout, porter or red ale: raise a glass at your local." } }
++      ]
++    },
++    {
++      "id": "st-georges-day",
++      "name": "St George's Day",
++      "category": "national",
++      "summary": "The patron saint's day of England, 23 April.",
++      "rule": { "kind": "fixed", "month": 4, "day": 23 },
++      "leadDays": 10,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St George's Day", "phase": "today", "heading": "Happy St George's Day", "note": "Raise a glass of English ale at your local." } }
++      ]
++    },
++    {
++      "id": "st-andrews-day",
++      "name": "St Andrew's Day",
++      "category": "national",
++      "summary": "The patron saint's day of Scotland, 30 November.",
++      "rule": { "kind": "fixed", "month": 11, "day": 30 },
++      "leadDays": 10,
++      "drafts": [
++        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St Andrew's Day", "phase": "today", "heading": "Happy St Andrew's Day", "note": "Raise a glass of Scottish ale at your local." } }
++      ]
++    }
++  ]
++}
+diff --git a/src/core/params.ts b/src/core/params.ts
+index 72a4a14..8ff3ebb 100644
+--- a/src/core/params.ts
++++ b/src/core/params.ts
+@@ -4,6 +4,7 @@
+ // (shareLink in app.js) and to build this reference, so the three can never
+ // drift apart. Field, size and icon parameters are generated from the live
+ // configuration (templates.js, presets.js, icons.js) in the same way.
++import { CAMPAIGNS } from "./campaigns.ts";
+ import { CONFIG } from "./config.ts";
+ import { escapeHtml as esc } from "./html.ts";
+ import { ICON_NAMES } from "./icons.ts";
+@@ -113,6 +114,9 @@ export const PARAM_DEFS: ParamDef[] = [
+   { key: "download", doc: "Set to <code>1</code> to export the selected sizes automatically on load." },
+   { key: "zip", doc: "With <code>download=1</code>, set to <code>1</code> to deliver every selected size as one ZIP file instead of separate PNGs (or <code>0</code> to force separate PNGs). Defaults to your download format setting." },
+   { key: "docs", doc: "Set to <code>1</code> to open this reference on load." },
++  { key: "campaign", doc: function(){
++      return "Opens the Campaigns panel at one campaign, with its drafts. One of: " + CAMPAIGNS.map(function(c){ return "<code>" + esc(c.id) + "</code>"; }).join(", ") + ". Any other value opens the full list. Calendar reminders link here.";
++    } },
+   { key: "branchOnCampaign", doc: "Set to <code>1</code> to show the branch logo instead of the CAMRA logo on campaign posts (One to Try, Real Cider and Perry). Off-brand but allowed: campaigns should normally show the CAMRA logo, so a warning appears." },
+   { key: "brand", doc: "Set to <code>1</code> to open the brand guidelines panel on load." },
+   { key: "tagline", doc: "Tagline to show: one of the two approved taglines (<code>Pubs, Pints, People.</code> or <code>Campaigning for pubs, pints and people since 1971</code>), or <code>none</code> to hide it (the tagline is optional). Anything else keeps the default tagline and shows a notice. Defaults to <code>Pubs, Pints, People.</code>" },
+diff --git a/src/core/templates.ts b/src/core/templates.ts
+index a017460..63be12c 100644
+--- a/src/core/templates.ts
++++ b/src/core/templates.ts
+@@ -89,6 +89,59 @@ function isCider(text: string): boolean {
+   return /cider|perry/i.test(text || "");
+ }
+ 
++// Stages for campaign and celebration-day posts, so one post type covers the
++// countdown, the launch, the last week and the thank you afterwards.
++const PHASES: Array<[string, string]> = [
++  ["", "No stage (just the campaign)"],
++  ["soon", "Coming soon"],
++  ["countdown", "Countdown (days to go)"],
++  ["now", "On now"],
++  ["today", "Today"],
++  ["last", "Last week"],
++  ["thanks", "Thank you (afterwards)"],
++];
++const PHASE_EYEBROW: Record<string, string> = { soon: "COMING SOON", now: "ON NOW", today: "TODAY", last: "LAST WEEK", thanks: "THANK YOU" };
++
++const OCCASIONS = [
++  "Cask Ale Week",
++  "Tryanuary",
++  "Beer Day Britain",
++  "World Cider Day",
++  "International IPA Day",
++  "International Beer Day",
++  "International Stout Day",
++  "Small Business Saturday",
++  "CAMRA's birthday",
++  "Burns Night",
++  "St David's Day",
++  "St Patrick's Day",
++  "St George's Day",
++  "St Andrew's Day",
++];
++
++// The eyebrow, title, subtitle and lines for a post with an optional stage.
++// With no stage set the post looks exactly as it did before stages existed.
++function phased(v: Values, name: string): Layout {
++  const phase = str(v, "phase");
++  const dates = str(v, "dates");
++  const note = str(v, "note") ? [str(v, "note")] : [];
++  if (phase === "countdown") {
++    const d = str(v, "days").trim();
++    return {
++      eyebrow: name.toUpperCase(),
++      title: d ? d + (d === "1" ? " day to go" : " days to go") : str(v, "heading") || "Coming soon",
++      subtitle: dates || (d ? str(v, "heading") : ""),
++      lines: note,
++    };
++  }
++  return {
++    eyebrow: PHASE_EYEBROW[phase] || name.toUpperCase(),
++    title: str(v, "heading") || name,
++    subtitle: dates,
++    lines: note,
++  };
++}
++
+ export const TEMPLATES: Template[] = [
+   {
+     id: "newcomer",
+@@ -627,6 +680,9 @@ export const TEMPLATES: Template[] = [
+     defaultIcon: "beer",
+     fields: [
+       { key: "campaignName", label: "Campaign", type: "suggest", options: ["Mild Month", "Cider and Perry Month", "Community Pubs Month", "Cask Ale Week"] },
++      { key: "phase", label: "Stage", type: "select", optional: true, options: PHASES },
++      { key: "dates", label: "Dates", type: "text", optional: true },
++      { key: "days", label: "Days to go (for a countdown)", type: "text", optional: true },
+       { key: "heading", label: "Heading", type: "text", optional: true },
+       { key: "note", label: "Message", type: "textarea", optional: true },
+       {
+@@ -643,9 +699,7 @@ export const TEMPLATES: Template[] = [
+       const name = str(v, "campaignName") || "CAMRA campaign";
+       const cider = isCider(name);
+       return {
+-        eyebrow: name.toUpperCase(),
+-        title: str(v, "heading") || name,
+-        lines: str(v, "note") ? [str(v, "note")] : [],
++        ...phased(v, name),
+         list: list(v, "pubs").map(function (p) {
+           return { primary: p.pub || "", secondary: p.detail || "" };
+         }),
+@@ -657,6 +711,46 @@ export const TEMPLATES: Template[] = [
+       };
+     },
+   },
++  {
++    id: "occasion",
++    label: "Beer or pub day (IPA Day, St George's Day)",
++    accentKey: "watermelon",
++    layout: "panel",
++    allowPhoto: true,
++    defaultIcon: "party-popper",
++    fields: [
++      { key: "occasion", label: "Day or week", type: "suggest", options: OCCASIONS },
++      { key: "phase", label: "Stage", type: "select", optional: true, options: PHASES },
++      { key: "dates", label: "Date", type: "text", optional: true },
++      { key: "days", label: "Days to go (for a countdown)", type: "text", optional: true },
++      { key: "heading", label: "Heading", type: "text", optional: true },
++      { key: "note", label: "Message", type: "textarea", optional: true },
++      {
++        key: "pubs",
++        label: "Pubs taking part",
++        type: "list",
++        itemFields: [
++          { key: "pub", label: "Pub" },
++          { key: "detail", label: "What's on", optional: true },
++        ],
++      },
++    ],
++    build(v: Values): Layout {
++      const name = str(v, "occasion") || "Beer day";
++      // A branch post about the day, so the branch logo leads; cider days
++      // still take the cider Blue.
++      const cider = isCider(name);
++      return {
++        ...phased(v, name),
++        list: list(v, "pubs").map(function (p) {
++          return { primary: p.pub || "", secondary: p.detail || "" };
++        }),
++        listStyle: "events" as const,
++        accentKey: cider ? "blue" : "watermelon",
++        cider: cider,
++      };
++    },
++  },
+   {
+     id: "trip",
+     label: "Trip (brewery visit, coach trip)",
+@@ -826,7 +920,7 @@ const GROUPS: Record<string, string> = {
+   newcomer: "Pubs", pubfeature: "Pubs", pubnews: "Pubs", locale: "Pubs", heritage: "Pubs", pubcampaign: "Pubs",
+   award: "Awards", hybrid: "Awards", gbg: "Awards",
+   whatson: "Events", social: "Events", trip: "Events", festival: "Events", countdown: "Events", meeting: "Events",
+-  beer: "Drinks and campaigns", campaignmonth: "Drinks and campaigns",
++  beer: "Drinks and campaigns", campaignmonth: "Drinks and campaigns", occasion: "Drinks and campaigns",
+   announcement: "Branch news", volunteers: "Branch news", join: "Branch news", thanks: "Branch news",
+   custom: "Your own",
+ };
+diff --git a/src/index.html b/src/index.html
+index 154f6a6..e224be0 100644
+--- a/src/index.html
++++ b/src/index.html
+@@ -26,10 +26,12 @@
+   </div>
+   <nav class="topnav" aria-label="Studio">
+     <button type="button" class="nav-btn" id="designsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-designs"></span>Designs</button>
++    <button type="button" class="nav-btn" id="campaignsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-campaigns"></span>Campaigns<span class="count-badge" aria-hidden="true" hidden></span></button>
+     <button type="button" class="nav-btn" id="settingsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-settings"></span>Settings</button>
+     <button type="button" class="nav-btn" id="helpBtn" aria-label="Show tips"><span aria-hidden="true" class="ico ico-help"></span>Tips</button>
+   </nav>
+ </header>
++<section class="campaign-alerts" id="campaignAlerts" aria-label="Campaign reminders" hidden></section>
+ <main class="layout" id="main" tabindex="-1">
+   <form class="controls" id="controls" aria-label="Graphic settings" novalidate>
+     <details class="group" data-group="post" open>
+@@ -421,6 +423,14 @@
+   <div class="dlg-body" id="logoBody"></div>
+ </dialog>
+ 
++<dialog id="campaignsDialog" class="dlg dlg-wide" aria-labelledby="campaignsTitle">
++  <div class="dlg-head">
++    <h2 id="campaignsTitle">Campaigns</h2>
++    <button type="button" class="icon-btn" data-close aria-label="Close campaigns">×</button>
++  </div>
++  <div class="dlg-body" id="campaignsBody"></div>
++</dialog>
++
+ <dialog id="settingsDialog" class="dlg" aria-labelledby="settingsTitle">
+   <div class="dlg-head">
+     <h2 id="settingsTitle">Settings</h2>
+diff --git a/src/main.ts b/src/main.ts
+index 77e81b3..7d44516 100644
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -11,6 +11,7 @@ import { initExport, doDownload } from "./ui/export.ts";
+ import { initDesigns, refreshDesigns, saveCurrent } from "./ui/designs-ui.ts";
+ import { initLogoPicker } from "./ui/logos-ui.ts";
+ import { initSettings, refreshSettings } from "./ui/settings-ui.ts";
++import { initCampaigns, refreshCampaigns } from "./ui/campaigns-ui.ts";
+ import { onDataChanged } from "./ui/backup-ui.ts";
+ import { initTips, startTips } from "./ui/tips.ts";
+ import { registerServiceWorker } from "./ui/sw-register.ts";
+@@ -27,6 +28,7 @@ async function boot(): Promise<void> {
+   await initDesigns();
+   initSettings();
+   initLogoPicker();
++  initCampaigns();
+   initTips();
+   // Ctrl or Cmd + S saves the design instead of the browser's "save page".
+   document.addEventListener("keydown", (e) => {
+@@ -38,6 +40,7 @@ async function boot(): Promise<void> {
+   onDataChanged(() => {
+     refreshDesigns();
+     refreshSettings();
++    refreshCampaigns();
+   });
+   document.documentElement.dataset.ready = "1";
+   if (result.download) window.setTimeout(() => doDownload(result.zip), 120);
+diff --git a/src/styles/campaigns.css b/src/styles/campaigns.css
+new file mode 100644
+index 0000000..f0e29c2
+--- /dev/null
++++ b/src/styles/campaigns.css
+@@ -0,0 +1,50 @@
++/* Campaign reminders (the banner under the top bar), the nav badge and the
++   Campaigns panel. */
++.ico-campaigns{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M4 1h2v2h4V1h2v2h2v12H2V3h2zM4 7v6h8V7z'/%3E%3Cpath d='M5 8h2v2H5z'/%3E%3C/svg%3E");}
++.nav-btn{position:relative;}
++.count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;line-height:1;}
++.count-badge[hidden]{display:none;}
++
++.campaign-alerts{display:flex;flex-direction:column;gap:var(--s2);padding:12px 14px 0;padding-left:calc(14px + env(safe-area-inset-left));padding-right:calc(14px + env(safe-area-inset-right));}
++.campaign-alerts[hidden]{display:none;}
++.camp-alert{display:grid;grid-template-columns:auto 1fr;gap:var(--s2) var(--s3);align-items:start;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:var(--radius);padding:var(--s3) var(--s3) var(--s3) var(--s4);}
++.camp-alert.live{border-left-color:var(--accent);}
++.camp-alert-dot{width:10px;height:10px;border-radius:50%;background:var(--blue);margin-top:6px;}
++.camp-alert.live .camp-alert-dot{background:var(--accent);}
++.camp-alert-text p{margin:0;font-size:14px;line-height:1.5;color:var(--muted);}
++.camp-alert-text .camp-alert-title{font-weight:700;font-size:15px;color:var(--text);}
++.camp-alert-actions{grid-column:2;display:flex;gap:var(--s2);flex-wrap:wrap;}
++.camp-more{align-self:flex-start;}
++@media (min-width:881px){
++  .campaign-alerts{padding:18px 28px 0;}
++  .camp-alert{grid-template-columns:auto 1fr auto;align-items:center;}
++  .camp-alert-dot{margin-top:0;}
++  .camp-alert-actions{grid-column:auto;justify-content:flex-end;}
++}
++
++.campaign-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2);}
++.campaign{background:var(--field);border:1px solid var(--line);border-radius:var(--radius);padding:var(--s3) var(--s4);scroll-margin-top:var(--s4);}
++.campaign.live{border-left:4px solid var(--accent);}
++.campaign.soon{border-left:4px solid var(--blue);}
++.campaign:focus{outline:none;}
++.campaign.focus-ring{box-shadow:0 0 0 3px var(--focus);}
++.campaign-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
++.campaign-head h4{margin:0 4px 0 0;font-size:16px;}
++.campaign-head .badge{margin-left:0;}
++.campaign-head .badge.when{border-color:var(--accent);color:var(--accent-text);}
++.campaign-date{margin:4px 0 0;font-weight:700;font-size:14px;color:var(--text);}
++.campaign .note{margin:4px 0 var(--s2);}
++.campaign-tags{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin:0 0 var(--s2);font-size:13px;color:var(--muted);}
++.campaign-tags span{overflow-wrap:anywhere;}
++.ghost.small{min-height:36px;padding:4px 10px;font-size:13px;}
++.draft-row{display:flex;flex-wrap:wrap;gap:6px;}
++.draft-row .btn{padding:6px 12px;font-size:13px;}
++.campaign-more{margin-top:var(--s2);align-items:center;}
++.campaign-more .ghost,.campaign-more a.ghost{font-size:13px;padding:6px 12px;}
++.campaign-more .check{font-size:13px;}
++a.btn,a.ghost{display:inline-flex;align-items:center;text-decoration:none;}
++.feed-pick span{text-align:center;}
++.linkish{background:none;border:0;padding:0;color:var(--accent-text);text-decoration:underline;text-underline-offset:2px;cursor:pointer;font:inherit;min-height:0;}
++@media (max-width:560px){
++  .feed-pick{flex-direction:column;}
++}
+diff --git a/src/styles/main.css b/src/styles/main.css
+index 59347ef..47a6e28 100644
+--- a/src/styles/main.css
++++ b/src/styles/main.css
+@@ -8,3 +8,4 @@
+ @import "./components.css";
+ @import "./dialogs.css";
+ @import "./layout.css";
++@import "./campaigns.css";
+diff --git a/src/sw.ts b/src/sw.ts
+index 47b8df2..2c3a482 100644
+--- a/src/sw.ts
++++ b/src/sw.ts
+@@ -9,7 +9,9 @@
+ declare const __PRECACHE__: string[];
+ declare const __CACHE__: string;
+ 
+-export {};
++import { CAMPAIGNS, dueAlerts, localYmd, normalisePrefs, normaliseState, pruneState } from "./core/campaigns.ts";
++import { kvGet, kvPut, openIdb } from "./ui/idb.ts";
++
+ const sw = self as unknown as ServiceWorkerGlobalScope;
+ const CACHE = __CACHE__;
+ const PRECACHE = __PRECACHE__;
+@@ -78,3 +80,45 @@ sw.addEventListener("fetch", (e) => {
+       ),
+   );
+ });
++
++// Background campaign reminders. Installed Chrome and Edge apps wake the
++// worker now and then (periodic background sync); it works out which
++// reminders are due from the bundled campaign list and the settings the page
++// saved, and shows each one once. Nothing is fetched.
++async function campaignCheck(): Promise<void> {
++  const db = await openIdb();
++  const rec = await kvGet<{ state?: unknown; prefs?: unknown }>(db, "campaignState");
++  const prefs = normalisePrefs(rec && rec.prefs);
++  if (!prefs.enabled || !prefs.system || Notification.permission !== "granted") return;
++  const today = localYmd(new Date());
++  const state = normaliseState(rec && rec.state);
++  const fresh = dueAlerts(CAMPAIGNS, today, prefs, state).filter((a) => !state.notified[a.key]);
++  if (!fresh.length) return;
++  for (const a of fresh) {
++    await sw.registration.showNotification(a.title, { body: a.body, tag: a.key, icon: "assets/icons/icon-192.png", data: { url: "./?campaign=" + a.entry.occ.campaign.id } });
++    state.notified[a.key] = true;
++  }
++  await kvPut(db, "campaignState", { state: pruneState(state, today), prefs });
++}
++
++sw.addEventListener("periodicsync", (e: Event) => {
++  const ev = e as ExtendableEvent & { tag?: string };
++  if (ev.tag === "campaign-reminders") ev.waitUntil(campaignCheck().catch(() => undefined));
++});
++
++// Tapping a reminder opens (or focuses) the studio at that campaign.
++sw.addEventListener("notificationclick", (e) => {
++  e.notification.close();
++  const data = e.notification.data as { url?: string } | null;
++  const target = new URL((data && data.url) || "./", sw.registration.scope).href;
++  e.waitUntil(
++    sw.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
++      for (const c of list) {
++        if (c.url.split(/[?#]/)[0] === target.split(/[?#]/)[0] && "navigate" in c) {
++          return (c as WindowClient).navigate(target).then((w) => (w ? w.focus() : undefined));
++        }
++      }
++      return sw.clients.openWindow(target);
++    }),
++  );
++});
+diff --git a/src/ui/campaigns-ui.ts b/src/ui/campaigns-ui.ts
+new file mode 100644
+index 0000000..52f05d6
+--- /dev/null
++++ b/src/ui/campaigns-ui.ts
+@@ -0,0 +1,513 @@
++// Campaigns: reminders in the studio before each national campaign (time to
++// schedule posts) and while it is on, the Campaigns panel with ready-made
++// drafts for each one, calendar subscriptions, and optional system
++// notifications. Everything is worked out on this device from the bundled
++// campaign list; nothing is fetched or uploaded.
++
++import {
++  CAMPAIGNS,
++  CATEGORIES,
++  FEEDS,
++  PHASE_LABELS,
++  buildIcs,
++  campaignById,
++  dueAlerts,
++  hashtags,
++  localYmd,
++  normalisePrefs,
++  normaliseState,
++  draftParams,
++  pruneState,
++  rangeLabel,
++  suggestedDraft,
++  timeline,
++  addDays,
++  type Alert,
++  type AlertState,
++  type CampaignPrefs,
++  type Draft,
++  type Feed,
++  type TimelineEntry,
++} from "../core/campaigns.ts";
++import { newId, type Design } from "../core/designs.ts";
++import { byId, copyText, downloadBlob, flashLabel, h } from "./dom.ts";
++import { closeDialog, openDialog } from "./dialog.ts";
++import { notify } from "./notices.ts";
++import { store } from "./store.ts";
++import * as E from "./editor.ts";
++import { confirmReplace, openDesigns } from "./designs-ui.ts";
++
++declare const __APP_VERSION__: string;
++
++/** kv record the service worker reads for background reminders. */
++export const STATE_KEY = "campaignState";
++const SYNC_TAG = "campaign-reminders";
++const SNOOZE_DAYS = 3;
++const MAX_BANNER = 2;
++
++const dlg = () => byId<HTMLDialogElement>("campaignsDialog");
++const view = { cat: "", feed: FEEDS[0].file };
++
++export function today(): string {
++  return localYmd(new Date());
++}
++
++export function getPrefs(): CampaignPrefs {
++  return normalisePrefs(store.getPrefs().campaigns);
++}
++
++function getState(): AlertState {
++  const rec = store.getKv<{ state?: unknown }>(STATE_KEY);
++  return normaliseState(rec && rec.state);
++}
++
++async function saveState(state: AlertState): Promise<void> {
++  // The preferences travel with the state so the service worker sees both.
++  await store.putKv(STATE_KEY, { state: pruneState(state, today()), prefs: getPrefs() });
++}
++
++export async function setPrefs(p: CampaignPrefs): Promise<void> {
++  store.setPref("campaigns", p);
++  await saveState(getState());
++  await syncBackground(p.system);
++  refreshCampaigns();
++}
++
++export function currentAlerts(): Alert[] {
++  return dueAlerts(CAMPAIGNS, today(), getPrefs(), getState());
++}
++
++// --- the reminder banner and the nav badge ---
++
++function renderBanner(alerts: Alert[]): void {
++  const box = byId("campaignAlerts");
++  box.innerHTML = "";
++  box.hidden = !alerts.length;
++  if (!alerts.length) return;
++  box.append(h("h2", { class: "sr-only" }, "Campaign reminders"));
++  alerts.slice(0, MAX_BANNER).forEach((a) => {
++    const id = a.entry.occ.campaign.id;
++    box.append(
++      h(
++        "article",
++        { class: "camp-alert " + a.phase, "data-key": a.key },
++        h("span", { class: "camp-alert-dot", "aria-hidden": "true" }),
++        h("div", { class: "camp-alert-text" }, h("p", { class: "camp-alert-title" }, a.title), h("p", {}, a.body)),
++        h(
++          "div",
++          { class: "camp-alert-actions" },
++          h("button", { type: "button", class: "btn primary", onclick: () => openCampaigns(id) }, "Get drafts"),
++          h("button", { type: "button", class: "ghost", onclick: () => snooze(a), "aria-label": "Remind me about " + a.entry.occ.campaign.name + " in " + SNOOZE_DAYS + " days" }, "Remind me later"),
++          h("button", { type: "button", class: "ghost", onclick: () => dismiss(a), "aria-label": "Dismiss the " + a.entry.occ.campaign.name + " reminder" }, "Dismiss"),
++        ),
++      ),
++    );
++  });
++  if (alerts.length > MAX_BANNER) {
++    const more = alerts.length - MAX_BANNER;
++    box.append(h("button", { type: "button", class: "ghost camp-more", onclick: () => openCampaigns() }, "And " + more + " more " + (more === 1 ? "reminder" : "reminders")));
++  }
++}
++
++function renderBadge(alerts: Alert[]): void {
++  const btn = byId("campaignsBtn");
++  const badge = btn.querySelector<HTMLElement>(".count-badge");
++  if (badge) {
++    badge.textContent = alerts.length ? String(alerts.length) : "";
++    badge.hidden = !alerts.length;
++  }
++  btn.setAttribute("aria-label", alerts.length ? "Campaigns, " + alerts.length + (alerts.length === 1 ? " reminder" : " reminders") : "Campaigns");
++}
++
++async function snooze(a: Alert): Promise<void> {
++  const s = getState();
++  s.snoozed[a.key] = addDays(today(), SNOOZE_DAYS);
++  await saveState(s);
++  refreshCampaigns();
++  notify("info", "We will remind you about " + a.entry.occ.campaign.name + " again in " + SNOOZE_DAYS + " days.");
++}
++
++async function dismiss(a: Alert): Promise<void> {
++  const before = getState();
++  const s = normaliseState(before);
++  s.dismissed[a.key] = true;
++  await saveState(s);
++  refreshCampaigns();
++  notify("info", "Dismissed. " + (a.phase === "prep" ? "You will still get a reminder when it starts." : "Find it any time under Campaigns."), {
++    action: {
++      label: "Undo",
++      run: async () => {
++        await saveState(before);
++        refreshCampaigns();
++      },
++    },
++  });
++}
++
++export async function resetReminders(): Promise<void> {
++  const s = getState();
++  s.dismissed = {};
++  s.snoozed = {};
++  await saveState(s);
++  refreshCampaigns();
++}
++
++// --- drafts ---
++
++function draftQuery(e: TimelineEntry, d: Draft): URLSearchParams {
++  // Your default look first, then the draft, then your branch, so a draft
++  // always arrives in your own colours with your own logo.
++  const merged = new URLSearchParams(store.getPrefs().styleDefaults || "");
++  draftParams(d, e.occ, today()).forEach((v, k) => merged.set(k, v));
++  const cur = E.serialize();
++  ["branch", "branchName", "branchLogo"].forEach((k) => {
++    const v = cur.get(k);
++    if (v) merged.set(k, v);
++  });
++  return merged;
++}
++
++async function useDraft(e: TimelineEntry, d: Draft): Promise<void> {
++  if (!(await confirmReplace())) return;
++  const logo = E.captureForm().logo;
++  await E.restoreForm({ params: draftQuery(e, d).toString(), photo: null, logo });
++  E.state.currentDesignId = null;
++  E.state.dirty = true;
++  closeDialog(dlg());
++  notify("success", "Draft ready: " + e.occ.campaign.name + ", " + d.name.toLowerCase() + ". Check the details, then download or save it.");
++}
++
++async function saveDrafts(e: TimelineEntry): Promise<void> {
++  const saved = E.captureForm();
++  const savedId = E.state.currentDesignId;
++  const savedDirty = E.state.dirty;
++  const now = new Date().toISOString();
++  const out: Design[] = [];
++  for (const d of e.occ.campaign.drafts) {
++    const params = draftQuery(e, d).toString();
++    await E.restoreForm({ params, photo: null, logo: saved.logo });
++    out.push({
++      id: newId("dsn"),
++      name: e.occ.campaign.name + " " + e.occ.year + ": " + d.name,
++      typeId: d.type,
++      params: E.serialize().toString(),
++      logo: saved.logo,
++      thumb: E.thumbnail(),
++      createdAt: now,
++      updatedAt: now,
++      deletedAt: null,
++    });
++  }
++  await E.restoreForm(saved);
++  E.state.currentDesignId = savedId;
++  E.state.dirty = savedDirty;
++  if (!(await store.putDesigns(out))) {
++    notify("error", "Could not save the drafts: this browser's storage is full.");
++    return;
++  }
++  notify("success", "Saved " + out.length + (out.length === 1 ? " draft" : " drafts") + " for " + e.occ.campaign.name + " to your designs.", { action: { label: "View designs", run: () => { closeDialog(dlg()); openDesigns(); } } });
++}
++
++// --- calendar ---
++
++function siteBase(): string {
++  return location.href.split(/[?#]/)[0].replace(/[^/]*$/, "");
++}
++
++function feedUrl(f: Feed): string {
++  return siteBase() + f.file;
++}
++
++function hosted(): boolean {
++  return location.protocol === "https:" || (location.protocol === "http:" && !/^(localhost|127\.|\[::1\])/.test(location.hostname));
++}
++
++function downloadIcs(name: string, text: string): void {
++  downloadBlob(new Blob([text], { type: "text/calendar;charset=utf-8" }), name);
++}
++
++function calendarSection(): HTMLElement {
++  const feed = FEEDS.find((f) => f.file === view.feed) || FEEDS[0];
++  const url = feedUrl(feed);
++  const webcal = url.replace(/^https?:/, "webcal:");
++  const seg = h("div", { class: "segmented feed-pick" });
++  FEEDS.forEach((f) => {
++    const r = h("input", { type: "radio", name: "feedPick", value: f.file });
++    r.checked = f.file === feed.file;
++    r.addEventListener("change", () => {
++      view.feed = f.file;
++      render();
++      document.querySelector<HTMLInputElement>('input[name="feedPick"]:checked')?.focus();
++    });
++    seg.append(h("label", {}, r, h("span", {}, f.short)));
++  });
++  const copyBtn = h("button", { type: "button", class: "ghost" }, "Copy calendar link");
++  copyBtn.addEventListener("click", async () => {
++    flashLabel(copyBtn, (await copyText(url)) ? "Copied" : "Copy failed");
++  });
++  const ext = { target: "_blank", rel: "noopener" };
++  const links = hosted()
++    ? h(
++        "div",
++        { class: "row-actions" },
++        h("a", { class: "btn", href: "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(webcal), ...ext }, "Google Calendar"),
++        h("a", { class: "btn", href: "https://outlook.live.com/calendar/0/addfromweb?url=" + encodeURIComponent(url) + "&name=" + encodeURIComponent(feed.name), ...ext }, "Outlook"),
++        h("a", { class: "btn", href: webcal }, "Apple Calendar or other"),
++        copyBtn,
++      )
++    : h("p", { class: "note" }, "Calendar subscriptions work from the hosted studio, not from a copy on this computer. You can still download the file below.");
++  return h(
++    "section",
++    { class: "dlg-section" },
++    h("h3", {}, "Add to your calendar"),
++    h("p", { class: "note" }, "Subscribe and your calendar stays in sync: new campaigns and confirmed dates arrive by themselves. Events carry a reminder when it is time to schedule posts."),
++    h("fieldset", { class: "field" }, h("legend", {}, "Which calendar"), seg),
++    h("p", { class: "note" }, feed.description.replace(/ From the unofficial CAMRA Social Graphics Studio\./, "")),
++    links,
++    h("div", { class: "row-actions" }, h("a", { class: "ghost", href: feed.file, download: feed.file.split("/").pop() || "campaigns.ics" }, "Download the .ics file")),
++  );
++}
++
++// --- the Campaigns panel ---
++
++const STATUS_LABEL = { live: "On now", soon: "Coming up", later: "Further ahead", past: "" } as const;
++
++function whenText(e: TimelineEntry): string {
++  if (e.status === "live") return e.occ.start === e.occ.end ? "Today" : e.daysLeft === 1 ? "Last day today" : e.daysLeft + " days left";
++  return e.daysToStart === 1 ? "Tomorrow" : "In " + e.daysToStart + " days";
++}
++
++function entryCard(e: TimelineEntry, prefs: CampaignPrefs): HTMLElement {
++  const c = e.occ.campaign;
++  const cat = CATEGORIES.find((x) => x.id === c.category);
++  const suggested = suggestedDraft(e);
++  const tags = hashtags(e.occ);
++  const muted = prefs.muted.includes(c.id);
++  const mute = h("input", { type: "checkbox", id: "mute-" + c.id + "-" + e.occ.year });
++  mute.checked = !muted;
++  mute.addEventListener("change", () => {
++    const p = getPrefs();
++    p.muted = mute.checked ? p.muted.filter((m) => m !== c.id) : Array.from(new Set(p.muted.concat(c.id)));
++    setPrefs(p);
++  });
++  const copyTags = h("button", { type: "button", class: "ghost small" }, "Copy hashtags");
++  copyTags.addEventListener("click", async () => flashLabel(copyTags, (await copyText(tags.join(" "))) ? "Copied" : "Copy failed"));
++  return h(
++    "li",
++    { class: "campaign " + e.status, id: "camp-" + c.id + "-" + e.occ.year, "data-campaign": c.id, tabindex: "-1" },
++    h(
++      "div",
++      { class: "campaign-head" },
++      h("h4", {}, c.name),
++      h("span", { class: "badge when" }, whenText(e)),
++      e.occ.estimated ? h("span", { class: "badge", title: "Follows the pattern of earlier years. Check the official announcement." }, "Date estimated") : null,
++      cat ? h("span", { class: "badge subtle" }, cat.label) : null,
++    ),
++    h("p", { class: "campaign-date" }, rangeLabel(e.occ.start, e.occ.end, true) + (e.occ.venue ? ", " + e.occ.venue : "")),
++    h("p", { class: "note" }, c.summary),
++    tags.length ? h("p", { class: "campaign-tags" }, h("span", {}, tags.join(" ")), copyTags) : null,
++    h(
++      "div",
++      { class: "draft-row", role: "group", "aria-label": "Drafts for " + c.name },
++      ...c.drafts.map((d) =>
++        h(
++          "button",
++          { type: "button", class: d === suggested ? "btn primary" : "btn", onclick: () => useDraft(e, d), title: PHASE_LABELS[d.phase], "aria-label": "Use the " + d.name + " draft for " + c.name + (d === suggested ? " (suggested now)" : "") },
++          d.name,
++        ),
++      ),
++    ),
++    h(
++      "div",
++      { class: "row-actions campaign-more" },
++      h("button", { type: "button", class: "ghost", onclick: () => saveDrafts(e) }, c.drafts.length === 1 ? "Save the draft to my designs" : "Save all " + c.drafts.length + " drafts to my designs"),
++      h("button", { type: "button", class: "ghost", onclick: () => downloadIcs(c.id + "-" + e.occ.year + ".ics", buildIcs([e.occ], { name: c.name, description: c.summary, now: new Date(), version: __APP_VERSION__, siteUrl: hosted() ? siteBase() : undefined, leadOverride: prefs.leadDays })) }, "Add this one to my calendar"),
++      c.url ? h("a", { class: "ghost", href: c.url, target: "_blank", rel: "noopener" }, "About " + c.name) : null,
++      h("label", { class: "check", for: mute.id }, mute, " Remind me"),
++    ),
++  );
++}
++
++function render(focusCampaign?: string): void {
++  const body = byId("campaignsBody");
++  const prefs = getPrefs();
++  const scroll = body.scrollTop;
++  body.innerHTML = "";
++
++  const cats = new Set(prefs.categories);
++  const on = CATEGORIES.filter((c) => cats.has(c.id)).map((c) => c.phrase);
++  body.append(
++    h(
++      "p",
++      { class: "note" },
++      !prefs.enabled
++        ? "Reminders are off. "
++        : on.length
++          ? "You get reminders for " + (on.length > 1 ? on.slice(0, -1).join(", ") + " and " + on[on.length - 1] : on[0]) + ", before each one starts and while it is on. "
++          : "Reminders are on, but no kinds of campaign are chosen. ",
++      h("button", { type: "button", class: "linkish", onclick: () => { closeDialog(dlg()); byId("settingsBtn").click(); } }, "Change reminder settings"),
++    ),
++  );
++  body.append(calendarSection());
++
++  const filter = h("select", { id: "campaignCat", "aria-label": "Show which campaigns" }, h("option", { value: "" }, "All campaigns"), ...CATEGORIES.map((c) => h("option", { value: c.id }, c.label)));
++  filter.value = view.cat;
++  filter.addEventListener("change", () => {
++    view.cat = filter.value;
++    render();
++    byId("campaignCat").focus();
++  });
++  body.append(h("div", { class: "toolbar" }, filter));
++
++  const list = CAMPAIGNS.filter((c) => !view.cat || c.category === view.cat);
++  const entries = timeline(list, today(), 366, prefs.leadDays);
++  (["live", "soon", "later"] as const).forEach((st) => {
++    const group = entries.filter((e) => e.status === st);
++    if (!group.length) return;
++    body.append(h("section", { class: "dlg-section" }, h("h3", {}, STATUS_LABEL[st]), h("ul", { class: "campaign-list" }, ...group.map((e) => entryCard(e, prefs)))));
++  });
++  if (!entries.length) body.append(h("div", { class: "empty" }, h("p", {}, "Nothing in the next twelve months for this filter.")));
++
++  if (focusCampaign) {
++    const target = body.querySelector<HTMLElement>('[data-campaign="' + focusCampaign + '"]');
++    if (target) {
++      target.classList.add("focus-ring");
++      target.scrollIntoView({ block: "start" });
++      target.focus({ preventScroll: true });
++    }
++  } else body.scrollTop = scroll;
++}
++
++export function openCampaigns(id?: string): void {
++  render(id);
++  openDialog(dlg(), id ? dlg().querySelector<HTMLElement>('[data-campaign="' + id + '"]') : byId("campaignCat"));
++  if (id) render(id);
++}
++
++export function refreshCampaigns(): void {
++  const alerts = currentAlerts();
++  renderBanner(alerts);
++  renderBadge(alerts);
++  if (dlg().open) render();
++}
++
++// --- system notifications ---
++
++async function registration(): Promise<ServiceWorkerRegistration | undefined> {
++  try {
++    return navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : undefined;
++  } catch {
++    return undefined;
++  }
++}
++
++async function showSystem(a: Alert): Promise<void> {
++  const opts: NotificationOptions = { body: a.body, tag: a.key, icon: "assets/icons/icon-192.png", data: { url: siteBase() + "?campaign=" + a.entry.occ.campaign.id } };
++  const reg = await registration();
++  if (reg) await reg.showNotification(a.title, opts);
++  else new Notification(a.title, opts);
++}
++
++/** Sends any reminder not yet sent as a system notification. */
++async function sendSystem(alerts: Alert[]): Promise<void> {
++  if (!getPrefs().system || typeof Notification === "undefined" || Notification.permission !== "granted") return;
++  const s = getState();
++  const fresh = alerts.filter((a) => !s.notified[a.key]);
++  if (!fresh.length) return;
++  for (const a of fresh) {
++    try {
++      await showSystem(a);
++      s.notified[a.key] = true;
++    } catch {
++      /* the browser refused; the banner still shows */
++    }
++  }
++  await saveState(s);
++}
++
++type PeriodicSync = { register(tag: string, o: { minInterval: number }): Promise<void>; unregister(tag: string): Promise<void> };
++
++/** Background checks while the studio is closed: installed Chrome and Edge apps only. */
++async function syncBackground(on: boolean): Promise<boolean> {
++  const reg = await registration();
++  const ps = reg && (reg as unknown as { periodicSync?: PeriodicSync }).periodicSync;
++  if (!ps) return false;
++  try {
++    if (!on) {
++      await ps.unregister(SYNC_TAG);
++      return false;
++    }
++    const perm = await navigator.permissions.query({ name: "periodic-background-sync" as PermissionName });
++    if (perm.state !== "granted") return false;
++    await ps.register(SYNC_TAG, { minInterval: 12 * 3600 * 1000 });
++    return true;
++  } catch {
++    return false;
++  }
++}
++
++export function systemSupported(): boolean {
++  return typeof Notification !== "undefined";
++}
++
++/** Turns system notifications on (asking the browser) or off. */
++export async function setSystem(on: boolean): Promise<boolean> {
++  const p = getPrefs();
++  if (on) {
++    if (!systemSupported()) {
++      notify("info", "This browser cannot show notifications. Reminders still appear in the studio.");
++      return false;
++    }
++    const perm = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
++    if (perm !== "granted") {
++      notify("warn", "The browser blocked notifications for this site. Allow them in the browser's site settings, then try again. Reminders still appear in the studio.");
++      return false;
++    }
++  }
++  p.system = on;
++  await setPrefs(p);
++  if (on) {
++    const bg = await syncBackground(true);
++    notify("success", bg ? "Notifications are on, including checks while the studio is closed." : "Notifications are on. They arrive when you open the studio; install it as an app in Chrome or Edge to get them while it is closed too.");
++    await sendSystem(currentAlerts());
++  }
++  return on;
++}
++
++export async function backgroundActive(): Promise<boolean> {
++  const reg = await registration();
++  const ps = reg && (reg as unknown as { periodicSync?: { getTags(): Promise<string[]> } }).periodicSync;
++  if (!ps) return false;
++  try {
++    return (await ps.getTags()).includes(SYNC_TAG);
++  } catch {
++    return false;
++  }
++}
++
++export function initCampaigns(): void {
++  byId("campaignsBtn").addEventListener("click", () => openCampaigns());
++  const qp = new URLSearchParams(location.search);
++  const wanted = qp.get("campaign");
++  refreshCampaigns();
++  // Keep the service worker's copy of the settings current.
++  saveState(getState());
++  if (wanted) window.setTimeout(() => openCampaigns(campaignById(wanted) ? wanted : undefined), 60);
++  sendSystem(currentAlerts());
++  // Reminders roll over at midnight for anyone who leaves the studio open.
++  let day = today();
++  window.setInterval(() => {
++    if (today() !== day) {
++      day = today();
++      refreshCampaigns();
++      sendSystem(currentAlerts());
++    }
++  }, 60000);
++  document.addEventListener("visibilitychange", () => {
++    if (document.visibilityState === "visible" && today() !== day) {
++      day = today();
++      refreshCampaigns();
++    }
++  });
++}
++
+diff --git a/src/ui/designs-ui.ts b/src/ui/designs-ui.ts
+index 72b9907..d0392b1 100644
+--- a/src/ui/designs-ui.ts
++++ b/src/ui/designs-ui.ts
+@@ -57,7 +57,7 @@ export async function saveCurrent(): Promise<void> {
+   if (dlg().open) render();
+ }
+ 
+-async function confirmReplace(): Promise<boolean> {
++export async function confirmReplace(): Promise<boolean> {
+   if (!E.state.dirty) return true;
+   return confirmDialog({
+     title: "Replace the current post?",
+diff --git a/src/ui/idb.ts b/src/ui/idb.ts
+new file mode 100644
+index 0000000..077285f
+--- /dev/null
++++ b/src/ui/idb.ts
+@@ -0,0 +1,47 @@
++// The studio's IndexedDB database, shared by the page (store.ts) and the
++// service worker (background campaign reminders). Both must open it the same
++// way: opening it anywhere without creating the stores would leave the page
++// with an empty, unusable database.
++
++export const DB_NAME = "camra-studio";
++export const DB_VERSION = 1;
++export type StoreName = "designs" | "library" | "kv";
++
++export function req<T>(r: IDBRequest<T>): Promise<T> {
++  return new Promise((resolve, reject) => {
++    r.onsuccess = () => resolve(r.result);
++    r.onerror = () => reject(r.error);
++  });
++}
++
++export function txDone(tx: IDBTransaction): Promise<void> {
++  return new Promise((resolve, reject) => {
++    tx.oncomplete = () => resolve();
++    tx.onerror = () => reject(tx.error);
++    tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
++  });
++}
++
++export async function openIdb(): Promise<IDBDatabase> {
++  if (typeof indexedDB === "undefined") throw new Error("IndexedDB unavailable");
++  const open = indexedDB.open(DB_NAME, DB_VERSION);
++  open.onupgradeneeded = () => {
++    const db = open.result;
++    for (const name of ["designs", "library", "kv"]) {
++      if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: "id" });
++    }
++  };
++  return req(open);
++}
++
++/** Reads one key from the kv store. */
++export async function kvGet<T>(db: IDBDatabase, id: string): Promise<T | undefined> {
++  const row = (await req(db.transaction("kv").objectStore("kv").get(id))) as { id: string; value: T } | undefined;
++  return row ? row.value : undefined;
++}
++
++export async function kvPut(db: IDBDatabase, id: string, value: unknown): Promise<void> {
++  const tx = db.transaction("kv", "readwrite");
++  tx.objectStore("kv").put({ id, value });
++  await txDone(tx);
++}
+diff --git a/src/ui/settings-ui.ts b/src/ui/settings-ui.ts
+index fbc4b9d..48a5c7a 100644
+--- a/src/ui/settings-ui.ts
++++ b/src/ui/settings-ui.ts
+@@ -11,6 +11,8 @@ import { applyTheme, type ThemePref } from "./theme.ts";
+ import { exportAll, pickImportFile } from "./backup-ui.ts";
+ import { startTips } from "./tips.ts";
+ import * as E from "./editor.ts";
++import { CATEGORIES, LEAD_OPTIONS } from "../core/campaigns.ts";
++import { backgroundActive, getPrefs as campaignPrefs, openCampaigns, resetReminders, setPrefs as setCampaignPrefs, setSystem, systemSupported } from "./campaigns-ui.ts";
+ 
+ declare const __APP_VERSION__: string;
+ 
+@@ -70,6 +72,52 @@ async function render(): Promise<void> {
+     ),
+   );
+ 
++  // Campaign reminders.
++  const cp = campaignPrefs();
++  const remind = h("input", { type: "checkbox", id: "campRemind" });
++  remind.checked = cp.enabled;
++  remind.addEventListener("change", async () => {
++    await setCampaignPrefs({ ...campaignPrefs(), enabled: remind.checked });
++    render();
++  });
++  const catBoxes = CATEGORIES.map((c) => {
++    const cb = h("input", { type: "checkbox", id: "campCat-" + c.id });
++    cb.checked = cp.categories.includes(c.id);
++    cb.disabled = !cp.enabled;
++    cb.addEventListener("change", () => {
++      const p = campaignPrefs();
++      p.categories = cb.checked ? Array.from(new Set(p.categories.concat(c.id))) : p.categories.filter((x) => x !== c.id);
++      setCampaignPrefs(p);
++    });
++    return h("label", { class: "check", for: cb.id }, cb, " " + c.label);
++  });
++  const lead = h("select", { id: "campLead" }, ...LEAD_OPTIONS.map(([v, l]) => h("option", { value: v }, l)));
++  lead.value = cp.leadDays ? String(cp.leadDays) : "";
++  lead.disabled = !cp.enabled;
++  lead.addEventListener("change", () => setCampaignPrefs({ ...campaignPrefs(), leadDays: lead.value ? Number(lead.value) : null }));
++  const sys = h("input", { type: "checkbox", id: "campSystem" });
++  sys.checked = cp.system && systemSupported() && Notification.permission === "granted";
++  sys.disabled = !cp.enabled || !systemSupported();
++  sys.addEventListener("change", async () => {
++    sys.checked = await setSystem(sys.checked);
++    render();
++  });
++  const bgNote = h("p", { class: "note" }, systemSupported() ? "Notifications arrive when you open the studio. Installed as an app in Chrome or Edge, it can also check while closed." : "This browser cannot show notifications; reminders still appear in the studio.");
++  if (sys.checked) backgroundActive().then((on) => { if (on) bgNote.textContent = "Notifications are on, including checks while the studio is closed."; });
++  const campaignsSection = section(
++    "Campaign reminders",
++    h("label", { class: "check", for: remind.id }, remind, " Remind me before national campaigns (to schedule posts) and while they are on"),
++    h("fieldset", { class: "field" }, h("legend", {}, "Remind me about"), ...catBoxes),
++    h("div", { class: "field" }, h("label", { for: lead.id }, "How far ahead"), lead),
++    h("label", { class: "check", for: sys.id }, sys, " Also show a system notification"),
++    bgNote,
++    h("div", { class: "row-actions" },
++      h("button", { type: "button", class: "ghost", onclick: () => { dlg().close(); openCampaigns(); } }, "Open Campaigns and calendar links"),
++      h("button", { type: "button", class: "ghost", onclick: async () => { await resetReminders(); notify("info", "Dismissed and snoozed reminders are back."); } }, "Bring back dismissed reminders"),
++    ),
++  );
++  body.append(campaignsSection);
++
+   const tipsCb = h("input", { type: "checkbox" });
+   tipsCb.checked = !store.tipsSeen();
+   tipsCb.addEventListener("change", () => store.setTipsSeen(!tipsCb.checked));
+diff --git a/src/ui/store.ts b/src/ui/store.ts
+index dacf4ad..854b9db 100644
+--- a/src/ui/store.ts
++++ b/src/ui/store.ts
+@@ -6,11 +6,9 @@
+ // falls back to localStorage, as the studio has always used.
+ 
+ import type { Design, LibraryItem } from "../core/designs.ts";
++import { openIdb, req, txDone, type StoreName } from "./idb.ts";
+ 
+ const NS = "camra-studio:";
+-const DB_NAME = "camra-studio";
+-const DB_VERSION = 1;
+-type StoreName = "designs" | "library" | "kv";
+ 
+ function lsRead<T>(key: string, fallback: T): T {
+   try {
+@@ -47,33 +45,6 @@ interface Backend {
+   readonly kind: "indexeddb" | "localstorage";
+ }
+ 
+-function req<T>(r: IDBRequest<T>): Promise<T> {
+-  return new Promise((resolve, reject) => {
+-    r.onsuccess = () => resolve(r.result);
+-    r.onerror = () => reject(r.error);
+-  });
+-}
+-
+-function txDone(tx: IDBTransaction): Promise<void> {
+-  return new Promise((resolve, reject) => {
+-    tx.oncomplete = () => resolve();
+-    tx.onerror = () => reject(tx.error);
+-    tx.onabort = () => reject(tx.error || new Error("Storage transaction aborted"));
+-  });
+-}
+-
+-async function openIdb(): Promise<IDBDatabase> {
+-  if (typeof indexedDB === "undefined") throw new Error("IndexedDB unavailable");
+-  const open = indexedDB.open(DB_NAME, DB_VERSION);
+-  open.onupgradeneeded = () => {
+-    const db = open.result;
+-    for (const name of ["designs", "library", "kv"]) {
+-      if (!db.objectStoreNames.contains(name)) db.createObjectStore(name, { keyPath: "id" });
+-    }
+-  };
+-  return req(open);
+-}
+-
+ function idbBackend(db: IDBDatabase): Backend {
+   return {
+     kind: "indexeddb",
+@@ -147,6 +118,7 @@ let backend: Backend = lsBackend();
+ let designs: Design[] = [];
+ let library: LibraryItem[] = [];
+ let customLogo: string | null = null;
++let kv = new Map<string, unknown>();
+ 
+ /** Opens storage, migrating anything an earlier version kept in localStorage. */
+ export async function initStore(): Promise<void> {
+@@ -157,8 +129,9 @@ export async function initStore(): Promise<void> {
+   }
+   designs = await backend.getAll<Design>("designs");
+   library = await backend.getAll<LibraryItem>("library");
+-  const kv = await backend.getAll<{ id: string; value: unknown }>("kv");
+-  const logo = kv.find((x) => x.id === "customLogo");
++  const kvRows = await backend.getAll<{ id: string; value: unknown }>("kv");
++  kv = new Map(kvRows.map((r) => [r.id, r.value]));
++  const logo = kvRows.find((x) => x.id === "customLogo");
+   customLogo = logo && typeof logo.value === "string" ? logo.value : null;
+ 
+   if (backend.kind === "indexeddb") {
+@@ -227,6 +200,20 @@ export const store = {
+     }
+   },
+ 
++  /** A small value kept in the database (readable by the service worker too). */
++  getKv<T>(id: string): T | undefined {
++    return kv.get(id) as T | undefined;
++  },
++  async putKv(id: string, value: unknown): Promise<boolean> {
++    kv.set(id, value);
++    try {
++      await backend.put("kv", { id, value } as { id: string });
++      return true;
++    } catch {
++      return false;
++    }
++  },
++
+   getLibrary(): LibraryItem[] {
+     return library.slice();
+   },
+@@ -277,6 +264,7 @@ export const store = {
+     designs = [];
+     library = [];
+     customLogo = null;
++    kv = new Map();
+     ["library", "prefs", "tipsSeen", "store-designs", "store-library", "store-kv"].forEach(lsRemove);
+   },
+ 
+diff --git a/tests/e2e/campaigns.spec.mjs b/tests/e2e/campaigns.spec.mjs
+new file mode 100644
+index 0000000..6c56954
+--- /dev/null
++++ b/tests/e2e/campaigns.spec.mjs
+@@ -0,0 +1,107 @@
++import { test, expect } from "@playwright/test";
++import { axeViolations, fieldByLabel, openStudio } from "./helpers.mjs";
++
++// 10 April 2027: Mild Month is 21 days away and Members' Weekend 6 days away.
++const APRIL = "2027-04-10T10:00:00";
++
++test("reminders appear before a campaign and a draft fills the form", async ({ page }) => {
++  await openStudio(page, { campaigns: true, now: APRIL });
++  const banner = page.locator("#campaignAlerts");
++  await expect(banner).toBeVisible();
++  await expect(banner).toContainText("Mild Month starts in 21 days");
++  await expect(banner).toContainText("Members' Weekend and AGM starts in 6 days");
++  await expect(page.locator("#campaignsBtn .count-badge")).toHaveText("2");
++
++  // Pick another branch first: the draft must keep it.
++  const branch = page.locator("#branch");
++  const other = await branch.locator("option").nth(3).getAttribute("value");
++  await branch.selectOption(other);
++
++  await banner.locator("article", { hasText: "Mild Month" }).getByRole("button", { name: "Get drafts" }).click();
++  const dlg = page.locator("#campaignsDialog");
++  await expect(dlg).toBeVisible();
++  const card = dlg.locator('[data-campaign="mild-month"]').first();
++  await expect(card).toContainText("1 to 31 May 2027");
++  await card.getByRole("button", { name: /Use the Countdown draft/ }).click();
++  // Changing the branch made the post unsaved, so the studio asks first.
++  await expect(page.locator("#confirmDialog")).toContainText("Replace the current post?");
++  await page.locator("#confirmOk").click();
++  await expect(dlg).toBeHidden();
++  await expect(page.locator("#postType")).toHaveValue("campaignmonth");
++  await expect(await fieldByLabel(page, "Days to go (for a countdown)")).toHaveValue("21");
++  await expect(await fieldByLabel(page, "Dates")).toHaveValue("1 to 31 May");
++  await expect(branch).toHaveValue(other);
++});
++
++test("dismissing a reminder sticks after a reload, and snoozing hides the rest", async ({ page }) => {
++  await openStudio(page, { campaigns: true, now: APRIL });
++  const banner = page.locator("#campaignAlerts");
++  await banner.getByRole("button", { name: "Dismiss the Mild Month reminder" }).click();
++  await expect(banner).not.toContainText("Mild Month");
++  await expect(page.locator("#campaignsBtn .count-badge")).toHaveText("1");
++  await page.reload();
++  await expect(page.locator("html")).toHaveAttribute("data-ready", "1");
++  await expect(banner).toContainText("Members' Weekend");
++  await expect(banner).not.toContainText("Mild Month");
++  // Snooze the other one: the banner empties and hides.
++  await banner.getByRole("button", { name: /Remind me about CAMRA Members' Weekend/ }).click();
++  await expect(banner).toBeHidden();
++});
++
++test("a reminder shows while the campaign is on", async ({ page }) => {
++  await openStudio(page, { campaigns: true, now: "2027-07-20T09:00:00" });
++  const banner = page.locator("#campaignAlerts");
++  await expect(banner).toContainText("Cider and Perry Month is on now");
++  await expect(banner).toContainText("12 days left, until Saturday 31 July");
++});
++
++test("the Campaigns panel lists drafts, deep links and saves drafts to designs", async ({ page }) => {
++  await openStudio(page, { campaigns: true, now: APRIL, query: "?campaign=gbg-launch" });
++  const dlg = page.locator("#campaignsDialog");
++  await expect(dlg).toBeVisible();
++  const gbg = dlg.locator('[data-campaign="gbg-launch"]').first();
++  await expect(gbg).toBeFocused();
++  await expect(gbg).toContainText("Date estimated");
++  await expect(gbg).toContainText("#GBG2028");
++  // Served from 127.0.0.1, so subscribing is explained rather than offered.
++  await expect(dlg).toContainText("Calendar subscriptions work from the hosted studio");
++  await expect(dlg.getByRole("link", { name: "Download the .ics file" })).toHaveAttribute("href", "calendar/campaigns.ics");
++
++  const mild = dlg.locator('[data-campaign="mild-month"]').first();
++  await mild.getByRole("button", { name: "Save all 4 drafts to my designs" }).click();
++  await expect(page.locator("#notices")).toContainText("Saved 4 drafts for Mild Month");
++  await page.locator("#notices").getByRole("button", { name: "View designs" }).click();
++  await expect(page.locator("#designsDialog")).toContainText("Mild Month 2027: Countdown");
++  await expect(page.locator("#designsDialog")).toContainText("Mild Month 2027: Thank you");
++});
++
++test("turning reminders off in Settings hides the banner", async ({ page }) => {
++  await openStudio(page, { campaigns: true, now: APRIL });
++  await expect(page.locator("#campaignAlerts")).toBeVisible();
++  await page.locator("#settingsBtn").click();
++  await page.getByLabel(/Remind me before national campaigns/).uncheck();
++  await expect(page.locator("#campaignAlerts")).toBeHidden();
++  await expect(page.locator("#campaignsBtn .count-badge")).toBeHidden();
++});
++
++test("the calendar feeds are served as text/calendar", async ({ request }) => {
++  for (const f of ["calendar/campaigns.ics", "calendar/camra.ics", "calendar/planning.ics"]) {
++    const res = await request.get("/" + f);
++    expect(res.status()).toBe(200);
++    expect(res.headers()["content-type"]).toContain("text/calendar");
++    const body = await res.text();
++    expect(body.startsWith("BEGIN:VCALENDAR\r\n")).toBe(true);
++    expect(body).toContain("BEGIN:VEVENT");
++  }
++});
++
++test("campaign panel and banner are accessible in both themes", async ({ page }) => {
++  for (const theme of ["dark", "light"]) {
++    await openStudio(page, { campaigns: true, now: APRIL, prefs: { theme } });
++    expect(await axeViolations(page)).toEqual([]);
++    await page.locator("#campaignsBtn").click();
++    await expect(page.locator("#campaignsDialog")).toBeVisible();
++    expect(await axeViolations(page)).toEqual([]);
++    await page.evaluate(() => sessionStorage.clear());
++  }
++});
+diff --git a/tests/e2e/helpers.mjs b/tests/e2e/helpers.mjs
+index d081293..5d38a83 100644
+--- a/tests/e2e/helpers.mjs
++++ b/tests/e2e/helpers.mjs
+@@ -6,8 +6,14 @@ import { iconPng } from "../../scripts/icon.mjs";
+ const require = createRequire(import.meta.url);
+ const AXE = readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
+ 
+-/** Opens the studio with tips already seen (unless asked) and waits for boot. */
+-export async function openStudio(page, { query = "", tips = false, prefs = null, errors = null } = {}) {
++/**
++ * Opens the studio with tips already seen (unless asked) and waits for boot.
++ * Campaign reminders are off unless `campaigns` is set, so tests do not depend
++ * on the date they run; `now` fixes the date for the ones that do.
++ */
++export async function openStudio(page, { query = "", tips = false, prefs = null, errors = null, campaigns = false, now = null } = {}) {
++  if (!campaigns) prefs = { campaigns: { enabled: false }, ...(prefs || {}) };
++  if (now) await page.clock.setFixedTime(new Date(now));
+   await page.addInitScript(
+     ([seen, p]) => {
+       if (sessionStorage.getItem("__init")) return;
+diff --git a/tests/unit/campaigns.test.mjs b/tests/unit/campaigns.test.mjs
+new file mode 100644
+index 0000000..b0cddf5
+--- /dev/null
++++ b/tests/unit/campaigns.test.mjs
+@@ -0,0 +1,245 @@
++// Campaigns: date rules, reminders, drafts and the iCalendar feeds.
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import {
++  CAMPAIGNS,
++  CATEGORIES,
++  DEFAULT_PREFS,
++  FEEDS,
++  buildIcs,
++  campaignById,
++  campaignsMarkdown,
++  draftParams,
++  dueAlerts,
++  emptyState,
++  feedFor,
++  fillTokens,
++  foldLine,
++  normalisePrefs,
++  nthWeekday,
++  occurrence,
++  ordinal,
++  pruneState,
++  rangeLabel,
++  suggestedDraft,
++  timeline,
++  tokens,
++} from "../../src/core/campaigns.ts";
++import { TEMPLATES, templateById } from "../../src/core/templates.ts";
++import { ICON_NAMES } from "../../src/core/icons.ts";
++import { readFileSync } from "node:fs";
++
++const c = (id) => campaignById(id);
++
++test("campaign ids are unique and every campaign is complete", () => {
++  const ids = CAMPAIGNS.map((x) => x.id);
++  assert.equal(new Set(ids).size, ids.length);
++  const cats = new Set(CATEGORIES.map((x) => x.id));
++  for (const x of CAMPAIGNS) {
++    assert.ok(cats.has(x.category), x.id + " category");
++    assert.ok(x.summary.length > 20, x.id + " summary");
++    assert.ok(x.leadDays >= 7 && x.leadDays <= 60, x.id + " lead");
++    assert.ok(x.drafts.length >= 1, x.id + " drafts");
++    if (x.url) assert.match(x.url, /^https:\/\//, x.id + " url");
++  }
++});
++
++test("every draft uses a real post type, real fields and a real icon", () => {
++  for (const x of CAMPAIGNS) {
++    for (const d of x.drafts) {
++      const t = templateById(d.type);
++      assert.ok(t, x.id + "/" + d.id + " type " + d.type);
++      const keys = new Set(t.fields.map((f) => f.key));
++      for (const k of Object.keys(d.values)) assert.ok(keys.has(k), x.id + "/" + d.id + " field " + k);
++      if (d.icon) assert.ok(ICON_NAMES.includes(d.icon), x.id + "/" + d.id + " icon " + d.icon);
++      const phase = d.values.phase;
++      if (phase) {
++        const opts = t.fields.find((f) => f.key === "phase").options.map((o) => (Array.isArray(o) ? o[0] : o));
++        assert.ok(opts.includes(phase), x.id + "/" + d.id + " phase " + phase);
++      }
++    }
++  }
++});
++
++test("nth weekday: first, third and last Thursdays", () => {
++  assert.equal(nthWeekday(2026, 8, 4, 1), "2026-08-06");
++  assert.equal(nthWeekday(2026, 9, 4, 3), "2026-09-17");
++  assert.equal(nthWeekday(2026, 9, 4, -1), "2026-09-24");
++  assert.equal(nthWeekday(2027, 9, 4, -1), "2027-09-30");
++  assert.equal(nthWeekday(2026, 12, 6, 1), "2026-12-05");
++});
++
++test("occurrences match the dates published for 2026 and 2027", () => {
++  const o = (id, y) => {
++    const r = occurrence(c(id), y);
++    return [r.start, r.end];
++  };
++  assert.deepEqual(o("mild-month", 2027), ["2027-05-01", "2027-05-31"]);
++  assert.deepEqual(o("cider-perry-month", 2027), ["2027-07-01", "2027-07-31"]);
++  assert.deepEqual(o("cask-ale-week", 2026), ["2026-09-17", "2026-09-27"]);
++  assert.deepEqual(o("gbg-launch", 2026), ["2026-09-24", "2026-09-24"]);
++  assert.deepEqual(o("gbg-launch", 2025), ["2025-09-25", "2025-09-25"]);
++  assert.deepEqual(o("members-weekend", 2027), ["2027-04-16", "2027-04-18"]);
++  assert.deepEqual(o("small-business-saturday", 2026), ["2026-12-05", "2026-12-05"]);
++  assert.deepEqual(o("beer-day-britain", 2026), ["2026-06-15", "2026-06-15"]);
++});
++
++test("the rules for estimated campaigns reproduce the confirmed years", () => {
++  // If a rule fits the years we know, it is a fair guess for the next one.
++  for (const x of CAMPAIGNS) {
++    for (const [y, conf] of Object.entries(x.confirmed || {})) {
++      const bare = occurrence({ ...x, confirmed: undefined }, Number(y));
++      assert.deepEqual([bare.start, bare.end], [conf.start, conf.end], x.id + " " + y);
++    }
++  }
++});
++
++test("estimated is only set for unconfirmed pattern-based dates", () => {
++  assert.equal(occurrence(c("gbg-launch"), 2026).estimated, false);
++  assert.equal(occurrence(c("gbg-launch"), 2027).estimated, true);
++  assert.equal(occurrence(c("mild-month"), 2030).estimated, false);
++  assert.equal(occurrence(c("members-weekend"), 2027).venue, "Chester");
++});
++
++test("labels: ranges, single days and ordinals", () => {
++  assert.equal(rangeLabel("2027-05-01", "2027-05-31"), "1 to 31 May");
++  assert.equal(rangeLabel("2027-04-30", "2027-05-02"), "30 April to 2 May");
++  assert.equal(rangeLabel("2026-09-24", "2026-09-24"), "Thursday 24 September");
++  assert.equal(rangeLabel("2027-05-01", "2027-05-31", true), "1 to 31 May 2027");
++  assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 56, 101, 111].map(ordinal), ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "56th", "101st", "111th"]);
++});
++
++test("reminders: before (to schedule posts) and while it is on", () => {
++  const prefs = DEFAULT_PREFS;
++  const before = dueAlerts(CAMPAIGNS, "2027-04-10", prefs, emptyState());
++  const mild = before.find((a) => a.entry.occ.campaign.id === "mild-month");
++  assert.equal(mild.phase, "prep");
++  assert.equal(mild.entry.daysToStart, 21);
++  assert.match(mild.body, /schedule your posts/);
++  const during = dueAlerts(CAMPAIGNS, "2027-05-20", prefs, emptyState()).find((a) => a.entry.occ.campaign.id === "mild-month");
++  assert.equal(during.phase, "live");
++  assert.equal(during.entry.daysLeft, 12);
++  assert.equal(dueAlerts(CAMPAIGNS, "2027-06-01", prefs, emptyState()).some((a) => a.entry.occ.campaign.id === "mild-month"), false);
++  assert.equal(dueAlerts(CAMPAIGNS, "2027-03-01", prefs, emptyState()).some((a) => a.entry.occ.campaign.id === "mild-month"), false);
++});
++
++test("reminders: live ones come first", () => {
++  const list = dueAlerts(CAMPAIGNS, "2027-07-25", DEFAULT_PREFS, emptyState());
++  assert.equal(list[0].phase, "live");
++  assert.ok(list.some((a) => a.phase === "prep"));
++});
++
++test("reminders: dismissing one stage keeps the other, snoozing hides until the day", () => {
++  const key = "mild-month:2027:prep";
++  const s = { ...emptyState(), dismissed: { [key]: true } };
++  assert.equal(dueAlerts(CAMPAIGNS, "2027-04-10", DEFAULT_PREFS, s).some((a) => a.key === key), false);
++  assert.ok(dueAlerts(CAMPAIGNS, "2027-05-02", DEFAULT_PREFS, s).some((a) => a.key === "mild-month:2027:live"));
++  const z = { ...emptyState(), snoozed: { [key]: "2027-04-13" } };
++  assert.equal(dueAlerts(CAMPAIGNS, "2027-04-12", DEFAULT_PREFS, z).some((a) => a.key === key), false);
++  assert.ok(dueAlerts(CAMPAIGNS, "2027-04-13", DEFAULT_PREFS, z).some((a) => a.key === key));
++});
++
++test("reminders: categories, mutes, lead override and the off switch", () => {
++  const day = "2027-04-20"; // St George's Day is three days away
++  const has = (p, id) => dueAlerts(CAMPAIGNS, day, p, emptyState()).some((a) => a.entry.occ.campaign.id === id);
++  assert.equal(has(DEFAULT_PREFS, "st-georges-day"), false, "national days are off by default");
++  assert.equal(has({ ...DEFAULT_PREFS, categories: ["national"] }, "st-georges-day"), true);
++  assert.equal(has({ ...DEFAULT_PREFS, muted: ["mild-month"] }, "mild-month"), false);
++  assert.equal(has({ ...DEFAULT_PREFS, leadDays: 7 }, "mild-month"), false);
++  assert.equal(has({ ...DEFAULT_PREFS, enabled: false }, "mild-month"), false);
++});
++
++test("prefs and state survive junk", () => {
++  assert.deepEqual(normalisePrefs(null), DEFAULT_PREFS);
++  const p = normalisePrefs({ enabled: "yes", categories: ["camra", "nope"], leadDays: 999, muted: [1, "x"] });
++  assert.deepEqual([p.enabled, p.categories, p.leadDays, p.muted], [true, ["camra"], null, ["x"]]);
++  const pruned = pruneState({ dismissed: { "a:2020:prep": true, "a:2027:prep": true }, snoozed: {}, notified: {} }, "2027-01-01");
++  assert.deepEqual(Object.keys(pruned.dismissed), ["a:2027:prep"]);
++});
++
++test("drafts: tokens fill in, and countdowns count from the day used", () => {
++  const occ = occurrence(c("gbg-launch"), 2026);
++  const t = tokens(occ, "2026-09-10");
++  assert.equal(t.edition, "2027");
++  assert.equal(t.days, "14");
++  const qp = draftParams(c("gbg-launch").drafts[0], occ, "2026-09-10");
++  assert.equal(qp.get("type"), "countdown");
++  assert.equal(qp.get("event"), "The 2027 Good Beer Guide");
++  assert.equal(qp.get("date"), "Out Thursday 24 September");
++  assert.equal(qp.get("days"), "14");
++  const list = JSON.parse(draftParams(c("camra-birthday").drafts[1], occurrence(c("camra-birthday"), 2027), "2027-03-01").get("benefits"));
++  assert.equal(list[0].benefit, "56 years of campaigning");
++  assert.equal(fillTokens("CAMRA Members' Weekend {where}", { where: "" }), "CAMRA Members' Weekend");
++  assert.equal(fillTokens("{dates} {where}.", { dates: "1 to 3 May", where: "" }), "1 to 3 May.");
++});
++
++test("drafts render through their post type", () => {
++  const occ = occurrence(c("mild-month"), 2027);
++  const qp = draftParams(c("mild-month").drafts[0], occ, "2027-04-10");
++  const v = Object.fromEntries(qp);
++  const l = templateById("campaignmonth").build(v);
++  assert.deepEqual([l.eyebrow, l.title, l.subtitle, l.campaign], ["MILD MONTH", "21 days to go", "1 to 31 May", true]);
++});
++
++test("suggested draft follows the moment", () => {
++  const [before] = timeline([c("mild-month")], "2027-04-10");
++  assert.equal(suggestedDraft(before).phase, "before");
++  const [start] = timeline([c("mild-month")], "2027-05-03");
++  assert.equal(suggestedDraft(start).phase, "start");
++  const [end] = timeline([c("mild-month")], "2027-05-27");
++  assert.equal(suggestedDraft(end).phase, "end");
++});
++
++test("stages: campaign posts look the same as before when no stage is set", () => {
++  const l = templateById("campaignmonth").build({ campaignName: "Mild Month", heading: "H", note: "N" });
++  assert.deepEqual([l.eyebrow, l.title, l.lines], ["MILD MONTH", "H", ["N"]]);
++  const o = templateById("occasion").build({ occasion: "St George's Day", phase: "today" });
++  assert.deepEqual([o.eyebrow, o.title, o.campaign, o.accentKey], ["TODAY", "St George's Day", undefined, "watermelon"]);
++  assert.equal(templateById("occasion").build({ occasion: "World Cider Day" }).accentKey, "blue");
++  assert.equal(TEMPLATES.filter((t) => t.id === "occasion").length, 1);
++});
++
++test("iCalendar: CRLF lines no longer than 75 octets, escaped text, unique UIDs", () => {
++  const now = new Date(Date.UTC(2026, 9, 18, 12, 0, 0));
++  for (const f of FEEDS) {
++    const ics = feedFor(f, now, { siteUrl: "https://example.org/studio/", version: "2.4.0" });
++    assert.ok(ics.startsWith("BEGIN:VCALENDAR\r\n") && ics.endsWith("END:VCALENDAR\r\n"), f.file);
++    assert.equal(/[^\r]\n/.test(ics), false, f.file + " bare LF");
++    const enc = new TextEncoder();
++    for (const line of ics.split("\r\n")) assert.ok(enc.encode(line).length <= 75, f.file + " long line: " + line);
++    const uids = ics.match(/^UID:.*$/gm);
++    assert.equal(new Set(uids).size, uids.length, f.file + " duplicate UID");
++    assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, (ics.match(/END:VEVENT/g) || []).length);
++  }
++  const all = feedFor(FEEDS[0], now, {});
++  assert.match(all, /UID:mild-month-2027@camra-graphics-studio/);
++  assert.match(all, /DTSTART;VALUE=DATE:20270501\r\nDTEND;VALUE=DATE:20270601/);
++  assert.match(all, /TRIGGER:-P28D/);
++  assert.match(all, /SUMMARY:Good Beer Guide launch \(date estimated\)/);
++  assert.match(all, /DTSTAMP:20261018T120000Z/);
++  // Four years ahead are not included; last year is.
++  assert.match(all, /tryanuary-2025@/);
++  assert.equal(/tryanuary-2030@/.test(all), false);
++  const camraOnly = feedFor(FEEDS[1], now, {});
++  assert.equal(/beer-day-britain/.test(camraOnly), false);
++  const plan = feedFor(FEEDS[2], now, { siteUrl: "https://example.org/" });
++  assert.match(plan, /UID:mild-month-2027-plan@/);
++  assert.match(plan, /DTSTART;VALUE=DATE:20270403/);
++  assert.match(plan.replace(/\r\n /g, ""), /\?campaign=mild-month/);
++});
++
++test("iCalendar: folding never splits a character and text is escaped", () => {
++  const long = "DESCRIPTION:" + "é".repeat(80);
++  const folded = foldLine(long);
++  assert.equal(folded.replace(/\r\n /g, ""), long);
++  const one = buildIcs([occurrence(c("mild-month"), 2027)], { name: "A, B; C", description: "x\ny", now: new Date(0) });
++  assert.match(one, /X-WR-CALNAME:A\\, B\\; C/);
++  assert.match(one, /X-WR-CALDESC:x\\ny/);
++});
++
++test("docs/CAMPAIGNS.md is generated from the catalogue", () => {
++  const md = campaignsMarkdown();
++  for (const x of CAMPAIGNS) assert.ok(md.includes("`" + x.id + "`"), x.id);
++  assert.equal(readFileSync(new URL("../../docs/CAMPAIGNS.md", import.meta.url), "utf8"), md);
++  assert.equal(/[\u2013\u2014]/.test(md), false, "no dashes");
++});
+diff --git a/tests/unit/v23.test.mjs b/tests/unit/v23.test.mjs
+index 8ceeecc..ed80086 100644
+--- a/tests/unit/v23.test.mjs
++++ b/tests/unit/v23.test.mjs
+@@ -41,7 +41,7 @@ test("logo search ignores case, accents and & versus and", () => {
+ });
+ 
+ test("every post type has a group and the new ones build sensibly", () => {
+-  assert.equal(TEMPLATES.length, 22);
++  assert.equal(TEMPLATES.length, 23);
+   for (const t of TEMPLATES) assert.ok(TEMPLATE_GROUPS.includes(t.group), t.id);
+   assert.equal(templateById("countdown").build({ days: "1" }).title, "1 day to go");
+   assert.equal(templateById("countdown").build({ days: "12" }).title, "12 days to go");
+-- 
+2.39.5
+

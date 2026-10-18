@@ -30,12 +30,13 @@ import {
   type TimelineEntry,
 } from "../core/campaigns.ts";
 import { newId, type Design } from "../core/designs.ts";
+import { planLabel, postAlert, suggestedPostDate, type PostAlert } from "../core/calendar.ts";
 import { byId, copyText, downloadBlob, flashLabel, h } from "./dom.ts";
 import { closeDialog, openDialog } from "./dialog.ts";
 import { notify } from "./notices.ts";
 import { store } from "./store.ts";
 import * as E from "./editor.ts";
-import { confirmReplace, openDesigns } from "./designs-ui.ts";
+import { confirmReplace, onDesignsChanged } from "./designs-ui.ts";
 
 declare const __APP_VERSION__: string;
 
@@ -77,14 +78,41 @@ export function currentAlerts(): Alert[] {
   return dueAlerts(CAMPAIGNS, today(), getPrefs(), getState());
 }
 
+/** Planned posts due today (and earlier ones not marked posted). */
+export function currentPostAlert(): PostAlert | null {
+  if (store.getPrefs().postReminders === false) return null;
+  return postAlert(store.getDesigns(), today(), getState().dismissed);
+}
+
+let calendarOpener: (day?: string) => void = () => undefined;
+export function setCalendarOpener(fn: (day?: string) => void): void {
+  calendarOpener = fn;
+}
+
 // --- the reminder banner and the nav badge ---
 
-function renderBanner(alerts: Alert[]): void {
+function renderBanner(alerts: Alert[], posts: PostAlert | null): void {
   const box = byId("campaignAlerts");
   box.innerHTML = "";
-  box.hidden = !alerts.length;
-  if (!alerts.length) return;
-  box.append(h("h2", { class: "sr-only" }, "Campaign reminders"));
+  box.hidden = !alerts.length && !posts;
+  if (box.hidden) return;
+  box.append(h("h2", { class: "sr-only" }, "Reminders"));
+  if (posts) {
+    box.append(
+      h(
+        "article",
+        { class: "camp-alert posts", "data-key": posts.key },
+        h("span", { class: "camp-alert-dot", "aria-hidden": "true" }),
+        h("div", { class: "camp-alert-text" }, h("p", { class: "camp-alert-title" }, posts.title), h("p", {}, posts.body)),
+        h(
+          "div",
+          { class: "camp-alert-actions" },
+          h("button", { type: "button", class: "btn primary", onclick: () => calendarOpener(posts.today.length ? posts.day : (posts.overdue[0].postOn as string)) }, "Open the calendar"),
+          h("button", { type: "button", class: "ghost", onclick: () => dismissPosts(posts), "aria-label": "Dismiss today's post reminder" }, "Dismiss"),
+        ),
+      ),
+    );
+  }
   alerts.slice(0, MAX_BANNER).forEach((a) => {
     const id = a.entry.occ.campaign.id;
     box.append(
@@ -107,6 +135,13 @@ function renderBanner(alerts: Alert[]): void {
     const more = alerts.length - MAX_BANNER;
     box.append(h("button", { type: "button", class: "ghost camp-more", onclick: () => openCampaigns() }, "And " + more + " more " + (more === 1 ? "reminder" : "reminders")));
   }
+}
+
+async function dismissPosts(p: PostAlert): Promise<void> {
+  const s = getState();
+  s.dismissed[p.key] = true;
+  await saveState(s);
+  refreshCampaigns();
 }
 
 function renderBadge(alerts: Alert[]): void {
@@ -154,11 +189,12 @@ export async function resetReminders(): Promise<void> {
 
 // --- drafts ---
 
-function draftQuery(e: TimelineEntry, d: Draft): URLSearchParams {
+function draftQuery(e: TimelineEntry, d: Draft, postOn: string): URLSearchParams {
   // Your default look first, then the draft, then your branch, so a draft
-  // always arrives in your own colours with your own logo.
+  // always arrives in your own colours with your own logo. Dates and days to
+  // go are worked out for the day it is planned for.
   const merged = new URLSearchParams(store.getPrefs().styleDefaults || "");
-  draftParams(d, e.occ, today()).forEach((v, k) => merged.set(k, v));
+  draftParams(d, e.occ, postOn).forEach((v, k) => merged.set(k, v));
   const cur = E.serialize();
   ["branch", "branchName", "branchLogo"].forEach((k) => {
     const v = cur.get(k);
@@ -167,25 +203,36 @@ function draftQuery(e: TimelineEntry, d: Draft): URLSearchParams {
   return merged;
 }
 
+function refFor(e: TimelineEntry, d: Draft) {
+  return { id: e.occ.campaign.id, year: e.occ.year, draft: d.id };
+}
+
 async function useDraft(e: TimelineEntry, d: Draft): Promise<void> {
   if (!(await confirmReplace())) return;
   const logo = E.captureForm().logo;
-  await E.restoreForm({ params: draftQuery(e, d).toString(), photo: null, logo });
+  const postOn = suggestedPostDate(e.occ.campaign, e.occ, d, today());
+  await E.restoreForm({ params: draftQuery(e, d, postOn).toString(), photo: null, logo, postOn, postAt: null, campaign: refFor(e, d) });
   E.state.currentDesignId = null;
   E.state.dirty = true;
   closeDialog(dlg());
-  notify("success", "Draft ready: " + e.occ.campaign.name + ", " + d.name.toLowerCase() + ". Check the details, then download or save it.");
+  notify("success", "Draft ready: " + e.occ.campaign.name + ", " + d.name.toLowerCase() + ", suggested for " + planLabel({ postOn } as Design) + ". Check the details and the post text, then save it to the calendar or download it.");
 }
 
-async function saveDrafts(e: TimelineEntry): Promise<void> {
+async function planDrafts(e: TimelineEntry): Promise<void> {
   const saved = E.captureForm();
   const savedId = E.state.currentDesignId;
   const savedDirty = E.state.dirty;
   const now = new Date().toISOString();
+  const existing = new Set(store.getDesigns().filter((x) => !x.deletedAt && x.campaign).map((x) => x.campaign!.id + ":" + x.campaign!.year + ":" + x.campaign!.draft));
   const out: Design[] = [];
+  let skipped = 0;
   for (const d of e.occ.campaign.drafts) {
-    const params = draftQuery(e, d).toString();
-    await E.restoreForm({ params, photo: null, logo: saved.logo });
+    if (existing.has(e.occ.campaign.id + ":" + e.occ.year + ":" + d.id)) {
+      skipped++;
+      continue;
+    }
+    const postOn = suggestedPostDate(e.occ.campaign, e.occ, d, today());
+    await E.restoreForm({ params: draftQuery(e, d, postOn).toString(), photo: null, logo: saved.logo });
     out.push({
       id: newId("dsn"),
       name: e.occ.campaign.name + " " + e.occ.year + ": " + d.name,
@@ -196,16 +243,32 @@ async function saveDrafts(e: TimelineEntry): Promise<void> {
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
+      postOn,
+      postAt: null,
+      postedAt: null,
+      campaign: refFor(e, d),
     });
   }
   await E.restoreForm(saved);
   E.state.currentDesignId = savedId;
   E.state.dirty = savedDirty;
+  if (!out.length) {
+    notify("info", "These drafts are already in your calendar.", { action: { label: "Open calendar", run: () => { closeDialog(dlg()); calendarOpener(e.occ.start); } } });
+    return;
+  }
   if (!(await store.putDesigns(out))) {
     notify("error", "Could not save the drafts: this browser's storage is full.");
     return;
   }
-  notify("success", "Saved " + out.length + (out.length === 1 ? " draft" : " drafts") + " for " + e.occ.campaign.name + " to your designs.", { action: { label: "View designs", run: () => { closeDialog(dlg()); openDesigns(); } } });
+  const first = out[0].postOn as string;
+  notify("success", "Planned " + out.length + (out.length === 1 ? " post" : " posts") + " for " + e.occ.campaign.name + " in your calendar" + (skipped ? " (" + skipped + " already there)" : "") + ". Change any of them before the day.", { action: { label: "Open calendar", run: () => { closeDialog(dlg()); calendarOpener(first); } } });
+  refreshCampaigns();
+  changedHooks.forEach((f) => f());
+}
+
+const changedHooks: Array<() => void> = [];
+export function onPlanned(fn: () => void): void {
+  changedHooks.push(fn);
 }
 
 // --- calendar ---
@@ -320,7 +383,7 @@ function entryCard(e: TimelineEntry, prefs: CampaignPrefs): HTMLElement {
     h(
       "div",
       { class: "row-actions campaign-more" },
-      h("button", { type: "button", class: "ghost", onclick: () => saveDrafts(e) }, c.drafts.length === 1 ? "Save the draft to my designs" : "Save all " + c.drafts.length + " drafts to my designs"),
+      h("button", { type: "button", class: "ghost", onclick: () => planDrafts(e) }, c.drafts.length === 1 ? "Plan it in my calendar" : "Plan all " + c.drafts.length + " in my calendar"),
       h("button", { type: "button", class: "ghost", onclick: () => downloadIcs(c.id + "-" + e.occ.year + ".ics", buildIcs([e.occ], { name: c.name, description: c.summary, now: new Date(), version: __APP_VERSION__, siteUrl: hosted() ? siteBase() : undefined, leadOverride: prefs.leadDays })) }, "Add this one to my calendar"),
       c.url ? h("a", { class: "ghost", href: c.url, target: "_blank", rel: "noopener" }, "About " + c.name) : null,
       h("label", { class: "check", for: mute.id }, mute, " Remind me"),
@@ -386,7 +449,7 @@ export function openCampaigns(id?: string): void {
 
 export function refreshCampaigns(): void {
   const alerts = currentAlerts();
-  renderBanner(alerts);
+  renderBanner(alerts, currentPostAlert());
   renderBadge(alerts);
   if (dlg().open) render();
 }
@@ -413,6 +476,19 @@ async function sendSystem(alerts: Alert[]): Promise<void> {
   if (!getPrefs().system || typeof Notification === "undefined" || Notification.permission !== "granted") return;
   const s = getState();
   const fresh = alerts.filter((a) => !s.notified[a.key]);
+  const posts = currentPostAlert();
+  if (posts && posts.today.length && !s.notified[posts.key]) {
+    try {
+      const opts: NotificationOptions = { body: posts.body, tag: posts.key, icon: "assets/icons/icon-192.png", data: { url: siteBase() + "?calendar=" + posts.day } };
+      const reg = await registration();
+      if (reg) await reg.showNotification(posts.title, opts);
+      else new Notification(posts.title, opts);
+      s.notified[posts.key] = true;
+      if (!fresh.length) await saveState(s);
+    } catch {
+      /* the banner still shows */
+    }
+  }
   if (!fresh.length) return;
   for (const a of fresh) {
     try {
@@ -487,6 +563,7 @@ export async function backgroundActive(): Promise<boolean> {
 
 export function initCampaigns(): void {
   byId("campaignsBtn").addEventListener("click", () => openCampaigns());
+  onDesignsChanged(() => refreshCampaigns());
   const qp = new URLSearchParams(location.search);
   const wanted = qp.get("campaign");
   refreshCampaigns();
