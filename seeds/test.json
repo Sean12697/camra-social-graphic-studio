@@ -1,0 +1,95 @@
+{
+  "format": "camra-studio-backup",
+  "schema": 1,
+  "note": "Deterministic edge-case fixtures for the test suite: Unicode, right-to-left text, maximum lengths, injection-like strings, invalid values and malformed entries.",
+  "designs": [
+    {
+      "id": "t-unicode",
+      "name": "Unicode: Café Zürich ☕ 🍺",
+      "typeId": "newcomer",
+      "params": "type=newcomer&pubName=Caf%C3%A9%20Z%C3%BCrich%20%E2%98%95%20%F0%9F%8D%BA%20%C3%96lst%C3%BCbchen&address=Stra%C3%9Fe%201%2C%20%C5%81%C3%B3d%C5%BA",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "t-rtl",
+      "name": "RTL: بار الحانة",
+      "typeId": "custom",
+      "params": "type=custom&title=%D7%91%D7%99%D7%A8%D7%94%20%D7%98%D7%95%D7%91%D7%94%20%D7%91%D7%A4%D7%90%D7%91&subtitle=%D8%A8%D8%A7%D8%B1%20%D8%A7%D9%84%D8%AD%D8%A7%D9%86%D8%A9%20%D8%A7%D9%84%D9%82%D8%AF%D9%8A%D9%85%D8%A9&note=Mixed%20English%20and%20%D7%A2%D7%91%D7%A8%D7%99%D7%AA%20text",
+      "createdAt": "2026-01-02T00:00:00.000Z",
+      "updatedAt": "2026-01-02T00:00:00.000Z"
+    },
+    {
+      "id": "t-long",
+      "name": "Long: A very long pub name that keeps going and going A very long pub name that keeps going and going A very long pub name that keeps going and going A very",
+      "typeId": "announcement",
+      "params": "type=announcement&heading=A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20&body=A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20%0AA%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20%0AA%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20%0AA%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20A%20very%20long%20pub%20name%20that%20keeps%20going%20and%20going%20%0A",
+      "createdAt": "2026-01-03T00:00:00.000Z",
+      "updatedAt": "2026-01-03T00:00:00.000Z"
+    },
+    {
+      "id": "t-inject",
+      "name": "<img src=x onerror=\"window.__pwned=1\">",
+      "typeId": "custom",
+      "params": "type=custom&eyebrow=%3Cscript%3Ewindow.__pwned%3D1%3C%2Fscript%3E&title=%22%3E%3Csvg%20onload%3Dwindow.__pwned%3D1%3E&subtitle=%27%3B%20DROP%20TABLE%20designs%3B%20--&tagline=%3Cb%3Enot%20approved%3C%2Fb%3E",
+      "createdAt": "2026-01-04T00:00:00.000Z",
+      "updatedAt": "2026-01-04T00:00:00.000Z"
+    },
+    {
+      "id": "t-bad-values",
+      "name": "Bad values: unknown type, colours and sizes",
+      "typeId": "nonexistent",
+      "params": "type=nonexistent&bg=notacolour&titlecolor=%2312345&logoScale=0.1&x=9&zoom=-4&sizes=not-a-size%2Cig-square&preview=nope&logos=both&orient=sideways&events=%7Bnot%20json",
+      "createdAt": "2026-01-05T00:00:00.000Z",
+      "updatedAt": "2026-01-05T00:00:00.000Z"
+    },
+    {
+      "id": "t-empty-list",
+      "name": "Empty list: What's On with no events",
+      "typeId": "whatson",
+      "params": "type=whatson&events=%5B%5D",
+      "createdAt": "2026-01-06T00:00:00.000Z",
+      "updatedAt": "2026-01-06T00:00:00.000Z"
+    },
+    {
+      "id": "t-many",
+      "name": "Many rows: twelve pubs",
+      "typeId": "social",
+      "params": "type=social&name=The%20big%20crawl&date=All%20day&pubs=%5B%7B%22pub%22%3A%22Pub%20number%201%22%2C%22time%22%3A%221pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%202%22%2C%22time%22%3A%222pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%203%22%2C%22time%22%3A%223pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%204%22%2C%22time%22%3A%224pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%205%22%2C%22time%22%3A%225pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%206%22%2C%22time%22%3A%226pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%207%22%2C%22time%22%3A%227pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%208%22%2C%22time%22%3A%228pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%209%22%2C%22time%22%3A%229pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%2010%22%2C%22time%22%3A%2210pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%2011%22%2C%22time%22%3A%2211pm%22%7D%2C%7B%22pub%22%3A%22Pub%20number%2012%22%2C%22time%22%3A%2212pm%22%7D%5D",
+      "createdAt": "2026-01-07T00:00:00.000Z",
+      "updatedAt": "2026-01-07T00:00:00.000Z"
+    },
+    {
+      "id": "t-trashed",
+      "name": "Already deleted",
+      "typeId": "custom",
+      "params": "type=custom&title=Deleted",
+      "createdAt": "2026-01-08T00:00:00.000Z",
+      "updatedAt": "2026-01-08T00:00:00.000Z",
+      "deletedAt": "2026-01-09T00:00:00.000Z"
+    },
+    {
+      "id": "",
+      "name": "Missing id is skipped",
+      "params": ""
+    },
+    {
+      "name": "No id or params is skipped"
+    },
+    "not an object"
+  ],
+  "library": [
+    {
+      "id": "t-lib-logo",
+      "kind": "logo",
+      "name": "Tiny logo",
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII="
+    },
+    {
+      "id": "t-lib-bad",
+      "kind": "sticker",
+      "name": "Unknown kind is skipped",
+      "dataUrl": "data:,x"
+    }
+  ]
+}

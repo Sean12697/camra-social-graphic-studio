@@ -1,0 +1,89 @@
+{
+  "format": "camra-studio-backup",
+  "schema": 1,
+  "note": "Sample designs shown by Load sample designs. All pubs, breweries and events are fictional.",
+  "designs": [
+    {
+      "id": "sample-newcomer",
+      "name": "Newcomer: The Copper Kettle",
+      "typeId": "newcomer",
+      "params": "type=newcomer&branch=central-manchester&pubName=The%20Copper%20Kettle&address=Tanner%27s%20Row%2C%20Northern%20Quarter&icon=pint&sizes=ig-square%2Cig-story%2Cfb-landscape",
+      "createdAt": "2026-09-01T18:30:00.000Z",
+      "updatedAt": "2026-10-01T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-award",
+      "name": "Pub of the Year: The Lamplighter",
+      "typeId": "award",
+      "params": "type=award&branch=central-manchester&award=Pub%20of%20the%20Year&scope=Branch&result=winner&recipient=The%20Lamplighter&year=2026&icon=trophy&sizes=ig-square%2Cig-portrait",
+      "createdAt": "2026-09-02T18:30:00.000Z",
+      "updatedAt": "2026-10-02T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-whatson",
+      "name": "What's on in November",
+      "typeId": "whatson",
+      "params": "type=whatson&branch=central-manchester&heading=Coming%20up%20in%20November&scope=branch&events=%5B%7B%22name%22%3A%22Branch%20meeting%22%2C%22date%22%3A%22Tue%204%20Nov%2C%207.30pm%22%2C%22venue%22%3A%22The%20Ropewalk%20Tap%22%7D%2C%7B%22name%22%3A%22Cider%20and%20perry%20social%22%2C%22date%22%3A%22Sat%2015%20Nov%2C%202pm%22%2C%22venue%22%3A%22The%20Orchard%20Arms%22%7D%2C%7B%22name%22%3A%22Pub%20of%20the%20Year%20presentation%22%2C%22date%22%3A%22Thu%2027%20Nov%2C%208pm%22%2C%22venue%22%3A%22The%20Lamplighter%22%7D%5D&icon=calendar&sizes=ig-square%2Cig-portrait%2Cfb-landscape",
+      "createdAt": "2026-09-03T18:30:00.000Z",
+      "updatedAt": "2026-10-03T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-social",
+      "name": "Social: Ancoats ale trail",
+      "typeId": "social",
+      "params": "type=social&branch=central-manchester&name=Ancoats%20ale%20trail&date=Saturday%2022%20November&pubs=%5B%7B%22pub%22%3A%22The%20Ropewalk%20Tap%22%2C%22time%22%3A%221pm%22%7D%2C%7B%22pub%22%3A%22The%20Foundry%22%2C%22time%22%3A%222.30pm%22%7D%2C%7B%22pub%22%3A%22The%20Weavers%27%20Rest%22%2C%22time%22%3A%224pm%22%7D%5D&icon=mug&sizes=ig-square%2Cig-story",
+      "createdAt": "2026-09-04T18:30:00.000Z",
+      "updatedAt": "2026-10-04T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-agm",
+      "name": "AGM invitation",
+      "typeId": "meeting",
+      "params": "type=meeting&branch=central-manchester&meetingType=AGM&date=Tuesday%202%20December%2C%207.30pm&venue=The%20Ropewalk%20Tap%2C%20upstairs%20room&note=Elect%20the%20new%20committee%20and%20help%20plan%20next%20year%27s%20festival.&icon=calendar&sizes=ig-square%2Cfb-landscape",
+      "createdAt": "2026-09-05T18:30:00.000Z",
+      "updatedAt": "2026-10-05T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-festival",
+      "name": "Winter Ales Festival",
+      "typeId": "festival",
+      "params": "type=festival&branch=central-manchester&name=Winter%20Ales%20Festival&dates=5%20to%207%20February&venue=The%20Old%20Mill%20Hall&note=Over%20200%20real%20ales%2C%20ciders%20and%20perries&icon=barrel&sizes=ig-square%2Cfb-landscape%2Cx-landscape%2Ccamra-event",
+      "createdAt": "2026-09-06T18:30:00.000Z",
+      "updatedAt": "2026-10-06T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-mild",
+      "name": "One to Try: Mill Race Mild",
+      "typeId": "beer",
+      "params": "type=beer&branch=central-manchester&kind=beer&beer=Mill%20Race%20Mild&producer=Ropewalk%20Brewing&style=Dark%20mild&abv=3.6%25&note=Roasty%2C%20smooth%20and%20gone%20too%20soon.&icon=hops&sizes=ig-square",
+      "createdAt": "2026-09-07T18:30:00.000Z",
+      "updatedAt": "2026-10-07T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-cider",
+      "name": "Real Cider: Orchard Gold",
+      "typeId": "beer",
+      "params": "type=beer&branch=central-manchester&kind=cider&beer=Orchard%20Gold&producer=Three%20Tuns%20Cider&style=Medium%20dry&abv=5.5%25&note=Bright%2C%20appley%20and%20properly%20still.&icon=apple&sizes=ig-square",
+      "createdAt": "2026-09-08T18:30:00.000Z",
+      "updatedAt": "2026-10-08T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-volunteers",
+      "name": "Volunteers wanted",
+      "typeId": "announcement",
+      "params": "type=announcement&branch=central-manchester&heading=Volunteers%20wanted&body=Help%20run%20our%20Winter%20Ales%20Festival.%0ABar%20shifts%2C%20glass%20washing%20and%20set-up%3A%20no%20experience%20needed.&icon=wheat&bg=blue&bgstyle=gradient&sizes=ig-square%2Cfb-landscape",
+      "createdAt": "2026-09-09T18:30:00.000Z",
+      "updatedAt": "2026-10-09T09:15:00.000Z",
+      "sample": true
+    }
+  ],
+  "library": []
+}

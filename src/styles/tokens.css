@@ -1,0 +1,27 @@
+:root{
+  /* Brand primitives (CAMRA Brand Guidelines p.14). */
+  --slate:#41495a; --amber:#f9b13c; --aqua:#00b3c4; --tango:#eb5b25;
+  --lilac:#9d4a96; --blue:#5b6fb3; --emerald:#60bb9b; --watermelon:#e8335e;
+  /* Spacing scale (4px base). */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px;
+  --radius:8px; --radius-lg:14px;
+  --target:44px;
+  --font:Arboria,Arial,sans-serif;
+}
+/* Dark theme (default). */
+:root,[data-theme="dark"]{
+  --bg:#2b313d; --panel:#363d4b; --raised:#3f4757; --field:#222733; --line:#4c5466;
+  --text:#eef1f5; --muted:#b9c0cc; --subtle:#a9b1bf; --faint:#9ea6b4;
+  --accent:#f9b13c; --accent-text:#f9b13c; --accent-hover:#ffce7a; --on-accent:#2b313d;
+  --focus:#f9b13c; --danger:#ff8fa5; --success:#7fd3b5; --info:#3fd0de;
+  --chip:#222733; --shadow:0 12px 40px rgba(0,0,0,.45); --scrim:rgba(20,24,31,.62);
+  --canvas-bg:#41495a;
+}
+[data-theme="light"]{
+  --bg:#f7f6f3; --panel:#fffdf8; --raised:#ffffff; --field:#ffffff; --line:#c9cdd5;
+  --text:#1f2430; --muted:#454c59; --subtle:#545b68; --faint:#5e6572;
+  --accent:#f9b13c; --accent-text:#8b5f00; --accent-hover:#6f4c00; --on-accent:#2b313d;
+  --focus:#41495a; --danger:#b3123b; --success:#1d6b50; --info:#006b75;
+  --chip:#f1f0ec; --shadow:0 10px 30px rgba(31,36,48,.14); --scrim:rgba(31,36,48,.45);
+  --canvas-bg:#41495a;
+}

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CAMRA Social Graphics Studio</title>
+<meta name="description" content="Make on-brand CAMRA social graphics in your browser. Unofficial, made by a CAMRA volunteer. Nothing you add is uploaded.">
+<meta name="theme-color" content="#2b313d">
+<meta name="color-scheme" content="dark light">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CAMRA Graphics">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- HEAD -->
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to the editor</a>
+<header class="topbar">
+  <div class="brandline">
+    <h1>CAMRA Social Graphics Studio</h1>
+    <p class="tagline">On-brand CAMRA social graphics, made in your browser.</p>
+    <p class="tagline subtle">Unofficial: made by a CAMRA volunteer, not by CAMRA.</p>
+  </div>
+  <nav class="topnav" aria-label="Studio">
+    <button type="button" class="nav-btn" id="designsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-designs"></span>Designs</button>
+    <button type="button" class="nav-btn" id="settingsBtn" aria-haspopup="dialog"><span aria-hidden="true" class="ico ico-settings"></span>Settings</button>
+    <button type="button" class="nav-btn" id="helpBtn" aria-label="Show tips"><span aria-hidden="true" class="ico ico-help"></span>Tips</button>
+  </nav>
+</header>
+<main class="layout" id="main" tabindex="-1">
+  <form class="controls" id="controls" aria-label="Graphic settings" novalidate>
+    <details class="group" data-group="post" open>
+      <summary><h2>Post</h2><span class="group-hint" id="postHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Pick what kind of post you are making. The fields below change to match.">
+          <label for="postType">Post type</label>
+          <select id="postType"></select>
+        </div>
+        <div class="field" data-tip="Choose your branch, or pick Custom to use any other branch and upload its logo.">
+          <label for="branch">Branch</label>
+          <select id="branch"></select>
+        </div>
+        <div class="field hidden" id="customBranchWrap">
+          <label for="customBranchName">Custom branch name</label>
+          <input type="text" id="customBranchName" placeholder="e.g. Bolton CAMRA" autocomplete="organization">
+          <label class="upload" for="customBranchLogo">Upload branch logo (white PNG)
+            <input type="file" id="customBranchLogo" accept="image/*">
+          </label>
+          <label class="check"><input type="checkbox" id="saveCustomLogo" checked> Remember this logo on this device</label>
+        </div>
+        <div id="dynamicFields"></div>
+        <div class="field hidden" id="campaignWrap" data-tip="One to Try and Real Cider and Perry are CAMRA campaigns, so the CAMRA logo shows by default. Tick this to show the branch logo instead. It is allowed, but off-brand, so a warning will appear.">
+          <label class="check"><input type="checkbox" id="campaignBranch"> Show the branch logo instead on this campaign post (off-brand)</label>
+        </div>
+        <div id="brandNotes" class="brand-notes" aria-live="polite"></div>
+      </div>
+    </details>
+
+    <details class="group" data-group="media" open>
+      <summary><h2>Photo or icon</h2><span class="group-hint" id="mediaHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Add a photo for photo-led posts, or leave it out for a clean graphic with an icon.">
+          <label class="upload" for="photo">Photo (optional)
+            <input type="file" id="photo" accept="image/*">
+          </label>
+          <button type="button" class="ghost" id="clearPhoto">Remove photo</button>
+        </div>
+        <div class="field" id="iconWrap">
+          <label for="presetIcon">Decorative icon (used when there is no photo)</label>
+          <select id="presetIcon"></select>
+        </div>
+      </div>
+    </details>
+
+    <details class="group" data-group="sizes" open>
+      <summary><h2>Platforms and sizes</h2><span class="group-hint" id="sizesHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Tick every platform and size you need. One download makes a graphic for each.">
+          <span class="field-label" id="presetLabel">Sizes to export</span>
+          <div id="presetList" class="preset-list" role="group" aria-labelledby="presetLabel"></div>
+        </div>
+        <div class="field" data-tip="Flip every selected size between landscape and portrait. Square sizes are unaffected. Handy for a landscape version of a portrait preset, or the other way round.">
+          <label for="orient">Orientation</label>
+          <select id="orient">
+            <option value="as">As listed</option>
+            <option value="landscape">Force landscape</option>
+            <option value="portrait">Force portrait</option>
+          </select>
+        </div>
+        <div class="field" data-tip="Adds breathing room around the content. Use a larger setting to keep text and logos inside Facebook's safe area, where desktop and mobile layouts can crop the edges.">
+          <label for="pad">Padding</label>
+          <select id="pad">
+            <option value="1">Standard (default)</option>
+            <option value="1.3">Comfortable</option>
+            <option value="1.6">Spacious (social safe area)</option>
+          </select>
+        </div>
+      </div>
+    </details>
+
+    <details class="group" data-group="look">
+      <summary><h2>Look and logo</h2><span class="group-hint" id="lookHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Change the background colour. The CAMRA logo always stays on a slate band, so it remains on-brand. Lighter colours may need a check that the white text is still readable.">
+          <label for="bgColor">Background colour</label>
+          <select id="bgColor">
+            <option value="slate">Slate (default)</option>
+            <option value="blue">Blue</option>
+            <option value="lilac">Lilac</option>
+            <option value="tango">Tango</option>
+            <option value="aqua">Aqua</option>
+            <option value="emerald">Emerald</option>
+            <option value="amber">Amber</option>
+            <option value="watermelon">Watermelon</option>
+            <option value="custom">Custom colour…</option>
+          </select>
+          <input type="color" id="bgCustom" class="color-input hidden" value="#41495a" aria-label="Custom background colour">
+        </div>
+        <div class="field" data-tip="Solid colour by default, or a subtle gradient of the same colour: slightly lighter towards the top left, slightly darker towards the bottom right. Applies wherever a background colour is drawn, never to photos.">
+          <label for="bgStyle">Background style</label>
+          <select id="bgStyle">
+            <option value="solid">Solid colour (default)</option>
+            <option value="gradient">Subtle gradient</option>
+          </select>
+        </div>
+        <div class="field" data-tip="Make the logo larger. Pick a preset, or fine-tune with the slider for anything in between. Standard is also the minimum, so the logo never gets too small to read.">
+          <label for="logoPreset">Logo size</label>
+          <select id="logoPreset">
+            <option value="1.25" selected>Standard (default)</option>
+            <option value="1.6">Larger</option>
+            <option value="2">Massive</option>
+            <option value="custom" hidden>Custom (set with the slider)</option>
+          </select>
+          <label class="range-row"><span>Fine-tune</span><input type="range" id="logoScale" min="1.25" max="2" step="0.05" value="1.25" aria-label="Logo size fine-tune"></label>
+        </div>
+        <div class="field" data-tip="One logo shows on each graphic: branch or CAMRA, never both at once. Automatic follows the brand rules (campaigns show the CAMRA logo, everything else the branch logo), or force one yourself.">
+          <label for="logos">Logo shown</label>
+          <select id="logos">
+            <option value="auto">Automatic (brand default)</option>
+            <option value="camra">CAMRA logo</option>
+            <option value="branch">Branch logo</option>
+          </select>
+        </div>
+        <div class="field" data-tip="Choose how the logo sits across the footer. Centre is the default.">
+          <label for="logoAlign">Logo alignment</label>
+          <select id="logoAlign">
+            <option value="center">Centre (default)</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+        <fieldset class="field" data-tip="Set each kind of text to its own colour. Auto keeps the standard on-brand colours. Pick Custom to choose any colour. A contrast check warns you if a combination is hard to read.">
+          <legend>Text colours and alignment</legend>
+          <div class="color-grid">
+            <div class="color-cell">
+              <label for="titleColor">Title</label>
+              <select id="titleColor" class="color-select"><option value="auto">Auto (default)</option><option value="white">White</option><option value="light">Light grey</option><option value="slate">Slate</option><option value="amber">Amber</option><option value="aqua">Aqua</option><option value="tango">Tango</option><option value="lilac">Lilac</option><option value="blue">Blue</option><option value="emerald">Emerald</option><option value="watermelon">Watermelon</option><option value="custom">Custom…</option></select>
+              <input type="color" id="titleCustom" class="color-input hidden" value="#ffffff" aria-label="Title custom colour">
+              <label class="sr-only" for="titleAlign">Title alignment</label>
+              <select id="titleAlign" class="align-select">
+                <option value="left">Left (default)</option>
+                <option value="center">Centre</option>
+              </select>
+            </div>
+            <div class="color-cell">
+              <label for="subColor">Subtitle</label>
+              <select id="subColor" class="color-select"><option value="auto">Auto (default)</option><option value="white">White</option><option value="light">Light grey</option><option value="slate">Slate</option><option value="amber">Amber</option><option value="aqua">Aqua</option><option value="tango">Tango</option><option value="lilac">Lilac</option><option value="blue">Blue</option><option value="emerald">Emerald</option><option value="watermelon">Watermelon</option><option value="custom">Custom…</option></select>
+              <input type="color" id="subCustom" class="color-input hidden" value="#f9b13c" aria-label="Subtitle custom colour">
+              <label class="sr-only" for="subAlign">Subtitle alignment</label>
+              <select id="subAlign" class="align-select">
+                <option value="left">Left (default)</option>
+                <option value="center">Centre</option>
+              </select>
+            </div>
+            <div class="color-cell">
+              <label for="bodyColor">Body text</label>
+              <select id="bodyColor" class="color-select"><option value="auto">Auto (default)</option><option value="white">White</option><option value="light">Light grey</option><option value="slate">Slate</option><option value="amber">Amber</option><option value="aqua">Aqua</option><option value="tango">Tango</option><option value="lilac">Lilac</option><option value="blue">Blue</option><option value="emerald">Emerald</option><option value="watermelon">Watermelon</option><option value="custom">Custom…</option></select>
+              <input type="color" id="bodyCustom" class="color-input hidden" value="#cdd2db" aria-label="Body text custom colour">
+              <label class="sr-only" for="bodyAlign">Body text alignment</label>
+              <select id="bodyAlign" class="align-select">
+                <option value="left">Left (default)</option>
+                <option value="center">Centre</option>
+              </select>
+            </div>
+            <div class="color-cell">
+              <label for="capColor">Caption</label>
+              <select id="capColor" class="color-select"><option value="auto">Auto (default)</option><option value="white">White</option><option value="light">Light grey</option><option value="slate">Slate</option><option value="amber">Amber</option><option value="aqua">Aqua</option><option value="tango">Tango</option><option value="lilac">Lilac</option><option value="blue">Blue</option><option value="emerald">Emerald</option><option value="watermelon">Watermelon</option><option value="custom">Custom…</option></select>
+              <input type="color" id="capCustom" class="color-input hidden" value="#f9b13c" aria-label="Caption custom colour">
+              <label class="sr-only" for="capAlign">Caption alignment</label>
+              <select id="capAlign" class="align-select">
+                <option value="left">Left (default)</option>
+                <option value="center">Centre</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+        <div class="field" data-tip="The tagline is optional. Pick one of the approved taglines or turn it off.">
+          <label for="tagline">Tagline</label>
+          <select id="tagline">
+            <option value="Pubs, Pints, People.">Pubs, Pints, People.</option>
+            <option value="Campaigning for pubs, pints and people since 1971">Campaigning for pubs, pints and people since 1971</option>
+            <option value="">No tagline</option>
+          </select>
+          <label for="taglineAlign">Tagline alignment</label>
+          <select id="taglineAlign">
+            <option value="center">Centre (default)</option>
+            <option value="left">Left</option>
+          </select>
+        </div>
+        <div class="row-actions">
+          <button type="button" class="ghost" id="resetLook">Reset to brand defaults</button>
+          <button type="button" class="ghost" id="saveLookDefault">Make this my default look</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="group" data-group="library">
+      <summary><h2>Content library</h2><span class="group-hint" id="libraryHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Your saved logos and images live here, stored only on this device. Click one to reuse it.">
+          <p class="note">Stored locally in this browser only. Nothing is uploaded.</p>
+          <div class="lib-actions">
+            <button type="button" class="btn" id="saveLogoLib">Save current logo</button>
+            <button type="button" class="btn" id="savePhotoLib">Save current photo</button>
+          </div>
+          <div id="library" class="library"></div>
+        </div>
+      </div>
+    </details>
+
+    <details class="group" data-group="export" open>
+      <summary><h2>Export and share</h2><span class="group-hint" id="exportHint"></span></summary>
+      <div class="group-body">
+        <div class="field" data-tip="Choose which selected size to preview. Download makes a PNG for every ticked size.">
+          <label for="previewPreset">Preview size</label>
+          <select id="previewPreset"></select>
+        </div>
+        <fieldset class="field segmented-wrap" data-tip="Separate PNG files, or every size in one ZIP file. One ZIP is easier on phones, where browsers often block several downloads at once.">
+          <legend>Download as</legend>
+          <div class="segmented">
+            <label><input type="radio" name="dlFormat" value="png" checked><span>Separate PNGs</span></label>
+            <label><input type="radio" name="dlFormat" value="zip"><span>One ZIP file</span></label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="btn primary wide" id="download">Download selected (PNG)</button>
+          <p class="note progress" id="exportStatus" role="status" aria-live="polite"></p>
+          <div class="actions-row">
+            <button type="button" class="ghost hidden" id="shareImage">Share image</button>
+            <button type="button" class="ghost hidden" id="copyImage">Copy image</button>
+            <button type="button" class="ghost" id="saveDesign">Save design</button>
+          </div>
+        </div>
+        <div class="share-row" data-tip="Share a link that pre-fills the form, or add download=1 for automatic export. The docs section below lists every parameter.">
+          <button type="button" class="ghost" id="copyLink">Copy share link</button>
+          <button type="button" class="ghost" id="copyDownloadLink">Copy auto-download link</button>
+        </div>
+        <div class="field alt-field" data-tip="Social platforms ask for alt text so blind and partially sighted people know what the image shows. This description is written from your post; copy it into the alt text box when you post.">
+          <label for="altText">Alt text for this graphic</label>
+          <textarea id="altText" readonly rows="3"></textarea>
+          <button type="button" class="ghost" id="copyAlt">Copy alt text</button>
+        </div>
+        <p class="note">Everything runs in your browser. Nothing you add is uploaded. If a logo image isn't available, the graphic falls back to a text wordmark.</p>
+      </div>
+    </details>
+
+    <button type="button" class="accordion-head" id="docsBtn" aria-expanded="false" aria-controls="docsPanel">Query parameter docs</button>
+    <section class="docs hidden" id="docsPanel" aria-labelledby="docsHeading">
+      <h2 id="docsHeading" class="docs-title">Query parameters</h2>
+      <div id="docsBody"></div>
+    </section>
+    <button type="button" class="accordion-head" id="brandBtn" aria-expanded="false" aria-controls="brandPanel">Brand guidelines</button>
+    <section class="docs hidden" id="brandPanel" aria-labelledby="brandHeading">
+      <h2 id="brandHeading" class="docs-title">Brand guidelines</h2>
+      <div id="brandBody"></div>
+    </section>
+  </form>
+  <section class="preview" aria-label="Preview">
+    <div class="canvas-wrap">
+      <canvas id="frame" width="1080" height="1080" role="img" aria-label="Preview of your social graphic"></canvas>
+    </div>
+    <div class="quick-actions">
+      <span class="preview-size" id="previewSizeLabel"></span>
+      <button type="button" class="btn primary" id="quickDownload">Download</button>
+      <button type="button" class="ghost" id="quickSave">Save</button>
+    </div>
+  </section>
+  <details class="reframe-col hidden" id="reframeWrap" open>
+    <summary>Reframe photo</summary>
+      <p class="note">Choose how the photo fills each frame, then nudge it into place. The same framing is used for every size you download.</p>
+      <div class="field">
+        <label for="frameMode">Image size</label>
+        <select id="frameMode">
+          <option value="labelOut">Framed, label above image (smaller image)</option>
+          <option value="labelIn">Framed, label on image (larger image)</option>
+          <option value="fullBleed">Full bleed, image to the edges</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fbStyle">Full bleed style</label>
+        <select id="fbStyle">
+          <option value="gradient">Footer band with gradient</option>
+          <option value="corner">Corner panel (curved sweep, logos in corner)</option>
+        </select>
+      </div>
+      <fieldset class="field">
+        <legend>Show on graphic</legend>
+        <label class="check"><input type="checkbox" id="showLabel" checked> Label (e.g. &quot;NEWCOMER&quot;)</label>
+        <label class="check"><input type="checkbox" id="showText" checked> Title and subtitle</label>
+        <label class="check"><input type="checkbox" id="showCaption" checked> Caption line</label>
+        <label class="sr-only" for="captionText">Caption text</label>
+        <input type="text" id="captionText" placeholder="Default caption">
+      </fieldset>
+      <div class="field">
+        <label for="fitMode">Fit</label>
+        <select id="fitMode">
+          <option value="cover">Fill frame (crop to fit)</option>
+          <option value="contain">Fit whole image (letterbox)</option>
+          <option value="fill">Stretch to fill</option>
+        </select>
+      </div>
+      <label class="range-row"><span>Horizontal</span><input type="range" id="frameX" min="-1" max="1" step="0.02" value="0"></label>
+      <label class="range-row"><span>Vertical</span><input type="range" id="frameY" min="-1" max="1" step="0.02" value="0"></label>
+      <label class="range-row"><span>Zoom</span><input type="range" id="frameZoom" min="1" max="3" step="0.02" value="1"></label>
+      <label class="range-row"><span>Opacity</span><input type="range" id="photoOpacity" min="0" max="1" step="0.05" value="1" aria-label="Photo opacity"></label>
+      <button type="button" class="ghost" id="resetFrame">Reset framing</button>
+  </details>
+</main>
+<footer class="sitefoot">
+  An unofficial tool by <a href="https://seanomahoney.com" target="_blank" rel="noopener">Sean O'Mahoney</a>, a CAMRA volunteer. Not affiliated with or endorsed by CAMRA. Everything you add is stored locally in your browser.
+  <span class="version">CAMRA Social Graphics Studio v%VERSION%</span>
+</footer>
+
+<div class="toasts">
+  <div id="notices" role="status" aria-live="polite" aria-atomic="false"></div>
+  <div id="alerts" role="alert" aria-atomic="false"></div>
+</div>
+
+<div class="tip-layer hidden" id="tipLayer">
+  <div class="tip-card" id="tipCard" role="dialog" aria-modal="true" aria-labelledby="tipHeading" aria-describedby="tipText">
+    <h2 class="sr-only" id="tipHeading">Tips</h2>
+    <p id="tipText"></p>
+    <div class="tip-row">
+      <span id="tipCount" class="tip-count"></span>
+      <span class="tip-buttons">
+        <button type="button" class="ghost" id="tipSkip">Skip</button>
+        <button type="button" class="btn primary" id="tipNext">Next</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<dialog id="designsDialog" class="dlg dlg-wide" aria-labelledby="designsTitle">
+  <div class="dlg-head">
+    <h2 id="designsTitle">Saved designs</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Close saved designs">×</button>
+  </div>
+  <div class="dlg-body" id="designsBody"></div>
+</dialog>
+
+<dialog id="settingsDialog" class="dlg" aria-labelledby="settingsTitle">
+  <div class="dlg-head">
+    <h2 id="settingsTitle">Settings</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Close settings">×</button>
+  </div>
+  <div class="dlg-body" id="settingsBody"></div>
+</dialog>
+
+<dialog id="importDialog" class="dlg" aria-labelledby="importTitle">
+  <div class="dlg-head">
+    <h2 id="importTitle">Import a backup</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Close import">×</button>
+  </div>
+  <div class="dlg-body" id="importBody"></div>
+</dialog>
+
+<dialog id="confirmDialog" class="dlg dlg-small" aria-labelledby="confirmTitle" aria-describedby="confirmBody">
+  <div class="dlg-head"><h2 id="confirmTitle"></h2></div>
+  <div class="dlg-body"><p id="confirmBody"></p></div>
+  <div class="dlg-foot">
+    <button type="button" class="ghost" id="confirmCancel" data-close>Cancel</button>
+    <button type="button" class="btn primary" id="confirmOk">OK</button>
+  </div>
+</dialog>
+
+<dialog id="promptDialog" class="dlg dlg-small" aria-labelledby="promptTitle">
+  <form id="promptForm" method="dialog" novalidate>
+    <div class="dlg-head"><h2 id="promptTitle"></h2></div>
+    <div class="dlg-body">
+      <div class="field">
+        <label for="promptInput" id="promptLabel">Name</label>
+        <input type="text" id="promptInput" maxlength="200" autocomplete="off" aria-describedby="promptError">
+        <p class="field-error" id="promptError" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="ghost" data-close>Cancel</button>
+      <button type="button" class="ghost" id="promptSecondary" hidden></button>
+      <button type="submit" class="btn primary" id="promptOk">Save</button>
+    </div>
+  </form>
+</dialog>
+<!-- BODY -->
+</body>
+</html>
