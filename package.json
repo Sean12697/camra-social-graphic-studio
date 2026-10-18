@@ -1,6 +1,6 @@
 {
   "name": "camra-social-graphic-studio",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "An unofficial, browser-based studio for making on-brand CAMRA social graphics. Nothing is uploaded.",
   "private": true,
   "type": "module",

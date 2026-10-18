@@ -1,5 +1,6 @@
 // Generates the docs that must match the code: docs/QUERY_PARAMETERS.md from
-// the parameter schema, docs/LOGOS.md from the logo catalogue and
+// the parameter schema, docs/LOGOS.md from the logo catalogue,
+// docs/CAMPAIGNS.md from the campaign list and
 // docs/assets/logo.svg from the icon definition.
 //   node scripts/docs.mjs           write them
 //   node scripts/docs.mjs --check   fail if the committed copies are stale (CI)
@@ -9,11 +10,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { docsMarkdown, logosMarkdown } from "../src/core/params.ts";
 import { iconSvg } from "./icon.mjs";
+import { campaignsMarkdown } from "../src/core/campaigns.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const files = {
   "docs/QUERY_PARAMETERS.md": docsMarkdown(),
   "docs/LOGOS.md": logosMarkdown(),
+  "docs/CAMPAIGNS.md": campaignsMarkdown(),
   "docs/assets/logo.svg": iconSvg(),
 };
 const check = process.argv.includes("--check");

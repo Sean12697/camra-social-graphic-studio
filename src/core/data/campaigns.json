@@ -1,0 +1,253 @@
+{
+  "note": "Known national and annual campaigns. Rules generate the dates for any year; confirmed entries override a rule for one year. Rules marked estimate follow the pattern of recent years and should be checked each year. Draft values may use the tokens listed in docs/CAMPAIGNS.md. Run npm run docs after editing.",
+  "categories": [
+    { "id": "camra", "label": "CAMRA campaigns and dates", "phrase": "CAMRA campaigns and dates", "defaultOn": true },
+    { "id": "beer", "label": "Beer and pub days", "phrase": "beer and pub days", "defaultOn": true },
+    { "id": "national", "label": "National days", "phrase": "national days", "defaultOn": false }
+  ],
+  "campaigns": [
+    {
+      "id": "mild-month",
+      "name": "Mild Month",
+      "category": "camra",
+      "summary": "CAMRA's month-long celebration of mild every May: make yours a Mild this May. Branches run mild trails and pubs put a mild on the bar.",
+      "url": "https://camra.org.uk/promotional-campaigns",
+      "hashtags": ["#MildMay", "#MildMonth"],
+      "rule": { "kind": "month", "month": 5 },
+      "leadDays": 28,
+      "drafts": [
+        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "campaignmonth", "icon": "beer", "values": { "campaignName": "Mild Month", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "Make yours a Mild this May." } },
+        { "id": "on-now", "name": "It's here", "phase": "start", "type": "campaignmonth", "icon": "beer", "values": { "campaignName": "Mild Month", "phase": "now", "heading": "Make yours a Mild this May", "dates": "{dates}", "note": "Ask for a mild at the bar all month.", "pubs": [{ "pub": "Pub name", "detail": "Which mild is on" }, { "pub": "Pub name", "detail": "Which mild is on" }] } },
+        { "id": "last-week", "name": "Last week", "phase": "end", "type": "campaignmonth", "icon": "beer", "values": { "campaignName": "Mild Month", "phase": "last", "heading": "Last week of Mild Month", "note": "There is still time to make yours a mild." } },
+        { "id": "thanks", "name": "Thank you", "phase": "after", "type": "campaignmonth", "icon": "heart", "values": { "campaignName": "Mild Month", "phase": "thanks", "heading": "Thanks for drinking mild", "note": "Thank you to every pub that put a mild on the bar this May." } }
+      ]
+    },
+    {
+      "id": "cider-perry-month",
+      "name": "Cider and Perry Month",
+      "category": "camra",
+      "summary": "CAMRA's month-long celebration of real cider and perry, held every July since 2025 (it used to run in May and October). Ask for #NotFromConcentrate real cider or perry.",
+      "url": "https://camra.org.uk/promotional-campaigns/cider-and-perry-months",
+      "hashtags": ["#CiderandPerryMonth", "#NotFromConcentrate"],
+      "rule": { "kind": "month", "month": 7 },
+      "leadDays": 28,
+      "drafts": [
+        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "campaignmonth", "icon": "apple", "values": { "campaignName": "Cider and Perry Month", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "A month of real cider and perry at your local." } },
+        { "id": "on-now", "name": "It's here", "phase": "start", "type": "campaignmonth", "icon": "apple", "values": { "campaignName": "Cider and Perry Month", "phase": "now", "heading": "Cider and Perry Month", "dates": "{dates}", "note": "Ask for #NotFromConcentrate real cider or perry at the bar.", "pubs": [{ "pub": "Pub name", "detail": "Ciders and perries on" }, { "pub": "Pub name", "detail": "Ciders and perries on" }] } },
+        { "id": "last-week", "name": "Last week", "phase": "end", "type": "campaignmonth", "icon": "pear", "values": { "campaignName": "Cider and Perry Month", "phase": "last", "heading": "Last week of Cider and Perry Month", "note": "There is still time to try a real cider or perry." } },
+        { "id": "thanks", "name": "Thank you", "phase": "after", "type": "campaignmonth", "icon": "heart", "values": { "campaignName": "Cider and Perry Month", "phase": "thanks", "heading": "Thanks for a month of real cider", "note": "Thank you to every pub and producer who joined in this July." } }
+      ]
+    },
+    {
+      "id": "gbg-launch",
+      "name": "Good Beer Guide launch",
+      "category": "camra",
+      "summary": "Publication day for the next edition of CAMRA's Good Beer Guide, usually a Thursday in late September. Branches hold launch events and celebrate the pubs that made it in.",
+      "url": "https://camra.org.uk/good-beer-guide",
+      "hashtags": ["#GoodBeerGuide", "#GBG{edition}"],
+      "rule": { "kind": "nthWeekday", "month": 9, "weekday": 4, "n": 4, "days": 1, "estimate": true },
+      "confirmed": {
+        "2025": { "start": "2025-09-25", "end": "2025-09-25" },
+        "2026": { "start": "2026-09-24", "end": "2026-09-24" }
+      },
+      "leadDays": 28,
+      "drafts": [
+        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "countdown", "icon": "book-open", "values": { "event": "The {edition} Good Beer Guide", "days": "{days}", "date": "Out {start}" } },
+        { "id": "launch-event", "name": "Launch event", "phase": "before", "type": "announcement", "icon": "book-open", "values": { "heading": "Good Beer Guide {edition} launch", "body": "Join us on {start} to celebrate the new Guide.\nPick up a copy and raise a glass to the pubs that made it in." } },
+        { "id": "in-the-guide", "name": "Our pubs in the Guide", "phase": "start", "type": "gbg", "icon": "book-open", "values": { "heading": "In the {edition} Good Beer Guide", "edition": "Out now", "pubs": [{ "pub": "Pub name", "town": "Town" }, { "pub": "Pub name", "town": "Town" }, { "pub": "Pub name", "town": "Town" }] } }
+      ]
+    },
+    {
+      "id": "members-weekend",
+      "name": "CAMRA Members' Weekend and AGM",
+      "category": "camra",
+      "summary": "CAMRA's annual gathering in April: the AGM, Conference, National Executive election results and the Members' Bar, in a different host city each year.",
+      "url": "https://camra.org.uk/members-weekend",
+      "hashtags": ["#CAMRAMembersWeekend"],
+      "rule": { "kind": "nthWeekday", "month": 4, "weekday": 5, "n": 3, "days": 3, "estimate": true },
+      "confirmed": {
+        "2026": { "start": "2026-04-17", "end": "2026-04-19", "venue": "St Albans" },
+        "2027": { "start": "2027-04-16", "end": "2027-04-18", "venue": "Chester" }
+      },
+      "leadDays": 42,
+      "drafts": [
+        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "countdown", "icon": "users", "values": { "event": "CAMRA Members' Weekend {where}", "days": "{days}", "date": "{dates}" } },
+        { "id": "see-you-there", "name": "See you there", "phase": "before", "type": "announcement", "icon": "users", "values": { "heading": "See you at Members' Weekend", "body": "{dates} {where}.\nThe AGM, Conference and the Members' Bar." } }
+      ]
+    },
+    {
+      "id": "camra-birthday",
+      "name": "CAMRA's birthday",
+      "category": "camra",
+      "summary": "CAMRA was founded on 16 March 1971. A good excuse to thank members and invite new ones.",
+      "hashtags": ["#CAMRA"],
+      "rule": { "kind": "fixed", "month": 3, "day": 16 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "birthday", "name": "Happy birthday", "phase": "start", "type": "occasion", "icon": "party-popper", "values": { "occasion": "CAMRA's birthday", "phase": "today", "heading": "Happy {ordinal} birthday, CAMRA", "note": "Campaigning for pubs, pints and people since 16 March 1971." } },
+        { "id": "join", "name": "Join us", "phase": "start", "type": "join", "icon": "user-plus", "values": { "heading": "Join the campaign", "benefits": [{ "benefit": "{age} years of campaigning", "detail": "for pubs, pints and people" }, { "benefit": "Free or discounted entry", "detail": "to CAMRA beer festivals" }, { "benefit": "Have your say", "detail": "on the pubs and beers we champion" }], "link": "camra.org.uk/join" } }
+      ]
+    },
+    {
+      "id": "tryanuary",
+      "name": "Tryanuary",
+      "category": "beer",
+      "summary": "An independent campaign, running since 2015 and supported by SIBA, that asks people to try a new beer, pub or brewery in January instead of going dry.",
+      "hashtags": ["#Tryanuary"],
+      "rule": { "kind": "month", "month": 1 },
+      "leadDays": 21,
+      "drafts": [
+        { "id": "on-now", "name": "It's here", "phase": "start", "type": "occasion", "icon": "sparkles", "values": { "occasion": "Tryanuary", "phase": "now", "heading": "Try something new this January", "dates": "{dates}", "note": "Support pubs and breweries through the quietest month: try a new beer, pub or brewery." } }
+      ]
+    },
+    {
+      "id": "beer-day-britain",
+      "name": "Beer Day Britain",
+      "category": "beer",
+      "summary": "The UK's national beer day, every 15 June (the day Magna Carta was sealed). The National Cheers to Beer toast is at 7pm.",
+      "url": "https://www.beerdaybritain.co.uk/",
+      "hashtags": ["#BeerDayBritain", "#CheersToBeer"],
+      "rule": { "kind": "fixed", "month": 6, "day": 15 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "occasion", "icon": "pint", "values": { "occasion": "Beer Day Britain", "phase": "countdown", "days": "{days}", "dates": "{start}", "note": "Join the National Cheers to Beer at 7pm." } },
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "pint", "values": { "occasion": "Beer Day Britain", "phase": "today", "heading": "Cheers to Beer", "dates": "{start}, 7pm", "note": "Raise a glass at your local at 7pm for the National Cheers to Beer." } }
+      ]
+    },
+    {
+      "id": "world-cider-day",
+      "name": "World Cider Day",
+      "category": "beer",
+      "summary": "An international day for cider every 3 June, started by German cider houses in 2013.",
+      "url": "https://www.worldciderday.com/",
+      "hashtags": ["#WorldCiderDay"],
+      "rule": { "kind": "fixed", "month": 6, "day": 3 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "apple", "values": { "occasion": "World Cider Day", "phase": "today", "heading": "Happy World Cider Day", "note": "Ask for a real cider or perry at the bar." } }
+      ]
+    },
+    {
+      "id": "ipa-day",
+      "name": "International IPA Day",
+      "category": "beer",
+      "summary": "A worldwide day for India pale ale, on the first Thursday of August.",
+      "hashtags": ["#IPADay"],
+      "rule": { "kind": "nthWeekday", "month": 8, "weekday": 4, "n": 1, "days": 1 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "hops", "values": { "occasion": "International IPA Day", "phase": "today", "heading": "Happy IPA Day", "note": "Which IPA are you raising today?" } }
+      ]
+    },
+    {
+      "id": "international-beer-day",
+      "name": "International Beer Day",
+      "category": "beer",
+      "summary": "A worldwide celebration of beer and the people who brew and serve it, on the first Friday of August.",
+      "hashtags": ["#InternationalBeerDay"],
+      "rule": { "kind": "nthWeekday", "month": 8, "weekday": 5, "n": 1, "days": 1 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "beer", "values": { "occasion": "International Beer Day", "phase": "today", "heading": "Happy International Beer Day", "note": "Raise a glass to the brewers and the bar staff." } }
+      ]
+    },
+    {
+      "id": "cask-ale-week",
+      "name": "Cask Ale Week",
+      "category": "beer",
+      "summary": "The industry's annual celebration of cask beer, run by Cask Marque and supported by CAMRA. Ten days in late September (17 to 27 September in 2026).",
+      "url": "https://caskaleweek.co.uk/",
+      "hashtags": ["#CaskAleWeek"],
+      "rule": { "kind": "nthWeekday", "month": 9, "weekday": 4, "n": 3, "days": 11, "estimate": true },
+      "confirmed": {
+        "2026": { "start": "2026-09-17", "end": "2026-09-27" }
+      },
+      "leadDays": 28,
+      "drafts": [
+        { "id": "countdown", "name": "Countdown", "phase": "before", "type": "occasion", "icon": "barrel", "values": { "occasion": "Cask Ale Week", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "Celebrate Britain's national drink at your local." } },
+        { "id": "on-now", "name": "It's here", "phase": "start", "type": "occasion", "icon": "barrel", "values": { "occasion": "Cask Ale Week", "phase": "now", "heading": "Cask Ale Week", "dates": "{dates}", "note": "Try a pint of cask at one of these pubs.", "pubs": [{ "pub": "Pub name", "detail": "What's on" }, { "pub": "Pub name", "detail": "What's on" }] } },
+        { "id": "thanks", "name": "Thank you", "phase": "after", "type": "occasion", "icon": "heart", "values": { "occasion": "Cask Ale Week", "phase": "thanks", "heading": "Thanks for celebrating cask", "note": "Thank you to every pub and brewery that joined in." } }
+      ]
+    },
+    {
+      "id": "stout-day",
+      "name": "International Stout Day",
+      "category": "beer",
+      "summary": "A worldwide day for stout and porter, on the first Thursday of November.",
+      "hashtags": ["#InternationalStoutDay"],
+      "rule": { "kind": "nthWeekday", "month": 11, "weekday": 4, "n": 1, "days": 1 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "mug", "values": { "occasion": "International Stout Day", "phase": "today", "heading": "Happy International Stout Day", "note": "Stout or porter: what is on the bar near you?" } }
+      ]
+    },
+    {
+      "id": "small-business-saturday",
+      "name": "Small Business Saturday",
+      "category": "beer",
+      "summary": "The UK's day for supporting small, local businesses, on the first Saturday of December. Independent pubs and breweries are small businesses too.",
+      "url": "https://smallbusinesssaturdayuk.com/",
+      "hashtags": ["#SmallBizSatUK"],
+      "rule": { "kind": "nthWeekday", "month": 12, "weekday": 6, "n": 1, "days": 1 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "store", "values": { "occasion": "Small Business Saturday", "phase": "today", "heading": "Shop small, drink local", "note": "Your local pub is a small business too. Pop in this Small Business Saturday." } }
+      ]
+    },
+    {
+      "id": "burns-night",
+      "name": "Burns Night",
+      "category": "national",
+      "summary": "Robert Burns's birthday, 25 January.",
+      "rule": { "kind": "fixed", "month": 1, "day": 25 },
+      "leadDays": 10,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "utensils", "values": { "occasion": "Burns Night", "phase": "today", "heading": "Happy Burns Night", "note": "Haggis, neeps and a pint of Scottish ale." } }
+      ]
+    },
+    {
+      "id": "st-davids-day",
+      "name": "St David's Day",
+      "category": "national",
+      "summary": "The patron saint's day of Wales, 1 March.",
+      "rule": { "kind": "fixed", "month": 3, "day": 1 },
+      "leadDays": 10,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St David's Day", "phase": "today", "heading": "Happy St David's Day", "note": "Raise a glass of Welsh beer or cider at your local." } }
+      ]
+    },
+    {
+      "id": "st-patricks-day",
+      "name": "St Patrick's Day",
+      "category": "national",
+      "summary": "The patron saint's day of Ireland, 17 March.",
+      "rule": { "kind": "fixed", "month": 3, "day": 17 },
+      "leadDays": 10,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St Patrick's Day", "phase": "today", "heading": "Happy St Patrick's Day", "note": "Stout, porter or red ale: raise a glass at your local." } }
+      ]
+    },
+    {
+      "id": "st-georges-day",
+      "name": "St George's Day",
+      "category": "national",
+      "summary": "The patron saint's day of England, 23 April.",
+      "rule": { "kind": "fixed", "month": 4, "day": 23 },
+      "leadDays": 10,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St George's Day", "phase": "today", "heading": "Happy St George's Day", "note": "Raise a glass of English ale at your local." } }
+      ]
+    },
+    {
+      "id": "st-andrews-day",
+      "name": "St Andrew's Day",
+      "category": "national",
+      "summary": "The patron saint's day of Scotland, 30 November.",
+      "rule": { "kind": "fixed", "month": 11, "day": 30 },
+      "leadDays": 10,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St Andrew's Day", "phase": "today", "heading": "Happy St Andrew's Day", "note": "Raise a glass of Scottish ale at your local." } }
+      ]
+    }
+  ]
+}

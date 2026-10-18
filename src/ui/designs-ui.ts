@@ -57,7 +57,7 @@ export async function saveCurrent(): Promise<void> {
   if (dlg().open) render();
 }
 
-async function confirmReplace(): Promise<boolean> {
+export async function confirmReplace(): Promise<boolean> {
   if (!E.state.dirty) return true;
   return confirmDialog({
     title: "Replace the current post?",

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.4.0
+
+### Added
+- Campaigns: 18 national and annual campaigns and days (Mild Month, Cider and Perry Month, Good Beer Guide launch, Members' Weekend, CAMRA's birthday, Cask Ale Week, Tryanuary, Beer Day Britain, World Cider Day, IPA Day, International Beer Day, International Stout Day, Small Business Saturday and the national days), with dates worked out for any year and confirmed dates where they are published.
+- Reminders under the top bar before each campaign (time to schedule posts) and while it is on, with Get drafts, Remind me later and Dismiss, and a count on the new Campaigns button.
+- Campaigns panel: what is on now, coming up and further ahead, suggested hashtags, and ready-made drafts for each campaign that open with your branch and default look and the dates and days to go filled in. Drafts can be saved to your designs in one go.
+- Calendar feeds built with the site (`calendar/campaigns.ics`, `camra.ics`, `planning.ics`) with subscribe links for Google Calendar, Outlook and Apple Calendar, plus a single-event download per campaign.
+- Settings for reminders: on or off, which kinds of campaign, how far ahead, optional system notifications (with background checks in installed Chrome and Edge apps), and bringing back dismissed reminders.
+- National campaign posts gain Stage, Dates and Days to go fields (coming soon, countdown, on now, today, last week, thank you), and a Beer or pub day post type does the same with the branch logo.
+- `campaign` link parameter, which opens the panel at one campaign, and generated `docs/CAMPAIGNS.md`.
+
 ## 2.3.0
 
 ### Added

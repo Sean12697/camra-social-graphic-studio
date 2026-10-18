@@ -22,3 +22,9 @@
 
 /manifest.webmanifest
   Content-Type: application/manifest+json
+
+# Campaign calendar feeds: calendar apps poll these, so keep them fresh.
+/calendar/*
+  Content-Type: text/calendar; charset=utf-8
+  Cache-Control: public, max-age=3600
+  Access-Control-Allow-Origin: *
