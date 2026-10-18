@@ -6,6 +6,12 @@ An unofficial, static, browser-based studio for making on-brand CAMRA social gra
 
 ![Editor, dark theme](docs/screenshots/editor-dark.png)
 
+## What it does
+
+Pick one of 22 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved, shared as links and backed up.
+
+![Logo picker](docs/screenshots/logos-dark.png)
+
 ## Quick start
 
 ```sh
@@ -30,6 +36,10 @@ flowchart LR
 ```
 
 `src/core` has no DOM dependencies and is unit tested in Node. The query parameter reference is generated into [docs/QUERY_PARAMETERS.md](docs/QUERY_PARAMETERS.md) by `npm run docs` from the same schema the app uses.
+
+## Logos
+
+`assets/logos/catalogue.json` lists every branch, region and sub-brand logo with its id; [docs/LOGOS.md](docs/LOGOS.md) is the readable version. To add or replace logos, put white-on-transparent PNGs in a folder and run `python3 scripts/import-logos.py <branches|regions|sub-brands> <folder>`, then `npm run docs`. JPEGs are refused because they cannot be transparent.
 
 ## Data
 

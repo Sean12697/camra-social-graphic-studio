@@ -25,6 +25,10 @@ export interface NoteOptions {
   textColors?: TextColours;
   /** False when the text sits over a full-bleed photo rather than the background. */
   solidBg?: boolean;
+  /** What fills the branch slot, when not the branch logo: "region" or "subBrand". */
+  slotKind?: "branch" | "region" | "subBrand";
+  /** Name of the region or sub-brand logo in the slot. */
+  slotName?: string;
 }
 
 const P: Record<string, string> = PALETTE;
@@ -107,10 +111,17 @@ export function contextNotes(layoutIn: Layout | null | undefined, oIn?: NoteOpti
   if (layout.campaign){
     var name = layout.campaignName || "This post type";
     if (who.branch){
-      notes.push({ tone: "warn", title: "Branch logo on a campaign (off-brand)", body: name + " is a CAMRA campaign, which should carry the CAMRA logo (Brand Guidelines p.17 to p.19). Showing the branch logo here instead is off-brand. You can still export it, but the CAMRA logo is the on-brand choice." });
+      var what = o.slotKind === "region" ? "region logo" : o.slotKind === "subBrand" ? (o.slotName || "sub-brand") + " logo" : "branch logo";
+      notes.push({ tone: "warn", title: what.charAt(0).toUpperCase() + what.slice(1) + " on a campaign (off-brand)", body: name + " is a CAMRA campaign, which should carry the CAMRA logo (Brand Guidelines p.17 to p.19). Showing the " + what + " here instead is off-brand. You can still export it, but the CAMRA logo is the on-brand choice." });
     } else {
       notes.push({ tone: "info", title: "The CAMRA logo shows", body: name + " is a CAMRA campaign. Campaigns are the Blue level of the brand hierarchy and carry the CAMRA logo, not the branch logo (Brand Guidelines p.17 to p.19). You can swap in the branch logo below if you need to, knowing it is off-brand." });
     }
+  }
+  if (o.slotKind === "subBrand" && !layout.campaign){
+    notes.push({ tone: "info", title: (o.slotName || "Sub-brand") + " logo", body: "Sub-brands such as LocAle and Pub Heritage are CAMRA programmes, the Lilac level of the brand hierarchy (Brand Guidelines p.17 to p.19). Their logo replaces the branch logo here, so the graphic still carries one logo." });
+  }
+  if (o.slotKind === "region" && !layout.campaign){
+    notes.push({ tone: "info", title: "Region logo", body: "Region logos are endorsed logos, like branch logos, so they lead on their own (Brand Guidelines p.17 to p.19). Use one for posts made on behalf of the whole region." + (o.slotName ? "" : " Choose a region under Logo shown.") });
   }
   if (acc === "gold" || acc === "silver" || acc === "bronze"){
     notes.push({ tone: "warn", title: "Medal colour is off-palette", body: COLOUR_WHY[acc] });

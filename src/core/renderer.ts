@@ -3,7 +3,7 @@
 // for square, portrait, story and landscape sizes.
 import { CONFIG, PALETTE, type Branch } from "./config.ts";
 import { shade } from "./colour.ts";
-import { ICONS } from "./icons.ts";
+import { ALL_ICONS } from "./icons.ts";
 import type { Layout, ListItem, Template, Values } from "./templates.ts";
 
 type Ctx = CanvasRenderingContext2D;
@@ -75,6 +75,9 @@ export interface RenderOptions {
   branchLogoImg?: Img | null;
   camraLogoImg?: Img | null;
   iconName?: string;
+  iconStyle?: IconStyle;
+  /** Replaces the branch logo slot with a region or sub-brand logo. */
+  altLogo?: { img: Img | null | undefined; text: string } | null;
   frame?: Frame;
   showBranchOnCampaign?: boolean;
   tagline?: string | null;
@@ -189,17 +192,51 @@ function eyebrow(ctx: Ctx, text: string, accent: string, x: number, y: number, k
   ctx.fillStyle = accent;
   rr(ctx, x, y, w, h, Math.round(10 * k));
   ctx.fill();
-  ctx.fillStyle = P.slate;
+  // Slate text on the accent, as always; white on Lilac, where slate is unreadable.
+  ctx.fillStyle = accent.toLowerCase() === P.lilac ? "#ffffff" : P.slate;
   ctx.fillText(text, x + padX, y + h * 0.68);
   return h;
 }
 
-function watermark(ctx: Ctx, name: string | undefined, accent: string, W: number, _H: number, k: number): void {
-  if (!name || name === "none" || !ICONS[name]) return;
+export interface IconStyle {
+  /** top-right (default), top-left, center, bottom-left or pattern. */
+  position?: string;
+  /** Size multiplier, 1 by default. */
+  size?: number;
+  /** 0 to 1; 0.10 by default. */
+  opacity?: number;
+  /** Any CSS colour; the accent colour by default. */
+  color?: string | null;
+}
+
+// Draws the decorative icon as a faint watermark. The default (top right, size
+// 1, 10% opacity, accent colour) matches the studio's original placement.
+function watermark(ctx: Ctx, name: string | undefined, accent: string, W: number, H: number, k: number, st: IconStyle = {}, floorY: number = H): void {
+  if (!name || name === "none" || !ALL_ICONS[name]) return;
+  const fn = ALL_ICONS[name];
+  const scale = st.size && st.size > 0 ? st.size : 1;
+  const alpha = st.opacity != null && st.opacity >= 0 && st.opacity <= 1 ? st.opacity : 0.1;
+  const pos = st.position || "top-right";
   ctx.save();
-  ctx.globalAlpha = 0.10;
-  ctx.fillStyle = accent;
-  ICONS[name](ctx, W - Math.round(190 * k), Math.round(250 * k), Math.round(320 * k));
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = st.color || accent;
+  if (pos === "pattern") {
+    const s = Math.round(150 * k * scale);
+    const gap = Math.round(s * 1.7);
+    let row = 0;
+    for (let y = Math.round(s * 0.7); y < floorY - s * 0.4; y += gap, row++) {
+      for (let x = Math.round(s * 0.7) + (row % 2 ? gap / 2 : 0); x < W + s; x += gap) fn(ctx, x, y, s);
+    }
+  } else if (pos === "center") {
+    const s = Math.round(Math.min(W, floorY) * 0.6 * scale);
+    fn(ctx, W / 2, Math.min(floorY, H) / 2, s);
+  } else {
+    const s = Math.round(320 * k * scale);
+    const inset = Math.round(30 * k) + s / 2;
+    const cx = pos === "top-left" || pos === "bottom-left" ? inset : W - inset;
+    const cy = pos === "bottom-left" ? floorY - Math.round(30 * k) - s / 2 : Math.round(90 * k) + s / 2;
+    fn(ctx, cx, cy, s);
+  }
   ctx.restore();
 }
 
@@ -527,6 +564,10 @@ export function draw(opts: RenderOptions): DrawInfo {
       panelFloor = Math.min(footTop, H - pcp.sweepH - Math.round(20 * k));
     }
   }
+  // A patterned icon fills the background, so it is drawn first, behind
+  // the label as well as the text. The other positions draw with the text.
+  var patternIcon = !!(opts.iconStyle && opts.iconStyle.position === "pattern");
+  if (patternIcon && !hasPhoto && !(usePhoto)) watermark(ctx, opts.iconName || tmpl.defaultIcon, accent, W, H, k, opts.iconStyle, panelFloor);
   var ebH = 0, topY = M;
   if (frameMode === "labelOut" && showLabel && layout.eyebrow){
     ebH = eyebrow(ctx, layout.eyebrow, accent, M, M, k);
@@ -619,7 +660,7 @@ export function draw(opts: RenderOptions): DrawInfo {
     if (hasPhoto && !panelFullBleed){
       listTop = photoHeader(ctx, opts.photoImg!, M, topY, contentW, panelFloor, opts.frame, k) + Math.round(30 * k);
     } else if (!hasPhoto){
-      watermark(ctx, opts.iconName || tmpl.defaultIcon, accent, W, H, k);
+      if (!patternIcon) watermark(ctx, opts.iconName || tmpl.defaultIcon, accent, W, H, k, opts.iconStyle, panelFloor);
     }
     var afterTitle = textBlock(ctx, layout, accent, M, listTop + Math.round(8 * k), contentW, panelFloor, k, false, tc, ta);
     drawList(ctx, layout.list, layout.listStyle, accent, M, afterTitle + Math.round(26 * k), contentW, panelFloor, k, tc);
@@ -636,7 +677,7 @@ export function draw(opts: RenderOptions): DrawInfo {
       ctx.fillText(layout.footer, pCapAl === "center" ? W / 2 : M, Math.min(pEndY + Math.round(50 * k), panelFloor));
     }
   } else {
-    if (!hasPhoto) watermark(ctx, opts.iconName || tmpl.defaultIcon, accent, W, H, k);
+    if (!hasPhoto && !patternIcon) watermark(ctx, opts.iconName || tmpl.defaultIcon, accent, W, H, k, opts.iconStyle, panelFloor);
     var blockH = textBlock(ctx, layout, accent, M, 0, contentW, 1e6, k, true);
     var avail = panelFloor - topY;
     var startY = topY + Math.max(0, (avail - blockH) / 2 - Math.round(30 * k));
@@ -650,6 +691,10 @@ export function draw(opts: RenderOptions): DrawInfo {
     }
   }
 
+  // The branch slot normally holds the branch logo; a region or sub-brand
+  // logo can take its place, with its own wordmark fallback.
+  var slotImg = opts.altLogo ? opts.altLogo.img : opts.branchLogoImg;
+  var slotBranch: Branch = opts.altLogo ? { name: opts.altLogo.text, short: opts.altLogo.text } : opts.branch;
   var fullBleedCorner = ((usePhoto && frameMode === "fullBleed") || panelFullBleed) && fbStyle === "corner";
   if (fullBleedCorner){
     // The corner panel holds exactly one logo instead of the footer band.
@@ -660,12 +705,12 @@ export function draw(opts: RenderOptions): DrawInfo {
     var cp = cornerPanel(W, H, M, k, who, logoScale);
     var lx = W - cp.pad - cp.logoW, ly = H - cp.pad - cp.lh;
     if (who.branch){
-      logoOrText(ctx, opts.branchLogoImg, opts.branch.short || opts.branch.name, lx, ly, cp.logoW, cp.lh, "right", k);
+      logoOrText(ctx, slotImg, slotBranch.short || slotBranch.name, lx, ly, cp.logoW, cp.lh, "right", k);
     } else {
       logoOrText(ctx, opts.camraLogoImg, "CAMRA", lx, ly, cp.logoW, cp.lh, "right", k);
     }
   } else {
-    footer(ctx, accent, opts.branch, opts.branchLogoImg, opts.camraLogoImg, {
+    footer(ctx, accent, slotBranch, slotImg, opts.camraLogoImg, {
       campaign: layout.campaign,
       showBranchOnCampaign: opts.showBranchOnCampaign,
       tagline: opts.tagline != null ? opts.tagline : CONFIG.tagline,

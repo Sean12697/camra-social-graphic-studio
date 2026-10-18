@@ -1,6 +1,8 @@
-// Site configuration: brand palette, taglines, the CAMRA logo and the branches
-// the studio is preconfigured for. Anyone else can pick Custom in the app and
-// upload their own branch logo, so other branches need no code changes.
+// Site configuration: brand palette, taglines, the CAMRA logo and the
+// branches, built from the logo catalogue. Anyone else can pick Custom in the
+// app and upload their own branch logo.
+
+import { BRANCH_LOGOS, shortName } from "./logos.ts";
 
 export const PALETTE = {
   slate: "#41495a",
@@ -42,15 +44,11 @@ export const CONFIG = {
   tagline: TAGLINES[0] as string,
   credit: { name: "Sean O'Mahoney", url: "https://seanomahoney.com" },
   palette: PALETTE,
-  // Branch identity. Drop a white-on-transparent PNG at each logo path.
-  // "Central Manchester" is always capitalised (branch house rule).
-  branches: {
-    "central-manchester": {
-      name: "Central Manchester CAMRA",
-      short: "Central Manchester",
-      logo: "assets/logos/central-manchester-white.png",
-    },
-  } as Record<string, Branch>,
+  // Every branch in the logo catalogue, keyed by id. "Central Manchester" is
+  // always capitalised (branch house rule).
+  branches: Object.fromEntries(
+    BRANCH_LOGOS.map((b) => [b.id, { name: shortName(b.name) + " CAMRA", short: shortName(b.name), logo: b.logo }]),
+  ) as Record<string, Branch>,
 };
 
 /** The palette keys offered in the colour dropdowns, in display order. */

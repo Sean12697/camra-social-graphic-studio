@@ -8,11 +8,15 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
 
 | Parameter | What it does |
 | --- | --- |
-| `type` | Post type. One of: `newcomer`, `award`, `whatson`, `social`, `hybrid`, `meeting`, `festival`, `pubfeature`, `beer`, `announcement`, `custom`. |
-| `branch` | Branch. One of: `central-manchester`, `custom`. |
+| `type` | Post type. One of: `newcomer`, `award`, `whatson`, `social`, `hybrid`, `meeting`, `festival`, `pubfeature`, `beer`, `announcement`, `pubnews`, `locale`, `heritage`, `pubcampaign`, `gbg`, `campaignmonth`, `trip`, `countdown`, `volunteers`, `join`, `thanks`, `custom`. |
+| `branch` | Branch: `custom`, or one of the 217 branch ids in the logo catalogue, for example `central-manchester`. Every id is listed in docs/LOGOS.md, and the branch picker shows them all. |
 | `branchName` | Custom branch name (with `branch=custom`). |
 | `branchLogo` | URL of a white branch-logo PNG (with `branch=custom`). Needs permissive CORS for downloads. Included in share links when the logo came from a URL (an uploaded file cannot travel in a link). |
-| `icon` | Decorative icon when there is no photo. One of: `none`, `pint`, `mug`, `apple`, `pear`, `hops`, `barrel`, `trophy`, `calendar`, `wheat`, `pin`. |
+| `icon` | Decorative icon when there is no photo. One of: `none`, `pint`, `mug`, `apple`, `pear`, `hops`, `barrel`, `trophy`, `calendar`, `wheat`, `pin`, `beer`, `wine`, `martini`, `glass-water`, `cup-soda`, `milk`, `hop`, `wheat-outline`, `apple-outline`, `grape`, `citrus`, `calendar-days`, `clock`, `map-pin`, `map`, `trophy-outline`, `medal`, `award`, `star`, `heart`, `mic`, `guitar`, `ticket`, `tent`, `party-popper`, `sparkles`, `bus`, `train-front`, `bike`, `footprints`, `users`, `user-plus`, `hand-heart`, `handshake`, `megaphone`, `vote`, `landmark`, `store`, `house`, `factory`, `flag`, `book-open`, `newspaper`, `key`, `puzzle`, `dices`, `target`, `utensils`, `sun`, `snowflake`, `leaf`, `trees`, `gift`, `camera`, `lightbulb`, `beer-off`, `piggy-bank`, `badge-percent`, `signpost`, `church`, `castle`, `crown`. |
+| `iconpos` | Where the decorative icon sits: `top-right` (default), `top-left`, `bottom-left`, `center` (large, behind the text) or `pattern` (repeated across the background). |
+| `iconsize` | Decorative icon size multiplier: `0.7`, `1` (default), `1.4` or `2`. |
+| `iconopacity` | Decorative icon opacity, `0.05` to `0.5`. Defaults to `0.1`, a faint watermark. |
+| `iconcolor` | Decorative icon colour: `auto` (the post's accent colour, default), a brand colour key such as `white` or `amber`, or a custom hex value. |
 | `sizes` | Comma-separated size ids, for example `ig-square,fb-landscape`. |
 | `preview` | Size id to show in the on-screen preview. |
 | `orient` | Output orientation for every selected size: `landscape` or `portrait` swaps width and height where needed (square sizes are unaffected). Defaults to each size's listed orientation. |
@@ -24,7 +28,9 @@ Example: `?type=newcomer&pubName=The%20Pigeon&sizes=ig-square,ig-story&download=
 | `bodycolor` | Body text colour. A brand colour key or a custom hex value. Defaults to light grey. |
 | `capcolor` | Caption text colour. A brand colour key or a custom hex value. Defaults to the accent colour. |
 | `logoScale` | Logo size multiplier, from `1.25` (standard, the default and the minimum) to `2`. The form's presets map to `1.25` (standard), `1.6` (larger) and `2` (massive); the slider covers everything in between. Anything below `1.25`, including older links, is raised to the minimum so the branch logo stays legible. |
-| `logos` | Which logo to show: `auto` (brand default: campaigns show the CAMRA logo, everything else the branch logo), `camra` or `branch`. Only one logo ever shows on a graphic; legacy `both` links fall back to `auto`. |
+| `logos` | Which logo to show: `auto` (brand default: campaigns show the CAMRA logo, LocAle and Pub heritage posts their own logos, everything else the branch logo), `camra`, `branch`, `region` (with `region`) or `subbrand` (with `subbrand`). Only one logo ever shows on a graphic; legacy `both` links fall back to `auto`. |
+| `region` | Region logo id, used with `logos=region`. One of: `east-anglia`, `east-central`, `east-midlands`, `greater-london`, `merseyside-and-cheshire`, `north-east`, `north-west`, `northern-ireland`, `scotland`, `south-central`, `south-east`, `south-west`, `wales`, `west-central`, `west-midlands`, `yorkshire`. |
+| `subbrand` | Sub-brand logo id, used with `logos=subbrand`. One of: `cider-and-perry`, `community-pubs`, `locale`, `ocr-pubs`, `pub-heritage`, `what-s-brewing`. |
 | `logoalign` | Alignment of the logo in the footer: `center` (default), `left` or `right`. |
 | `titlealign` | Title alignment: `left` (default) or `center`. |
 | `subalign` | Subtitle alignment: `left` (default) or `center`. |
@@ -140,6 +146,99 @@ List fields take a URL-encoded JSON array of objects, for example `events=[{"nam
 | `heading` | text |
 | `body` (optional) | textarea |
 
+### Pub news (reopening, new licensee) (`type=pubnews`)
+
+| Parameter | Type |
+| --- | --- |
+| `status` | select (reopened, refurbished, licensee, anniversary, newbeer) |
+| `pubName` | text |
+| `detail` (optional) | textarea |
+| `date` (optional) | text |
+
+### LocAle accreditation (`type=locale`)
+
+| Parameter | Type |
+| --- | --- |
+| `pubName` | text |
+| `detail` (optional) | textarea |
+
+### Pub heritage (`type=heritage`)
+
+| Parameter | Type |
+| --- | --- |
+| `pubName` | text |
+| `listing` (optional) | suggest (National Inventory of Historic Pub Interiors, Regional Inventory, Grade II listed, Grade II* listed) |
+| `note` (optional) | textarea |
+
+### Pub campaign (save our pub) (`type=pubcampaign`)
+
+| Parameter | Type |
+| --- | --- |
+| `status` | select (threat, closed, acv, saved) |
+| `pubName` | text |
+| `detail` (optional) | textarea |
+| `action` (optional) | text |
+
+### Good Beer Guide (`type=gbg`)
+
+| Parameter | Type |
+| --- | --- |
+| `heading` (optional) | text |
+| `edition` (optional) | text |
+| `pubs` | list: URL-encoded JSON array of objects with keys pub, town |
+
+### National campaign (Mild Month and more) (`type=campaignmonth`)
+
+| Parameter | Type |
+| --- | --- |
+| `campaignName` | suggest (Mild Month, Cider and Perry Month, Community Pubs Month, Cask Ale Week) |
+| `heading` (optional) | text |
+| `note` (optional) | textarea |
+| `pubs` | list: URL-encoded JSON array of objects with keys pub, detail |
+
+### Trip (brewery visit, coach trip) (`type=trip`)
+
+| Parameter | Type |
+| --- | --- |
+| `destination` | text |
+| `date` | text |
+| `departs` (optional) | text |
+| `price` (optional) | text |
+| `booking` (optional) | text |
+
+### Countdown (days to go) (`type=countdown`)
+
+| Parameter | Type |
+| --- | --- |
+| `event` | text |
+| `days` | text |
+| `date` (optional) | text |
+| `venue` (optional) | text |
+
+### Volunteers wanted (`type=volunteers`)
+
+| Parameter | Type |
+| --- | --- |
+| `heading` (optional) | text |
+| `event` (optional) | text |
+| `roles` | list: URL-encoded JSON array of objects with keys role, when |
+| `contact` (optional) | text |
+
+### Join CAMRA (membership) (`type=join`)
+
+| Parameter | Type |
+| --- | --- |
+| `heading` (optional) | suggest (Join CAMRA, Join the campaign, Become a member) |
+| `benefits` | list: URL-encoded JSON array of objects with keys benefit, detail |
+| `link` (optional) | text |
+
+### Thank you (`type=thanks`)
+
+| Parameter | Type |
+| --- | --- |
+| `who` | text |
+| `note` (optional) | textarea |
+
 ### Custom (your text, or image only) (`type=custom`)
 
 | Parameter | Type |
@@ -159,8 +258,11 @@ List fields take a URL-encoded JSON array of objects, for example `events=[{"nam
 | `fb-square` | Facebook square (1:1) | 1080x1080 |
 | `fb-landscape` | Facebook landscape (1.91:1) | 1200x628 |
 | `fb-story` | Facebook story (9:16) | 1080x1920 |
+| `fb-event` | Facebook event cover (1.91:1) | 1920x1005 |
 | `x-landscape` | Twitter/X landscape (16:9) | 1600x900 |
 | `x-square` | Twitter/X square (1:1) | 1080x1080 |
 | `bsky` | Bluesky (1.91:1) | 1200x628 |
 | `linkedin` | LinkedIn (1.91:1) | 1200x627 |
 | `camra-event` | CAMRA Events website (4:3) | 1440x1080 |
+| `print-a4` | Print A4 poster (portrait, 300 dpi) | 2480x3508 |
+| `print-a5` | Print A5 flyer (portrait, 300 dpi) | 1748x2480 |

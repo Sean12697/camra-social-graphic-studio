@@ -22,7 +22,9 @@
   },
   "include": [
     "src/**/*.ts",
-    "seeds/*.json"
+    "seeds/*.json",
+    "assets/logos/catalogue.json",
+    "src/core/data/*.json"
   ],
   "exclude": [
     "src/sw.ts"

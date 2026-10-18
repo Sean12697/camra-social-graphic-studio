@@ -51,6 +51,10 @@ export interface Template {
   defaultIcon: string;
   fields: Field[];
   build(v: Values): Layout;
+  /** Heading the post type sits under in the Post type list. */
+  group?: string;
+  /** A sub-brand logo (catalogue id) the Automatic logo choice uses. */
+  subBrand?: string;
 }
 
 function str(v: Values, key: string): string {
@@ -472,6 +476,320 @@ export const TEMPLATES: Template[] = [
     },
   },
   {
+    id: "pubnews",
+    label: "Pub news (reopening, new licensee)",
+    accentKey: "amber",
+    layout: "photoTop",
+    allowPhoto: true,
+    defaultIcon: "store",
+    fields: [
+      {
+        key: "status",
+        label: "News",
+        type: "select",
+        options: [
+          ["reopened", "Reopened"],
+          ["refurbished", "Refurbished"],
+          ["licensee", "New licensee"],
+          ["anniversary", "Anniversary"],
+          ["newbeer", "New on the bar"],
+        ],
+      },
+      { key: "pubName", label: "Pub name", type: "text" },
+      { key: "detail", label: "Details", type: "textarea", optional: true },
+      { key: "date", label: "Date", type: "text", optional: true },
+    ],
+    build(v: Values): Layout {
+      const label: Record<string, string> = { reopened: "REOPENED", refurbished: "REFURBISHED", licensee: "NEW LICENSEE", anniversary: "ANNIVERSARY", newbeer: "NEW ON THE BAR" };
+      return {
+        eyebrow: label[str(v, "status")] || "PUB NEWS",
+        title: str(v, "pubName") || "Pub name",
+        subtitle: str(v, "date"),
+        lines: str(v, "detail") ? str(v, "detail").split(/\n+/) : [],
+      };
+    },
+  },
+  {
+    id: "locale",
+    label: "LocAle accreditation",
+    accentKey: "lilac",
+    layout: "photoTop",
+    allowPhoto: true,
+    defaultIcon: "leaf",
+    subBrand: "locale",
+    fields: [
+      { key: "pubName", label: "Pub name", type: "text" },
+      { key: "detail", label: "Details", type: "textarea", optional: true },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "LOCALE",
+        title: str(v, "pubName") || "Pub name",
+        subtitle: "LocAle accredited",
+        lines: str(v, "detail") ? [str(v, "detail")] : [],
+        footer: "Serving local real ale",
+      };
+    },
+  },
+  {
+    id: "heritage",
+    label: "Pub heritage",
+    accentKey: "lilac",
+    layout: "photoTop",
+    allowPhoto: true,
+    defaultIcon: "landmark",
+    subBrand: "pub-heritage",
+    fields: [
+      { key: "pubName", label: "Pub name", type: "text" },
+      { key: "listing", label: "Listing", type: "suggest", optional: true, options: ["National Inventory of Historic Pub Interiors", "Regional Inventory", "Grade II listed", "Grade II* listed"] },
+      { key: "note", label: "What makes it special", type: "textarea", optional: true },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "PUB HERITAGE",
+        title: str(v, "pubName") || "Pub name",
+        subtitle: str(v, "listing"),
+        lines: str(v, "note") ? [str(v, "note")] : [],
+      };
+    },
+  },
+  {
+    id: "pubcampaign",
+    label: "Pub campaign (save our pub)",
+    accentKey: "tango",
+    layout: "photoTop",
+    allowPhoto: true,
+    defaultIcon: "megaphone",
+    fields: [
+      {
+        key: "status",
+        label: "Status",
+        type: "select",
+        options: [
+          ["threat", "Under threat"],
+          ["closed", "Closed"],
+          ["acv", "Asset of Community Value"],
+          ["saved", "Saved"],
+        ],
+      },
+      { key: "pubName", label: "Pub name", type: "text" },
+      { key: "detail", label: "What is happening", type: "textarea", optional: true },
+      { key: "action", label: "What people can do", type: "text", optional: true },
+    ],
+    build(v: Values): Layout {
+      const label: Record<string, string> = { threat: "PUB UNDER THREAT", closed: "PUB CLOSED", acv: "ASSET OF COMMUNITY VALUE", saved: "PUB SAVED" };
+      return {
+        eyebrow: label[str(v, "status")] || "PUB UNDER THREAT",
+        title: str(v, "pubName") || "Pub name",
+        lines: [str(v, "detail")].filter(Boolean),
+        footer: str(v, "action"),
+      };
+    },
+  },
+  {
+    id: "gbg",
+    label: "Good Beer Guide",
+    accentKey: "lilac",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "book-open",
+    fields: [
+      { key: "heading", label: "Heading", type: "text", optional: true },
+      { key: "edition", label: "Edition", type: "text", optional: true },
+      {
+        key: "pubs",
+        label: "Pubs",
+        type: "list",
+        itemFields: [
+          { key: "pub", label: "Pub" },
+          { key: "town", label: "Town or area", optional: true },
+        ],
+      },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "GOOD BEER GUIDE",
+        title: str(v, "heading") || "In the Good Beer Guide",
+        subtitle: str(v, "edition"),
+        list: list(v, "pubs").map(function (p) {
+          return { primary: p.pub || "", secondary: p.town || "" };
+        }),
+        listStyle: "events" as const,
+      };
+    },
+  },
+  {
+    id: "campaignmonth",
+    label: "National campaign (Mild Month and more)",
+    accentKey: "blue",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "beer",
+    fields: [
+      { key: "campaignName", label: "Campaign", type: "suggest", options: ["Mild Month", "Cider and Perry Month", "Community Pubs Month", "Cask Ale Week"] },
+      { key: "heading", label: "Heading", type: "text", optional: true },
+      { key: "note", label: "Message", type: "textarea", optional: true },
+      {
+        key: "pubs",
+        label: "Pubs taking part",
+        type: "list",
+        itemFields: [
+          { key: "pub", label: "Pub" },
+          { key: "detail", label: "What's on", optional: true },
+        ],
+      },
+    ],
+    build(v: Values): Layout {
+      const name = str(v, "campaignName") || "CAMRA campaign";
+      const cider = isCider(name);
+      return {
+        eyebrow: name.toUpperCase(),
+        title: str(v, "heading") || name,
+        lines: str(v, "note") ? [str(v, "note")] : [],
+        list: list(v, "pubs").map(function (p) {
+          return { primary: p.pub || "", secondary: p.detail || "" };
+        }),
+        listStyle: "events" as const,
+        accentKey: "blue",
+        cider: cider,
+        campaign: true,
+        campaignName: cider ? "Real Cider and Perry" : name,
+      };
+    },
+  },
+  {
+    id: "trip",
+    label: "Trip (brewery visit, coach trip)",
+    accentKey: "watermelon",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "bus",
+    fields: [
+      { key: "destination", label: "Destination", type: "text" },
+      { key: "date", label: "Date", type: "text" },
+      { key: "departs", label: "Departs from", type: "text", optional: true },
+      { key: "price", label: "Price", type: "text", optional: true },
+      { key: "booking", label: "How to book", type: "text", optional: true },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "TRIP",
+        title: str(v, "destination") || "Branch trip",
+        subtitle: str(v, "date"),
+        lines: [str(v, "departs") ? "Departs " + str(v, "departs") : "", str(v, "price")].filter(Boolean),
+        footer: str(v, "booking"),
+      };
+    },
+  },
+  {
+    id: "countdown",
+    label: "Countdown (days to go)",
+    accentKey: "aqua",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "clock",
+    fields: [
+      { key: "event", label: "Event", type: "text" },
+      { key: "days", label: "Days to go", type: "text" },
+      { key: "date", label: "Date", type: "text", optional: true },
+      { key: "venue", label: "Venue", type: "text", optional: true },
+    ],
+    build(v: Values): Layout {
+      const d = str(v, "days").trim();
+      return {
+        eyebrow: "COUNTDOWN",
+        title: d ? d + (d === "1" ? " day to go" : " days to go") : "Coming soon",
+        subtitle: str(v, "event"),
+        lines: [join([str(v, "date"), str(v, "venue")], " \u00b7 ")].filter(Boolean),
+      };
+    },
+  },
+  {
+    id: "volunteers",
+    label: "Volunteers wanted",
+    accentKey: "watermelon",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "hand-heart",
+    fields: [
+      { key: "heading", label: "Heading", type: "text", optional: true },
+      { key: "event", label: "For (event or activity)", type: "text", optional: true },
+      {
+        key: "roles",
+        label: "Roles",
+        type: "list",
+        itemFields: [
+          { key: "role", label: "Role" },
+          { key: "when", label: "When", optional: true },
+        ],
+      },
+      { key: "contact", label: "How to sign up", type: "text", optional: true },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "VOLUNTEERS WANTED",
+        title: str(v, "heading") || "Can you help?",
+        subtitle: str(v, "event"),
+        list: list(v, "roles").map(function (r) {
+          return { primary: r.role || "", secondary: r.when || "" };
+        }),
+        listStyle: "events" as const,
+        footer: str(v, "contact"),
+      };
+    },
+  },
+  {
+    id: "join",
+    label: "Join CAMRA (membership)",
+    accentKey: "lilac",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "user-plus",
+    fields: [
+      { key: "heading", label: "Heading", type: "suggest", optional: true, options: ["Join CAMRA", "Join the campaign", "Become a member"] },
+      {
+        key: "benefits",
+        label: "Benefits",
+        type: "list",
+        itemFields: [
+          { key: "benefit", label: "Benefit" },
+          { key: "detail", label: "Detail", optional: true },
+        ],
+      },
+      { key: "link", label: "Where to join", type: "text", optional: true },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "MEMBERSHIP",
+        title: str(v, "heading") || "Join CAMRA",
+        list: list(v, "benefits").map(function (b) {
+          return { primary: b.benefit || "", secondary: b.detail || "" };
+        }),
+        listStyle: "events" as const,
+        footer: str(v, "link"),
+      };
+    },
+  },
+  {
+    id: "thanks",
+    label: "Thank you",
+    accentKey: "amber",
+    layout: "panel",
+    allowPhoto: true,
+    defaultIcon: "heart",
+    fields: [
+      { key: "who", label: "Thank you to", type: "text" },
+      { key: "note", label: "Message", type: "textarea", optional: true },
+    ],
+    build(v: Values): Layout {
+      return {
+        eyebrow: "THANK YOU",
+        title: str(v, "who") || "Thank you",
+        lines: str(v, "note") ? str(v, "note").split(/\n+/) : [],
+      };
+    },
+  },
+  {
     id: "custom",
     label: "Custom (your text, or image only)",
     accentKey: "amber",
@@ -502,6 +820,18 @@ export const TEMPLATES: Template[] = [
     },
   },
 ];
+
+// Headings for the Post type list.
+const GROUPS: Record<string, string> = {
+  newcomer: "Pubs", pubfeature: "Pubs", pubnews: "Pubs", locale: "Pubs", heritage: "Pubs", pubcampaign: "Pubs",
+  award: "Awards", hybrid: "Awards", gbg: "Awards",
+  whatson: "Events", social: "Events", trip: "Events", festival: "Events", countdown: "Events", meeting: "Events",
+  beer: "Drinks and campaigns", campaignmonth: "Drinks and campaigns",
+  announcement: "Branch news", volunteers: "Branch news", join: "Branch news", thanks: "Branch news",
+  custom: "Your own",
+};
+TEMPLATES.forEach((t) => (t.group = t.group || GROUPS[t.id] || "More"));
+export const TEMPLATE_GROUPS = ["Pubs", "Events", "Awards", "Drinks and campaigns", "Branch news", "Your own", "More"];
 
 export function templateById(id: string | null | undefined): Template | undefined {
   return TEMPLATES.find((t) => t.id === id);

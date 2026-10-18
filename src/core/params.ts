@@ -7,6 +7,7 @@
 import { CONFIG } from "./config.ts";
 import { escapeHtml as esc } from "./html.ts";
 import { ICON_NAMES } from "./icons.ts";
+import { BRANCH_LOGOS, REGION_LOGOS, SUB_BRAND_LOGOS } from "./logos.ts";
 import { PRESETS } from "./presets.ts";
 import { TEMPLATES, type Field } from "./templates.ts";
 
@@ -37,15 +38,22 @@ export const PARAM_DEFS: ParamDef[] = [
       return "Post type. One of: " + TEMPLATES.map(function(t){ return "<code>" + esc(t.id) + "</code>"; }).join(", ") + ".";
     } },
   { key: "branch", doc: function(){
-      var brs = Object.keys(CONFIG.branches).map(function(k){ return "<code>" + esc(k) + "</code>"; });
-      brs.push("<code>custom</code>");
-      return "Branch. One of: " + brs.join(", ") + ".";
+      var ids = Object.keys(CONFIG.branches);
+      return "Branch: <code>custom</code>, or one of the " + ids.length + " branch ids in the logo catalogue, for example <code>" + esc(CONFIG.defaultBranch) + "</code>. Every id is listed in docs/LOGOS.md, and the branch picker shows them all.";
     } },
   { key: "branchName", doc: "Custom branch name (with <code>branch=custom</code>)." },
   { key: "branchLogo", doc: "URL of a white branch-logo PNG (with <code>branch=custom</code>). Needs permissive CORS for downloads. Included in share links when the logo came from a URL (an uploaded file cannot travel in a link)." },
   { key: "icon", doc: function(){
       return "Decorative icon when there is no photo. One of: <code>none</code>, " + ICON_NAMES.map(function(k){ return "<code>" + esc(k) + "</code>"; }).join(", ") + ".";
     } },
+  { key: "iconpos", elId: "iconPos", kind: "value", def: "top-right",
+    doc: "Where the decorative icon sits: <code>top-right</code> (default), <code>top-left</code>, <code>bottom-left</code>, <code>center</code> (large, behind the text) or <code>pattern</code> (repeated across the background)." },
+  { key: "iconsize", elId: "iconSize", kind: "value", def: "1",
+    doc: "Decorative icon size multiplier: <code>0.7</code>, <code>1</code> (default), <code>1.4</code> or <code>2</code>." },
+  { key: "iconopacity", elId: "iconOpacity", kind: "value", def: "0.1",
+    doc: "Decorative icon opacity, <code>0.05</code> to <code>0.5</code>. Defaults to <code>0.1</code>, a faint watermark." },
+  { key: "iconcolor", elId: "iconColor", customElId: "iconCustom", kind: "color", def: "auto",
+    doc: "Decorative icon colour: <code>auto</code> (the post's accent colour, default), a brand colour key such as <code>white</code> or <code>amber</code>, or a custom hex value." },
   { key: "sizes", doc: "Comma-separated size ids, for example <code>ig-square,fb-landscape</code>." },
   { key: "preview", doc: "Size id to show in the on-screen preview." },
   { key: "orient", elId: "orient", kind: "value", def: "as",
@@ -67,7 +75,11 @@ export const PARAM_DEFS: ParamDef[] = [
   { key: "logoScale", elId: "logoScale", kind: "value", def: "1.25",
     doc: "Logo size multiplier, from <code>1.25</code> (standard, the default and the minimum) to <code>2</code>. The form's presets map to <code>1.25</code> (standard), <code>1.6</code> (larger) and <code>2</code> (massive); the slider covers everything in between. Anything below <code>1.25</code>, including older links, is raised to the minimum so the branch logo stays legible." },
   { key: "logos", elId: "logos", kind: "value", def: "auto",
-    doc: "Which logo to show: <code>auto</code> (brand default: campaigns show the CAMRA logo, everything else the branch logo), <code>camra</code> or <code>branch</code>. Only one logo ever shows on a graphic; legacy <code>both</code> links fall back to <code>auto</code>." },
+    doc: "Which logo to show: <code>auto</code> (brand default: campaigns show the CAMRA logo, LocAle and Pub heritage posts their own logos, everything else the branch logo), <code>camra</code>, <code>branch</code>, <code>region</code> (with <code>region</code>) or <code>subbrand</code> (with <code>subbrand</code>). Only one logo ever shows on a graphic; legacy <code>both</code> links fall back to <code>auto</code>." },
+  { key: "region", elId: "region", kind: "value", def: "",
+    doc: function(){ return "Region logo id, used with <code>logos=region</code>. One of: " + REGION_LOGOS.map(function(r){ return "<code>" + esc(r.id) + "</code>"; }).join(", ") + "."; } },
+  { key: "subbrand", elId: "subBrand", kind: "value", def: "",
+    doc: function(){ return "Sub-brand logo id, used with <code>logos=subbrand</code>. One of: " + SUB_BRAND_LOGOS.map(function(r){ return "<code>" + esc(r.id) + "</code>"; }).join(", ") + "."; } },
   { key: "logoalign", elId: "logoAlign", kind: "value", def: "center",
     doc: "Alignment of the logo in the footer: <code>center</code> (default), <code>left</code> or <code>right</code>." },
   { key: "titlealign", elId: "titleAlign", kind: "value", def: "left",
@@ -213,5 +225,19 @@ export function docsMarkdown(): string {
   out.push("| --- | --- | --- |");
   PRESETS.forEach((p) => out.push("| `" + p.id + "` | " + p.label + " | " + p.w + "x" + p.h + " |"));
   out.push("");
+  return out.join("\n");
+}
+
+/** docs/LOGOS.md: every logo in the catalogue with the id links use. */
+export function logosMarkdown(): string {
+  const out: string[] = ["# Logos", "", "Every logo the studio offers, with the id share links use (`branch=`, `region=` with `logos=region`, `subbrand=` with `logos=subbrand`). Generated from `assets/logos/catalogue.json` by `npm run docs`. Entries marked \"text wordmark\" have no logo file yet; add one with `scripts/import-logos.py`.", ""];
+  const table = (title: string, list: typeof BRANCH_LOGOS) => {
+    out.push("## " + title + " (" + list.length + ")", "", "| Name | Id | Logo |", "| --- | --- | --- |");
+    list.forEach((e) => out.push("| " + e.name.replace(/\|/g, "\\|") + " | `" + e.id + "` | " + (e.logo ? "PNG" : "text wordmark") + " |"));
+    out.push("");
+  };
+  table("Branches", BRANCH_LOGOS);
+  table("Regions", REGION_LOGOS);
+  table("Sub-brands", SUB_BRAND_LOGOS);
   return out.join("\n");
 }

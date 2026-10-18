@@ -42,6 +42,7 @@
         <div class="field" data-tip="Choose your branch, or pick Custom to use any other branch and upload its logo.">
           <label for="branch">Branch</label>
           <select id="branch"></select>
+          <button type="button" class="ghost" id="browseLogos" aria-haspopup="dialog">Browse all branch, region and sub-brand logos</button>
         </div>
         <div class="field hidden" id="customBranchWrap">
           <label for="customBranchName">Custom branch name</label>
@@ -68,9 +69,50 @@
           </label>
           <button type="button" class="ghost" id="clearPhoto">Remove photo</button>
         </div>
-        <div class="field" id="iconWrap">
-          <label for="presetIcon">Decorative icon (used when there is no photo)</label>
-          <select id="presetIcon"></select>
+        <div class="field" id="iconWrap" data-tip="Pick a decorative icon for posts without a photo, then choose where it sits, how big and how faint it is, and its colour. Pattern repeats it across the background.">
+          <span class="field-label" id="iconLabel">Decorative icon (used when there is no photo)</span>
+          <select id="presetIcon" hidden aria-hidden="true" tabindex="-1"></select>
+          <input type="search" id="iconFilter" placeholder="Filter icons, for example beer or bus" aria-label="Filter icons">
+          <div id="iconGrid" class="icon-grid" role="radiogroup" aria-labelledby="iconLabel"></div>
+          <div class="icon-style">
+            <div class="color-cell">
+              <label for="iconPos">Position</label>
+              <select id="iconPos">
+                <option value="top-right">Top right (default)</option>
+                <option value="top-left">Top left</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="center">Centre, behind the text</option>
+                <option value="pattern">Pattern across the background</option>
+              </select>
+            </div>
+            <div class="color-cell">
+              <label for="iconSize">Size</label>
+              <select id="iconSize">
+                <option value="0.7">Small</option>
+                <option value="1">Standard (default)</option>
+                <option value="1.4">Large</option>
+                <option value="2">Huge</option>
+              </select>
+            </div>
+            <div class="color-cell">
+              <label for="iconColor">Colour</label>
+              <select id="iconColor" class="color-select">
+                <option value="auto">Accent (default)</option>
+                <option value="white">White</option>
+                <option value="light">Light grey</option>
+                <option value="amber">Amber</option>
+                <option value="aqua">Aqua</option>
+                <option value="tango">Tango</option>
+                <option value="lilac">Lilac</option>
+                <option value="blue">Blue</option>
+                <option value="emerald">Emerald</option>
+                <option value="watermelon">Watermelon</option>
+                <option value="custom">Custom…</option>
+              </select>
+              <input type="color" id="iconCustom" class="color-input hidden" value="#f9b13c" aria-label="Custom icon colour">
+            </div>
+            <label class="range-row color-cell"><span>Strength</span><input type="range" id="iconOpacity" min="0.05" max="0.5" step="0.05" value="0.1" aria-label="Icon strength (opacity)"></label>
+          </div>
         </div>
       </div>
     </details>
@@ -142,7 +184,17 @@
             <option value="auto">Automatic (brand default)</option>
             <option value="camra">CAMRA logo</option>
             <option value="branch">Branch logo</option>
+            <option value="region">Region logo</option>
+            <option value="subbrand">Sub-brand logo (LocAle, Pub Heritage and more)</option>
           </select>
+        </div>
+        <div class="field hidden" id="regionWrap">
+          <label for="region">Region</label>
+          <select id="region"></select>
+        </div>
+        <div class="field hidden" id="subBrandWrap">
+          <label for="subBrand">Sub-brand</label>
+          <select id="subBrand"></select>
         </div>
         <div class="field" data-tip="Choose how the logo sits across the footer. Centre is the default.">
           <label for="logoAlign">Logo alignment</label>
@@ -359,6 +411,14 @@
     <button type="button" class="icon-btn" data-close aria-label="Close saved designs">×</button>
   </div>
   <div class="dlg-body" id="designsBody"></div>
+</dialog>
+
+<dialog id="logoDialog" class="dlg dlg-wide" aria-labelledby="logoTitle">
+  <div class="dlg-head">
+    <h2 id="logoTitle">Choose a logo</h2>
+    <button type="button" class="icon-btn" data-close aria-label="Close logo picker">×</button>
+  </div>
+  <div class="dlg-body" id="logoBody"></div>
 </dialog>
 
 <dialog id="settingsDialog" class="dlg" aria-labelledby="settingsTitle">

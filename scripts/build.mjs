@@ -87,7 +87,10 @@ export async function buildSite() {
   // to this build's contents.
   const shell = walk(dist)
     .map((p) => relative(dist, p).split("\\").join("/"))
+    // The logo library (hundreds of files) is cached as each logo is used,
+    // not up front; the CAMRA logo and the default branch are precached.
     .filter((p) => !p.endsWith(".map") && p !== "_headers" && p !== "robots.txt" && !p.startsWith("assets/fonts/"))
+    .filter((p) => !/^assets\/logos\/(branches|regions|sub-brands|thumbs)\//.test(p) || p === "assets/logos/branches/central-manchester.png")
     .sort();
   const hash = createHash("sha256");
   shell.forEach((p) => hash.update(p).update(readFileSync(join(dist, p))));

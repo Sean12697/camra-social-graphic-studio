@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.0
+
+### Added
+- Logo library: all 217 branch logos, 16 regions and 6 sub-brands (LocAle, Pub Heritage, Community Pubs, Cider and Perry, What's Brewing, OCR Pubs) with a searchable logo picker, Region and Sub-brand options under Logo shown, and `region` and `subbrand` link parameters. LocAle and Pub heritage posts use their own logo automatically.
+- Eleven post types: Pub news, LocAle accreditation, Pub heritage, Pub campaign (save our pub), Good Beer Guide, National campaign (Mild Month and more), Trip, Countdown, Volunteers wanted, Join CAMRA, Thank you. The Post type list is grouped.
+- Decorative icons: 62 line icons alongside the 10 solid ones, a visual picker with filter, and position (including centre and pattern), size, strength and colour controls with matching link parameters.
+- Print sizes (A4 poster and A5 flyer at 300 dpi) and a Facebook event cover size.
+- Three more sample designs, Ctrl or Cmd + S to save a design, `docs/LOGOS.md` and `scripts/import-logos.py`.
+
+### Changed
+- Only the CAMRA logo and the default branch logo are precached for offline use; other logos are cached as they are used.
+
+
 ## 2.2.0
 
 ### Added

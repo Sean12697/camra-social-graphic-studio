@@ -83,6 +83,33 @@
       "createdAt": "2026-09-09T18:30:00.000Z",
       "updatedAt": "2026-10-09T09:15:00.000Z",
       "sample": true
+    },
+    {
+      "id": "sample-locale",
+      "name": "LocAle: The Foundry",
+      "typeId": "locale",
+      "params": "type=locale&branch=central-manchester&pubName=The%20Foundry&detail=Always%20at%20least%20two%20beers%20from%20breweries%20within%2025%20miles.&icon=leaf&sizes=ig-square%2Cfb-landscape",
+      "createdAt": "2026-09-10T18:30:00.000Z",
+      "updatedAt": "2026-10-10T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-countdown",
+      "name": "Countdown: Winter Ales Festival",
+      "typeId": "countdown",
+      "params": "type=countdown&branch=central-manchester&event=Winter%20Ales%20Festival&days=7&date=5%20to%207%20February&venue=The%20Old%20Mill%20Hall&icon=beer&iconpos=pattern&iconopacity=0.08&sizes=ig-square%2Cig-story",
+      "createdAt": "2026-09-11T18:30:00.000Z",
+      "updatedAt": "2026-10-11T09:15:00.000Z",
+      "sample": true
+    },
+    {
+      "id": "sample-trip",
+      "name": "Trip: Ropewalk Brewing tour",
+      "typeId": "trip",
+      "params": "type=trip&branch=central-manchester&destination=Ropewalk%20Brewing%20tour&date=Saturday%2014%20March&departs=Piccadilly%20Gardens%2C%2010am&price=%C2%A315%20members%2C%20%C2%A320%20guests&booking=Book%20with%20the%20social%20secretary&icon=bus&iconsize=1.4&sizes=ig-square%2Cfb-event",
+      "createdAt": "2026-09-12T18:30:00.000Z",
+      "updatedAt": "2026-10-12T09:15:00.000Z",
+      "sample": true
     }
   ],
   "library": []
