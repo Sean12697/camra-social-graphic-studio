@@ -1,0 +1,1411 @@
+{
+ "note": "The logo catalogue: every branch, region and sub-brand logo the studio offers. Files are white on transparent PNGs at <folder>/<id>.png with 240px previews under thumbs/. Entries without a file show a text wordmark until one is added with scripts/import-logos.py.",
+ "branches": [
+  {
+   "id": "abercolwyn",
+   "name": "Abercolwyn",
+   "file": "branches/abercolwyn.png",
+   "thumb": "thumbs/branches/abercolwyn.png"
+  },
+  {
+   "id": "aberdeen-grampian-n-isles",
+   "name": "Aberdeen Grampian & N Isles",
+   "file": "branches/aberdeen-grampian-n-isles.png",
+   "thumb": "thumbs/branches/aberdeen-grampian-n-isles.png"
+  },
+  {
+   "id": "amber-valley",
+   "name": "Amber Valley",
+   "file": "branches/amber-valley.png",
+   "thumb": "thumbs/branches/amber-valley.png"
+  },
+  {
+   "id": "arun-and-adur",
+   "name": "Arun and Adur",
+   "file": "branches/arun-and-adur.png",
+   "thumb": "thumbs/branches/arun-and-adur.png"
+  },
+  {
+   "id": "ashbourne-and-district",
+   "name": "Ashbourne and District (sub-branch)",
+   "file": "branches/ashbourne-and-district.png",
+   "thumb": "thumbs/branches/ashbourne-and-district.png"
+  },
+  {
+   "id": "ashford-folkestone-romney-marsh",
+   "name": "Ashford Folkestone & Romney Marsh",
+   "file": "branches/ashford-folkestone-romney-marsh.png",
+   "thumb": "thumbs/branches/ashford-folkestone-romney-marsh.png"
+  },
+  {
+   "id": "aylesbury-vale-wycombe",
+   "name": "Aylesbury Vale & Wycombe",
+   "file": "branches/aylesbury-vale-wycombe.png",
+   "thumb": "thumbs/branches/aylesbury-vale-wycombe.png"
+  },
+  {
+   "id": "ayrshire-wigtownshire",
+   "name": "Ayrshire & Wigtownshire",
+   "file": "branches/ayrshire-wigtownshire.png",
+   "thumb": "thumbs/branches/ayrshire-wigtownshire.png"
+  },
+  {
+   "id": "bae-ceredigion",
+   "name": "Bae Ceredigion",
+   "file": "branches/bae-ceredigion.png",
+   "thumb": "thumbs/branches/bae-ceredigion.png"
+  },
+  {
+   "id": "barnsley",
+   "name": "Barnsley",
+   "file": "branches/barnsley.png",
+   "thumb": "thumbs/branches/barnsley.png"
+  },
+  {
+   "id": "bath-borders",
+   "name": "Bath & Borders",
+   "file": "branches/bath-borders.png",
+   "thumb": "thumbs/branches/bath-borders.png"
+  },
+  {
+   "id": "berkshire-south-east",
+   "name": "Berkshire South East",
+   "file": "branches/berkshire-south-east.png",
+   "thumb": "thumbs/branches/berkshire-south-east.png"
+  },
+  {
+   "id": "bexley",
+   "name": "Bexley",
+   "file": "branches/bexley.png",
+   "thumb": "thumbs/branches/bexley.png"
+  },
+  {
+   "id": "birmingham",
+   "name": "Birmingham",
+   "file": "branches/birmingham.png",
+   "thumb": "thumbs/branches/birmingham.png"
+  },
+  {
+   "id": "blackpool-fylde-wyre",
+   "name": "Blackpool Fylde & Wyre",
+   "file": "branches/blackpool-fylde-wyre.png",
+   "thumb": "thumbs/branches/blackpool-fylde-wyre.png"
+  },
+  {
+   "id": "bolton",
+   "name": "Bolton",
+   "file": "branches/bolton.png",
+   "thumb": "thumbs/branches/bolton.png"
+  },
+  {
+   "id": "bradford",
+   "name": "Bradford",
+   "file": "branches/bradford.png",
+   "thumb": "thumbs/branches/bradford.png"
+  },
+  {
+   "id": "brecknockshire",
+   "name": "Brecknockshire",
+   "file": "branches/brecknockshire.png",
+   "thumb": "thumbs/branches/brecknockshire.png"
+  },
+  {
+   "id": "bridgnorth",
+   "name": "Bridgnorth (sub-branch)",
+   "file": "branches/bridgnorth.png",
+   "thumb": "thumbs/branches/bridgnorth.png"
+  },
+  {
+   "id": "brighton-south-downs",
+   "name": "Brighton & South Downs",
+   "file": "branches/brighton-south-downs.png",
+   "thumb": "thumbs/branches/brighton-south-downs.png"
+  },
+  {
+   "id": "bristol-district",
+   "name": "Bristol & District",
+   "file": "branches/bristol-district.png",
+   "thumb": "thumbs/branches/bristol-district.png"
+  },
+  {
+   "id": "bromley",
+   "name": "Bromley",
+   "file": "branches/bromley.png",
+   "thumb": "thumbs/branches/bromley.png"
+  },
+  {
+   "id": "burton-on-trent-south-derbyshire",
+   "name": "Burton-on-Trent & South Derbyshire",
+   "file": "branches/burton-on-trent-south-derbyshire.png",
+   "thumb": "thumbs/branches/burton-on-trent-south-derbyshire.png"
+  },
+  {
+   "id": "cambridge",
+   "name": "Cambridge",
+   "file": "branches/cambridge.png",
+   "thumb": "thumbs/branches/cambridge.png"
+  },
+  {
+   "id": "cannock-chase",
+   "name": "Cannock Chase",
+   "file": "branches/cannock-chase.png",
+   "thumb": "thumbs/branches/cannock-chase.png"
+  },
+  {
+   "id": "canterbury-herne-bay-whitstable",
+   "name": "Canterbury Herne Bay & Whitstable",
+   "file": "branches/canterbury-herne-bay-whitstable.png",
+   "thumb": "thumbs/branches/canterbury-herne-bay-whitstable.png"
+  },
+  {
+   "id": "cardiff",
+   "name": "Cardiff",
+   "file": "branches/cardiff.png",
+   "thumb": "thumbs/branches/cardiff.png"
+  },
+  {
+   "id": "carmarthenshire",
+   "name": "Carmarthenshire",
+   "file": "branches/carmarthenshire.png",
+   "thumb": "thumbs/branches/carmarthenshire.png"
+  },
+  {
+   "id": "central-lancashire",
+   "name": "Central Lancashire",
+   "file": "branches/central-lancashire.png",
+   "thumb": "thumbs/branches/central-lancashire.png"
+  },
+  {
+   "id": "central-manchester",
+   "name": "Central Manchester",
+   "file": "branches/central-manchester.png",
+   "thumb": "thumbs/branches/central-manchester.png"
+  },
+  {
+   "id": "channel-islands",
+   "name": "Channel Islands",
+   "file": "branches/channel-islands.png",
+   "thumb": "thumbs/branches/channel-islands.png"
+  },
+  {
+   "id": "chelmsford-mid-essex",
+   "name": "Chelmsford & Mid Essex",
+   "file": "branches/chelmsford-mid-essex.png",
+   "thumb": "thumbs/branches/chelmsford-mid-essex.png"
+  },
+  {
+   "id": "cheltenham",
+   "name": "Cheltenham",
+   "file": "branches/cheltenham.png",
+   "thumb": "thumbs/branches/cheltenham.png"
+  },
+  {
+   "id": "chesterfield-and-district",
+   "name": "Chesterfield and District",
+   "file": "branches/chesterfield-and-district.png",
+   "thumb": "thumbs/branches/chesterfield-and-district.png"
+  },
+  {
+   "id": "cleveland",
+   "name": "Cleveland",
+   "file": "branches/cleveland.png",
+   "thumb": "thumbs/branches/cleveland.png"
+  },
+  {
+   "id": "colchester-north-east-essex",
+   "name": "Colchester & North East Essex",
+   "file": "branches/colchester-north-east-essex.png",
+   "thumb": "thumbs/branches/colchester-north-east-essex.png"
+  },
+  {
+   "id": "cornwall",
+   "name": "Cornwall",
+   "file": "branches/cornwall.png",
+   "thumb": "thumbs/branches/cornwall.png"
+  },
+  {
+   "id": "coventry-and-district",
+   "name": "Coventry and District",
+   "file": "branches/coventry-and-district.png",
+   "thumb": "thumbs/branches/coventry-and-district.png"
+  },
+  {
+   "id": "croydon-sutton",
+   "name": "Croydon & Sutton",
+   "file": "branches/croydon-sutton.png",
+   "thumb": "thumbs/branches/croydon-sutton.png"
+  },
+  {
+   "id": "darlington",
+   "name": "Darlington",
+   "file": "branches/darlington.png",
+   "thumb": "thumbs/branches/darlington.png"
+  },
+  {
+   "id": "deal-dover-sandwich",
+   "name": "Deal Dover & Sandwich",
+   "file": "branches/deal-dover-sandwich.png",
+   "thumb": "thumbs/branches/deal-dover-sandwich.png"
+  },
+  {
+   "id": "dee-valley",
+   "name": "Dee Valley",
+   "file": "branches/dee-valley.png",
+   "thumb": "thumbs/branches/dee-valley.png"
+  },
+  {
+   "id": "derby",
+   "name": "Derby",
+   "file": "branches/derby.png",
+   "thumb": "thumbs/branches/derby.png"
+  },
+  {
+   "id": "devizes",
+   "name": "Devizes",
+   "file": "branches/devizes.png",
+   "thumb": "thumbs/branches/devizes.png"
+  },
+  {
+   "id": "doncaster",
+   "name": "Doncaster",
+   "file": "branches/doncaster.png",
+   "thumb": "thumbs/branches/doncaster.png"
+  },
+  {
+   "id": "dronfield-and-district",
+   "name": "Dronfield and District",
+   "file": "branches/dronfield-and-district.png",
+   "thumb": "thumbs/branches/dronfield-and-district.png"
+  },
+  {
+   "id": "dudley-south-staffordshire",
+   "name": "Dudley & South Staffordshire",
+   "file": "branches/dudley-south-staffordshire.png",
+   "thumb": "thumbs/branches/dudley-south-staffordshire.png"
+  },
+  {
+   "id": "dumfries-stewartry",
+   "name": "Dumfries & Stewartry (Solway sub-branch)",
+   "file": "branches/dumfries-stewartry.png",
+   "thumb": "thumbs/branches/dumfries-stewartry.png"
+  },
+  {
+   "id": "durham",
+   "name": "Durham",
+   "file": "branches/durham.png",
+   "thumb": "thumbs/branches/durham.png"
+  },
+  {
+   "id": "east-mid-surrey",
+   "name": "East & Mid Surrey",
+   "file": "branches/east-mid-surrey.png",
+   "thumb": "thumbs/branches/east-mid-surrey.png"
+  },
+  {
+   "id": "east-bedfordshire",
+   "name": "East Bedfordshire",
+   "file": "branches/east-bedfordshire.png",
+   "thumb": "thumbs/branches/east-bedfordshire.png"
+  },
+  {
+   "id": "east-dorset",
+   "name": "East Dorset",
+   "file": "branches/east-dorset.png",
+   "thumb": "thumbs/branches/east-dorset.png"
+  },
+  {
+   "id": "east-hampshire",
+   "name": "East Hampshire",
+   "file": "branches/east-hampshire.png",
+   "thumb": "thumbs/branches/east-hampshire.png"
+  },
+  {
+   "id": "east-lancashire",
+   "name": "East Lancashire",
+   "file": "branches/east-lancashire.png",
+   "thumb": "thumbs/branches/east-lancashire.png"
+  },
+  {
+   "id": "east-london-city",
+   "name": "East London & City",
+   "file": "branches/east-london-city.png",
+   "thumb": "thumbs/branches/east-london-city.png"
+  },
+  {
+   "id": "east-norfolk",
+   "name": "East Norfolk",
+   "file": "branches/east-norfolk.png",
+   "thumb": "thumbs/branches/east-norfolk.png"
+  },
+  {
+   "id": "edinburgh-south-east-scotland",
+   "name": "Edinburgh & South East Scotland",
+   "file": "branches/edinburgh-south-east-scotland.png",
+   "thumb": "thumbs/branches/edinburgh-south-east-scotland.png"
+  },
+  {
+   "id": "ely-district",
+   "name": "Ely & District",
+   "file": "branches/ely-district.png",
+   "thumb": "thumbs/branches/ely-district.png"
+  },
+  {
+   "id": "enfield-barnet",
+   "name": "Enfield & Barnet",
+   "file": "branches/enfield-barnet.png",
+   "thumb": "thumbs/branches/enfield-barnet.png"
+  },
+  {
+   "id": "erewash-valley",
+   "name": "Erewash Valley",
+   "file": "branches/erewash-valley.png",
+   "thumb": "thumbs/branches/erewash-valley.png"
+  },
+  {
+   "id": "exeter-east-devon",
+   "name": "Exeter & East Devon",
+   "file": "branches/exeter-east-devon.png",
+   "thumb": "thumbs/branches/exeter-east-devon.png"
+  },
+  {
+   "id": "fenland",
+   "name": "Fenland",
+   "file": "branches/fenland.png",
+   "thumb": "thumbs/branches/fenland.png"
+  },
+  {
+   "id": "forth-valley",
+   "name": "Forth Valley",
+   "file": "branches/forth-valley.png",
+   "thumb": "thumbs/branches/forth-valley.png"
+  },
+  {
+   "id": "furness",
+   "name": "Furness",
+   "file": "branches/furness.png",
+   "thumb": "thumbs/branches/furness.png"
+  },
+  {
+   "id": "gainsborough",
+   "name": "Gainsborough",
+   "file": "branches/gainsborough.png",
+   "thumb": "thumbs/branches/gainsborough.png"
+  },
+  {
+   "id": "glasgow-west-of-scotland",
+   "name": "Glasgow & West of Scotland",
+   "file": "branches/glasgow-west-of-scotland.png",
+   "thumb": "thumbs/branches/glasgow-west-of-scotland.png"
+  },
+  {
+   "id": "gloucestershire",
+   "name": "Gloucestershire",
+   "file": "branches/gloucestershire.png",
+   "thumb": "thumbs/branches/gloucestershire.png"
+  },
+  {
+   "id": "grantham",
+   "name": "Grantham",
+   "file": "branches/grantham.png",
+   "thumb": "thumbs/branches/grantham.png"
+  },
+  {
+   "id": "gravesend-darent-valley",
+   "name": "Gravesend & Darent Valley",
+   "file": "branches/gravesend-darent-valley.png",
+   "thumb": "thumbs/branches/gravesend-darent-valley.png"
+  },
+  {
+   "id": "grimsby-north-east-lincs",
+   "name": "Grimsby & North East Lincs",
+   "file": "branches/grimsby-north-east-lincs.png",
+   "thumb": "thumbs/branches/grimsby-north-east-lincs.png"
+  },
+  {
+   "id": "gwent",
+   "name": "Gwent",
+   "file": "branches/gwent.png",
+   "thumb": "thumbs/branches/gwent.png"
+  },
+  {
+   "id": "gwynedd-a-mon",
+   "name": "Gwynedd a Môn",
+   "file": "branches/gwynedd-a-mon.png",
+   "thumb": "thumbs/branches/gwynedd-a-mon.png"
+  },
+  {
+   "id": "halifax-calderdale",
+   "name": "Halifax & Calderdale",
+   "file": "branches/halifax-calderdale.png",
+   "thumb": "thumbs/branches/halifax-calderdale.png"
+  },
+  {
+   "id": "halton",
+   "name": "Halton",
+   "file": "branches/halton.png",
+   "thumb": "thumbs/branches/halton.png"
+  },
+  {
+   "id": "harrogate-ripon",
+   "name": "Harrogate & Ripon",
+   "file": "branches/harrogate-ripon.png",
+   "thumb": "thumbs/branches/harrogate-ripon.png"
+  },
+  {
+   "id": "heart-of-staffordshire",
+   "name": "Heart of Staffordshire",
+   "file": "branches/heart-of-staffordshire.png",
+   "thumb": "thumbs/branches/heart-of-staffordshire.png"
+  },
+  {
+   "id": "heart-of-warwickshire",
+   "name": "Heart of Warwickshire",
+   "file": "branches/heart-of-warwickshire.png",
+   "thumb": "thumbs/branches/heart-of-warwickshire.png"
+  },
+  {
+   "id": "heavy-woollen-district",
+   "name": "Heavy Woollen District",
+   "file": "branches/heavy-woollen-district.png",
+   "thumb": "thumbs/branches/heavy-woollen-district.png"
+  },
+  {
+   "id": "herefordshire",
+   "name": "Herefordshire",
+   "file": "branches/herefordshire.png",
+   "thumb": "thumbs/branches/herefordshire.png"
+  },
+  {
+   "id": "herts-essex-borders",
+   "name": "Herts Essex Borders",
+   "file": "branches/herts-essex-borders.png",
+   "thumb": "thumbs/branches/herts-essex-borders.png"
+  },
+  {
+   "id": "high-peak-tameside-north-east-cheshire",
+   "name": "High Peak Tameside & North East Cheshire",
+   "file": "branches/high-peak-tameside-north-east-cheshire.png",
+   "thumb": "thumbs/branches/high-peak-tameside-north-east-cheshire.png"
+  },
+  {
+   "id": "highlands-western-isles",
+   "name": "Highlands & Western Isles",
+   "file": "branches/highlands-western-isles.png",
+   "thumb": "thumbs/branches/highlands-western-isles.png"
+  },
+  {
+   "id": "hinckley-and-bosworth",
+   "name": "Hinckley and Bosworth",
+   "file": "branches/hinckley-and-bosworth.png",
+   "thumb": "thumbs/branches/hinckley-and-bosworth.png"
+  },
+  {
+   "id": "huddersfield-district",
+   "name": "Huddersfield & District",
+   "file": "branches/huddersfield-district.png",
+   "thumb": "thumbs/branches/huddersfield-district.png"
+  },
+  {
+   "id": "hull-and-east-yorkshire",
+   "name": "Hull and East Yorkshire",
+   "file": "branches/hull-and-east-yorkshire.png",
+   "thumb": "thumbs/branches/hull-and-east-yorkshire.png"
+  },
+  {
+   "id": "huntingdonshire",
+   "name": "Huntingdonshire",
+   "file": "branches/huntingdonshire.png",
+   "thumb": "thumbs/branches/huntingdonshire.png"
+  },
+  {
+   "id": "ipswich-east-suffolk",
+   "name": "Ipswich & East Suffolk",
+   "file": "branches/ipswich-east-suffolk.png",
+   "thumb": "thumbs/branches/ipswich-east-suffolk.png"
+  },
+  {
+   "id": "isle-of-man",
+   "name": "Isle of Man",
+   "file": "branches/isle-of-man.png",
+   "thumb": "thumbs/branches/isle-of-man.png"
+  },
+  {
+   "id": "isle-of-wight",
+   "name": "Isle of Wight",
+   "file": "branches/isle-of-wight.png",
+   "thumb": "thumbs/branches/isle-of-wight.png"
+  },
+  {
+   "id": "keighley-craven",
+   "name": "Keighley & Craven",
+   "file": "branches/keighley-craven.png",
+   "thumb": "thumbs/branches/keighley-craven.png"
+  },
+  {
+   "id": "kingdom-of-fife",
+   "name": "Kingdom of Fife",
+   "file": "branches/kingdom-of-fife.png",
+   "thumb": "thumbs/branches/kingdom-of-fife.png"
+  },
+  {
+   "id": "kingston-leatherhead",
+   "name": "Kingston & Leatherhead",
+   "file": "branches/kingston-leatherhead.png",
+   "thumb": "thumbs/branches/kingston-leatherhead.png"
+  },
+  {
+   "id": "leeds",
+   "name": "Leeds",
+   "file": "branches/leeds.png",
+   "thumb": "thumbs/branches/leeds.png"
+  },
+  {
+   "id": "leicester",
+   "name": "Leicester",
+   "file": "branches/leicester.png",
+   "thumb": "thumbs/branches/leicester.png"
+  },
+  {
+   "id": "lichfield-sutton-tamworth",
+   "name": "Lichfield Sutton & Tamworth",
+   "file": "branches/lichfield-sutton-tamworth.png",
+   "thumb": "thumbs/branches/lichfield-sutton-tamworth.png"
+  },
+  {
+   "id": "lincoln",
+   "name": "Lincoln",
+   "file": "branches/lincoln.png",
+   "thumb": "thumbs/branches/lincoln.png"
+  },
+  {
+   "id": "liverpool-districts",
+   "name": "Liverpool & Districts",
+   "file": "branches/liverpool-districts.png",
+   "thumb": "thumbs/branches/liverpool-districts.png"
+  },
+  {
+   "id": "loughborough-north-leics",
+   "name": "Loughborough & North Leics",
+   "file": "branches/loughborough-north-leics.png",
+   "thumb": "thumbs/branches/loughborough-north-leics.png"
+  },
+  {
+   "id": "louth",
+   "name": "Louth",
+   "file": "branches/louth.png",
+   "thumb": "thumbs/branches/louth.png"
+  },
+  {
+   "id": "lunesdale",
+   "name": "Lunesdale",
+   "file": "branches/lunesdale.png",
+   "thumb": "thumbs/branches/lunesdale.png"
+  },
+  {
+   "id": "macclesfield-east-cheshire",
+   "name": "Macclesfield & East Cheshire",
+   "file": "branches/macclesfield-east-cheshire.png",
+   "thumb": "thumbs/branches/macclesfield-east-cheshire.png"
+  },
+  {
+   "id": "maidstone-mid-kent",
+   "name": "Maidstone & Mid Kent",
+   "file": "branches/maidstone-mid-kent.png",
+   "thumb": "thumbs/branches/maidstone-mid-kent.png"
+  },
+  {
+   "id": "maldon-and-dengie",
+   "name": "Maldon and Dengie",
+   "file": "branches/maldon-and-dengie.png",
+   "thumb": "thumbs/branches/maldon-and-dengie.png"
+  },
+  {
+   "id": "mansfield-and-ashfield",
+   "name": "Mansfield and Ashfield",
+   "file": "branches/mansfield-and-ashfield.png",
+   "thumb": "thumbs/branches/mansfield-and-ashfield.png"
+  },
+  {
+   "id": "matlock-dales",
+   "name": "Matlock & Dales",
+   "file": "branches/matlock-dales.png",
+   "thumb": "thumbs/branches/matlock-dales.png"
+  },
+  {
+   "id": "medway",
+   "name": "Medway",
+   "file": "branches/medway.png",
+   "thumb": "thumbs/branches/medway.png"
+  },
+  {
+   "id": "melton-mowbray-district",
+   "name": "Melton Mowbray & District",
+   "file": "branches/melton-mowbray-district.png",
+   "thumb": "thumbs/branches/melton-mowbray-district.png"
+  },
+  {
+   "id": "mid-anglia",
+   "name": "Mid Anglia",
+   "file": "branches/mid-anglia.png",
+   "thumb": "thumbs/branches/mid-anglia.png"
+  },
+  {
+   "id": "mid-chilterns",
+   "name": "Mid Chilterns",
+   "file": "branches/mid-chilterns.png",
+   "thumb": "thumbs/branches/mid-chilterns.png"
+  },
+  {
+   "id": "mid-glamorgan",
+   "name": "Mid Glamorgan",
+   "file": "branches/mid-glamorgan.png",
+   "thumb": "thumbs/branches/mid-glamorgan.png"
+  },
+  {
+   "id": "milton-keynes-n-bucks",
+   "name": "Milton Keynes & N Bucks",
+   "file": "branches/milton-keynes-n-bucks.png",
+   "thumb": "thumbs/branches/milton-keynes-n-bucks.png"
+  },
+  {
+   "id": "montgomeryshire",
+   "name": "Montgomeryshire",
+   "file": "branches/montgomeryshire.png",
+   "thumb": "thumbs/branches/montgomeryshire.png"
+  },
+  {
+   "id": "newark",
+   "name": "Newark",
+   "file": "branches/newark.png",
+   "thumb": "thumbs/branches/newark.png"
+  },
+  {
+   "id": "north-bedfordshire",
+   "name": "North Bedfordshire",
+   "file": "branches/north-bedfordshire.png",
+   "thumb": "thumbs/branches/north-bedfordshire.png"
+  },
+  {
+   "id": "north-cheshire",
+   "name": "North Cheshire",
+   "file": "branches/north-cheshire.png",
+   "thumb": "thumbs/branches/north-cheshire.png"
+  },
+  {
+   "id": "north-cotswold",
+   "name": "North Cotswold",
+   "file": "branches/north-cotswold.png",
+   "thumb": "thumbs/branches/north-cotswold.png"
+  },
+  {
+   "id": "north-devon",
+   "name": "North Devon",
+   "file": "branches/north-devon.png",
+   "thumb": "thumbs/branches/north-devon.png"
+  },
+  {
+   "id": "north-east-suffolk",
+   "name": "North East Suffolk",
+   "file": "branches/north-east-suffolk.png",
+   "thumb": "thumbs/branches/north-east-suffolk.png"
+  },
+  {
+   "id": "north-east-sussex",
+   "name": "North East Sussex (sub-branch)",
+   "file": "branches/north-east-sussex.png",
+   "thumb": "thumbs/branches/north-east-sussex.png"
+  },
+  {
+   "id": "north-hampshire",
+   "name": "North Hampshire",
+   "file": "branches/north-hampshire.png",
+   "thumb": "thumbs/branches/north-hampshire.png"
+  },
+  {
+   "id": "north-hertfordshire",
+   "name": "North Hertfordshire",
+   "file": "branches/north-hertfordshire.png",
+   "thumb": "thumbs/branches/north-hertfordshire.png"
+  },
+  {
+   "id": "north-london",
+   "name": "North London",
+   "file": "branches/north-london.png",
+   "thumb": "thumbs/branches/north-london.png"
+  },
+  {
+   "id": "north-nottinghamshire",
+   "name": "North Nottinghamshire",
+   "file": "branches/north-nottinghamshire.png",
+   "thumb": "thumbs/branches/north-nottinghamshire.png"
+  },
+  {
+   "id": "north-oxfordshire",
+   "name": "North Oxfordshire",
+   "file": "branches/north-oxfordshire.png",
+   "thumb": "thumbs/branches/north-oxfordshire.png"
+  },
+  {
+   "id": "north-surrey",
+   "name": "North Surrey",
+   "file": "branches/north-surrey.png",
+   "thumb": "thumbs/branches/north-surrey.png"
+  },
+  {
+   "id": "north-sussex",
+   "name": "North Sussex",
+   "file": "branches/north-sussex.png",
+   "thumb": "thumbs/branches/north-sussex.png"
+  },
+  {
+   "id": "north-west-essex",
+   "name": "North West Essex",
+   "file": "branches/north-west-essex.png",
+   "thumb": "thumbs/branches/north-west-essex.png"
+  },
+  {
+   "id": "north-west-wiltshire",
+   "name": "North West Wiltshire",
+   "file": "branches/north-west-wiltshire.png",
+   "thumb": "thumbs/branches/north-west-wiltshire.png"
+  },
+  {
+   "id": "north-west-yorkshire",
+   "name": "North West Yorkshire",
+   "file": "branches/north-west-yorkshire.png",
+   "thumb": "thumbs/branches/north-west-yorkshire.png"
+  },
+  {
+   "id": "northamptonshire",
+   "name": "Northamptonshire",
+   "file": "branches/northamptonshire.png",
+   "thumb": "thumbs/branches/northamptonshire.png"
+  },
+  {
+   "id": "northern-ireland",
+   "name": "Northern Ireland",
+   "file": "branches/northern-ireland.png",
+   "thumb": "thumbs/branches/northern-ireland.png"
+  },
+  {
+   "id": "norwich-district",
+   "name": "Norwich & District",
+   "file": "branches/norwich-district.png",
+   "thumb": "thumbs/branches/norwich-district.png"
+  },
+  {
+   "id": "nottingham",
+   "name": "Nottingham",
+   "file": "branches/nottingham.png",
+   "thumb": "thumbs/branches/nottingham.png"
+  },
+  {
+   "id": "nuneaton-bedworth",
+   "name": "Nuneaton & Bedworth",
+   "file": "branches/nuneaton-bedworth.png",
+   "thumb": "thumbs/branches/nuneaton-bedworth.png"
+  },
+  {
+   "id": "oxford",
+   "name": "Oxford",
+   "file": "branches/oxford.png",
+   "thumb": "thumbs/branches/oxford.png"
+  },
+  {
+   "id": "pembrokeshire",
+   "name": "Pembrokeshire",
+   "file": "branches/pembrokeshire.png",
+   "thumb": "thumbs/branches/pembrokeshire.png"
+  },
+  {
+   "id": "peterborough-and-district",
+   "name": "Peterborough and District",
+   "file": "branches/peterborough-and-district.png",
+   "thumb": "thumbs/branches/peterborough-and-district.png"
+  },
+  {
+   "id": "plymouth",
+   "name": "Plymouth",
+   "file": "branches/plymouth.png",
+   "thumb": "thumbs/branches/plymouth.png"
+  },
+  {
+   "id": "portsmouth-south-east-hampshire",
+   "name": "Portsmouth & South East Hampshire",
+   "file": "branches/portsmouth-south-east-hampshire.png",
+   "thumb": "thumbs/branches/portsmouth-south-east-hampshire.png"
+  },
+  {
+   "id": "potteries",
+   "name": "Potteries",
+   "file": "branches/potteries.png",
+   "thumb": "thumbs/branches/potteries.png"
+  },
+  {
+   "id": "radnorshire",
+   "name": "Radnorshire",
+   "file": "branches/radnorshire.png",
+   "thumb": "thumbs/branches/radnorshire.png"
+  },
+  {
+   "id": "reading-mid-berks",
+   "name": "Reading & Mid-Berks",
+   "file": "branches/reading-mid-berks.png",
+   "thumb": "thumbs/branches/reading-mid-berks.png"
+  },
+  {
+   "id": "redditch-bromsgrove",
+   "name": "Redditch & Bromsgrove",
+   "file": "branches/redditch-bromsgrove.png",
+   "thumb": "thumbs/branches/redditch-bromsgrove.png"
+  },
+  {
+   "id": "renfrewshire",
+   "name": "Renfrewshire",
+   "file": "branches/renfrewshire.png",
+   "thumb": "thumbs/branches/renfrewshire.png"
+  },
+  {
+   "id": "richmond-hounslow",
+   "name": "Richmond & Hounslow",
+   "file": "branches/richmond-hounslow.png",
+   "thumb": "thumbs/branches/richmond-hounslow.png"
+  },
+  {
+   "id": "rochdale-oldham-bury",
+   "name": "Rochdale Oldham & Bury",
+   "file": "branches/rochdale-oldham-bury.png",
+   "thumb": "thumbs/branches/rochdale-oldham-bury.png"
+  },
+  {
+   "id": "rotherham",
+   "name": "Rotherham",
+   "file": "branches/rotherham.png",
+   "thumb": "thumbs/branches/rotherham.png"
+  },
+  {
+   "id": "rugby",
+   "name": "Rugby",
+   "file": "branches/rugby.png",
+   "thumb": "thumbs/branches/rugby.png"
+  },
+  {
+   "id": "rutland",
+   "name": "Rutland",
+   "file": "branches/rutland.png",
+   "thumb": "thumbs/branches/rutland.png"
+  },
+  {
+   "id": "salford",
+   "name": "Salford",
+   "file": "branches/salford.png",
+   "thumb": "thumbs/branches/salford.png"
+  },
+  {
+   "id": "salisbury-south-wiltshire",
+   "name": "Salisbury & South Wiltshire",
+   "file": "branches/salisbury-south-wiltshire.png",
+   "thumb": "thumbs/branches/salisbury-south-wiltshire.png"
+  },
+  {
+   "id": "scarborough",
+   "name": "Scarborough",
+   "file": "branches/scarborough.png",
+   "thumb": "thumbs/branches/scarborough.png"
+  },
+  {
+   "id": "scunthorpe-district",
+   "name": "Scunthorpe & District",
+   "file": "branches/scunthorpe-district.png",
+   "thumb": "thumbs/branches/scunthorpe-district.png"
+  },
+  {
+   "id": "shakespeare",
+   "name": "Shakespeare",
+   "file": "branches/shakespeare.png",
+   "thumb": "thumbs/branches/shakespeare.png"
+  },
+  {
+   "id": "sheffield-district",
+   "name": "Sheffield & District",
+   "file": "branches/sheffield-district.png",
+   "thumb": "thumbs/branches/sheffield-district.png"
+  },
+  {
+   "id": "shrewsbury-west-shropshire",
+   "name": "Shrewsbury & West Shropshire",
+   "file": "branches/shrewsbury-west-shropshire.png",
+   "thumb": "thumbs/branches/shrewsbury-west-shropshire.png"
+  },
+  {
+   "id": "slough-windsor-maidenhead",
+   "name": "Slough Windsor & Maidenhead",
+   "file": "branches/slough-windsor-maidenhead.png",
+   "thumb": "thumbs/branches/slough-windsor-maidenhead.png"
+  },
+  {
+   "id": "solihull-district",
+   "name": "Solihull & District",
+   "file": "branches/solihull-district.png",
+   "thumb": "thumbs/branches/solihull-district.png"
+  },
+  {
+   "id": "solway",
+   "name": "Solway",
+   "file": "branches/solway.png",
+   "thumb": "thumbs/branches/solway.png"
+  },
+  {
+   "id": "somerset",
+   "name": "Somerset",
+   "file": "branches/somerset.png",
+   "thumb": "thumbs/branches/somerset.png"
+  },
+  {
+   "id": "south-bedfordshire",
+   "name": "South Bedfordshire",
+   "file": "branches/south-bedfordshire.png",
+   "thumb": "thumbs/branches/south-bedfordshire.png"
+  },
+  {
+   "id": "south-cheshire",
+   "name": "South Cheshire",
+   "file": "branches/south-cheshire.png",
+   "thumb": "thumbs/branches/south-cheshire.png"
+  },
+  {
+   "id": "south-devon",
+   "name": "South Devon",
+   "file": "branches/south-devon.png",
+   "thumb": "thumbs/branches/south-devon.png"
+  },
+  {
+   "id": "south-east-essex",
+   "name": "South East Essex",
+   "file": "branches/south-east-essex.png",
+   "thumb": "thumbs/branches/south-east-essex.png"
+  },
+  {
+   "id": "south-east-london",
+   "name": "South East London",
+   "file": "branches/south-east-london.png",
+   "thumb": "thumbs/branches/south-east-london.png"
+  },
+  {
+   "id": "south-east-sussex",
+   "name": "South East Sussex",
+   "file": "branches/south-east-sussex.png",
+   "thumb": "thumbs/branches/south-east-sussex.png"
+  },
+  {
+   "id": "south-hertfordshire",
+   "name": "South Hertfordshire",
+   "file": "branches/south-hertfordshire.png",
+   "thumb": "thumbs/branches/south-hertfordshire.png"
+  },
+  {
+   "id": "south-oxfordshire",
+   "name": "South Oxfordshire",
+   "file": "branches/south-oxfordshire.png",
+   "thumb": "thumbs/branches/south-oxfordshire.png"
+  },
+  {
+   "id": "south-west-essex",
+   "name": "South West Essex",
+   "file": "branches/south-west-essex.png",
+   "thumb": "thumbs/branches/south-west-essex.png"
+  },
+  {
+   "id": "south-west-london",
+   "name": "South West London",
+   "file": "branches/south-west-london.png",
+   "thumb": "thumbs/branches/south-west-london.png"
+  },
+  {
+   "id": "south-east-lancashire",
+   "name": "South-East Lancashire",
+   "file": "branches/south-east-lancashire.png",
+   "thumb": "thumbs/branches/south-east-lancashire.png"
+  },
+  {
+   "id": "southern-hampshire",
+   "name": "Southern Hampshire",
+   "file": "branches/southern-hampshire.png",
+   "thumb": "thumbs/branches/southern-hampshire.png"
+  },
+  {
+   "id": "southport-west-lancs",
+   "name": "Southport & West Lancs",
+   "file": "branches/southport-west-lancs.png",
+   "thumb": "thumbs/branches/southport-west-lancs.png"
+  },
+  {
+   "id": "st-helens",
+   "name": "St Helens",
+   "file": "branches/st-helens.png",
+   "thumb": "thumbs/branches/st-helens.png"
+  },
+  {
+   "id": "staffordshire-moorlands",
+   "name": "Staffordshire Moorlands (Potteries sub-branch)",
+   "file": "branches/staffordshire-moorlands.png",
+   "thumb": "thumbs/branches/staffordshire-moorlands.png"
+  },
+  {
+   "id": "stockport-south-manchester",
+   "name": "Stockport & South Manchester",
+   "file": "branches/stockport-south-manchester.png",
+   "thumb": "thumbs/branches/stockport-south-manchester.png"
+  },
+  {
+   "id": "stourbridge-and-halesowen",
+   "name": "Stourbridge and Halesowen",
+   "file": "branches/stourbridge-and-halesowen.png",
+   "thumb": "thumbs/branches/stourbridge-and-halesowen.png"
+  },
+  {
+   "id": "sunderland-south-tyneside",
+   "name": "Sunderland & South Tyneside",
+   "file": "branches/sunderland-south-tyneside.png",
+   "thumb": "thumbs/branches/sunderland-south-tyneside.png"
+  },
+  {
+   "id": "surrey-hants-borders",
+   "name": "Surrey Hants Borders",
+   "file": "branches/surrey-hants-borders.png",
+   "thumb": "thumbs/branches/surrey-hants-borders.png"
+  },
+  {
+   "id": "swale",
+   "name": "Swale",
+   "file": "branches/swale.png",
+   "thumb": "thumbs/branches/swale.png"
+  },
+  {
+   "id": "swansea",
+   "name": "Swansea",
+   "file": "branches/swansea.png",
+   "thumb": "thumbs/branches/swansea.png"
+  },
+  {
+   "id": "swindon-north-wiltshire",
+   "name": "Swindon & North Wiltshire",
+   "file": "branches/swindon-north-wiltshire.png",
+   "thumb": "thumbs/branches/swindon-north-wiltshire.png"
+  },
+  {
+   "id": "tayside",
+   "name": "Tayside",
+   "file": "branches/tayside.png",
+   "thumb": "thumbs/branches/tayside.png"
+  },
+  {
+   "id": "telford-east-shropshire",
+   "name": "Telford & East Shropshire",
+   "file": "branches/telford-east-shropshire.png",
+   "thumb": "thumbs/branches/telford-east-shropshire.png"
+  },
+  {
+   "id": "tendring",
+   "name": "Tendring",
+   "file": "branches/tendring.png",
+   "thumb": "thumbs/branches/tendring.png"
+  },
+  {
+   "id": "tewkesbury",
+   "name": "Tewkesbury",
+   "file": "branches/tewkesbury.png",
+   "thumb": "thumbs/branches/tewkesbury.png"
+  },
+  {
+   "id": "thanet",
+   "name": "Thanet",
+   "file": "branches/thanet.png",
+   "thumb": "thumbs/branches/thanet.png"
+  },
+  {
+   "id": "thurrock",
+   "name": "Thurrock",
+   "file": "branches/thurrock.png",
+   "thumb": "thumbs/branches/thurrock.png"
+  },
+  {
+   "id": "trafford-hulme",
+   "name": "Trafford & Hulme",
+   "file": "branches/trafford-hulme.png",
+   "thumb": "thumbs/branches/trafford-hulme.png"
+  },
+  {
+   "id": "tyneside-northumberland",
+   "name": "Tyneside & Northumberland",
+   "file": "branches/tyneside-northumberland.png",
+   "thumb": "thumbs/branches/tyneside-northumberland.png"
+  },
+  {
+   "id": "uttoxeter-district",
+   "name": "Uttoxeter & District",
+   "file": "branches/uttoxeter-district.png",
+   "thumb": "thumbs/branches/uttoxeter-district.png"
+  },
+  {
+   "id": "vale-of-belvoir",
+   "name": "Vale of Belvoir",
+   "file": "branches/vale-of-belvoir.png",
+   "thumb": "thumbs/branches/vale-of-belvoir.png"
+  },
+  {
+   "id": "vale-of-clwyd",
+   "name": "Vale of Clwyd",
+   "file": "branches/vale-of-clwyd.png",
+   "thumb": "thumbs/branches/vale-of-clwyd.png"
+  },
+  {
+   "id": "vale-of-glamorgan-and-bridgend",
+   "name": "Vale of Glamorgan and Bridgend",
+   "file": "branches/vale-of-glamorgan-and-bridgend.png",
+   "thumb": "thumbs/branches/vale-of-glamorgan-and-bridgend.png"
+  },
+  {
+   "id": "wakefield",
+   "name": "Wakefield",
+   "file": "branches/wakefield.png",
+   "thumb": "thumbs/branches/wakefield.png"
+  },
+  {
+   "id": "walsall",
+   "name": "Walsall",
+   "file": "branches/walsall.png",
+   "thumb": "thumbs/branches/walsall.png"
+  },
+  {
+   "id": "watford-district",
+   "name": "Watford & District",
+   "file": "branches/watford-district.png",
+   "thumb": "thumbs/branches/watford-district.png"
+  },
+  {
+   "id": "west-berkshire",
+   "name": "West Berkshire",
+   "file": "branches/west-berkshire.png",
+   "thumb": "thumbs/branches/west-berkshire.png"
+  },
+  {
+   "id": "west-cheshire",
+   "name": "West Cheshire",
+   "file": "branches/west-cheshire.png",
+   "thumb": "thumbs/branches/west-cheshire.png"
+  },
+  {
+   "id": "west-cumbria",
+   "name": "West Cumbria",
+   "file": "branches/west-cumbria.png",
+   "thumb": "thumbs/branches/west-cumbria.png"
+  },
+  {
+   "id": "west-dorset",
+   "name": "West Dorset",
+   "file": "branches/west-dorset.png",
+   "thumb": "thumbs/branches/west-dorset.png"
+  },
+  {
+   "id": "west-kent",
+   "name": "West Kent",
+   "file": "branches/west-kent.png",
+   "thumb": "thumbs/branches/west-kent.png"
+  },
+  {
+   "id": "west-london",
+   "name": "West London",
+   "file": "branches/west-london.png",
+   "thumb": "thumbs/branches/west-london.png"
+  },
+  {
+   "id": "west-middlesex",
+   "name": "West Middlesex",
+   "file": "branches/west-middlesex.png",
+   "thumb": "thumbs/branches/west-middlesex.png"
+  },
+  {
+   "id": "west-norfolk",
+   "name": "West Norfolk",
+   "file": "branches/west-norfolk.png",
+   "thumb": "thumbs/branches/west-norfolk.png"
+  },
+  {
+   "id": "west-suffolk-borders",
+   "name": "West Suffolk & Borders",
+   "file": "branches/west-suffolk-borders.png",
+   "thumb": "thumbs/branches/west-suffolk-borders.png"
+  },
+  {
+   "id": "western-sussex",
+   "name": "Western Sussex",
+   "file": "branches/western-sussex.png",
+   "thumb": "thumbs/branches/western-sussex.png"
+  },
+  {
+   "id": "westmorland",
+   "name": "Westmorland (Solway sub-branch)",
+   "file": "branches/westmorland.png",
+   "thumb": "thumbs/branches/westmorland.png"
+  },
+  {
+   "id": "weston-super-mare",
+   "name": "Weston Super Mare",
+   "file": "branches/weston-super-mare.png",
+   "thumb": "thumbs/branches/weston-super-mare.png"
+  },
+  {
+   "id": "white-horse",
+   "name": "White Horse",
+   "file": "branches/white-horse.png",
+   "thumb": "thumbs/branches/white-horse.png"
+  },
+  {
+   "id": "wigan",
+   "name": "Wigan",
+   "file": "branches/wigan.png",
+   "thumb": "thumbs/branches/wigan.png"
+  },
+  {
+   "id": "wirral",
+   "name": "Wirral",
+   "file": "branches/wirral.png",
+   "thumb": "thumbs/branches/wirral.png"
+  },
+  {
+   "id": "wolverhampton",
+   "name": "Wolverhampton",
+   "file": "branches/wolverhampton.png",
+   "thumb": "thumbs/branches/wolverhampton.png"
+  },
+  {
+   "id": "worcester",
+   "name": "Worcester",
+   "file": "branches/worcester.png",
+   "thumb": "thumbs/branches/worcester.png"
+  },
+  {
+   "id": "wyre-forest",
+   "name": "Wyre Forest",
+   "file": "branches/wyre-forest.png",
+   "thumb": "thumbs/branches/wyre-forest.png"
+  },
+  {
+   "id": "york",
+   "name": "York",
+   "file": "branches/york.png",
+   "thumb": "thumbs/branches/york.png"
+  },
+  {
+   "id": "yorkshire-wolds",
+   "name": "Yorkshire Wolds",
+   "file": "branches/yorkshire-wolds.png",
+   "thumb": "thumbs/branches/yorkshire-wolds.png"
+  }
+ ],
+ "regions": [
+  {
+   "id": "east-anglia",
+   "name": "East Anglia"
+  },
+  {
+   "id": "east-central",
+   "name": "East Central"
+  },
+  {
+   "id": "east-midlands",
+   "name": "East Midlands"
+  },
+  {
+   "id": "greater-london",
+   "name": "Greater London"
+  },
+  {
+   "id": "merseyside-and-cheshire",
+   "name": "Merseyside and Cheshire"
+  },
+  {
+   "id": "north-east",
+   "name": "North East"
+  },
+  {
+   "id": "north-west",
+   "name": "North West"
+  },
+  {
+   "id": "northern-ireland",
+   "name": "Northern Ireland"
+  },
+  {
+   "id": "scotland",
+   "name": "Scotland"
+  },
+  {
+   "id": "south-central",
+   "name": "South Central"
+  },
+  {
+   "id": "south-east",
+   "name": "South East"
+  },
+  {
+   "id": "south-west",
+   "name": "South West"
+  },
+  {
+   "id": "wales",
+   "name": "Wales"
+  },
+  {
+   "id": "west-central",
+   "name": "West Central"
+  },
+  {
+   "id": "west-midlands",
+   "name": "West Midlands"
+  },
+  {
+   "id": "yorkshire",
+   "name": "Yorkshire"
+  }
+ ],
+ "subBrands": [
+  {
+   "id": "cider-and-perry",
+   "name": "Cider and Perry",
+   "file": "sub-brands/cider-and-perry.png",
+   "thumb": "thumbs/sub-brands/cider-and-perry.png"
+  },
+  {
+   "id": "community-pubs",
+   "name": "Community Pubs",
+   "file": "sub-brands/community-pubs.png",
+   "thumb": "thumbs/sub-brands/community-pubs.png"
+  },
+  {
+   "id": "locale",
+   "name": "LocAle",
+   "file": "sub-brands/locale.png",
+   "thumb": "thumbs/sub-brands/locale.png"
+  },
+  {
+   "id": "ocr-pubs",
+   "name": "OCR Pubs",
+   "file": "sub-brands/ocr-pubs.png",
+   "thumb": "thumbs/sub-brands/ocr-pubs.png"
+  },
+  {
+   "id": "pub-heritage",
+   "name": "Pub Heritage",
+   "file": "sub-brands/pub-heritage.png",
+   "thumb": "thumbs/sub-brands/pub-heritage.png"
+  },
+  {
+   "id": "what-s-brewing",
+   "name": "What's Brewing",
+   "file": "sub-brands/what-s-brewing.png",
+   "thumb": "thumbs/sub-brands/what-s-brewing.png"
+  }
+ ]
+}

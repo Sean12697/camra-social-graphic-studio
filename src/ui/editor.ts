@@ -5,8 +5,9 @@
 
 import { CONFIG, TAGLINES, paletteHex, type Branch } from "../core/config.ts";
 import { PRESETS, orientDims, type Preset } from "../core/presets.ts";
-import { ICON_NAMES } from "../core/icons.ts";
-import { TEMPLATES, templateById, type Field, type Layout, type Template, type Values, type ListRow } from "../core/templates.ts";
+import { ALL_ICONS, ICON_GROUPS, ICON_NAMES, iconLabel } from "../core/icons.ts";
+import { REGION_LOGOS, SUB_BRAND_LOGOS, findLogo } from "../core/logos.ts";
+import { TEMPLATES, TEMPLATE_GROUPS, templateById, type Field, type Layout, type Template, type Values, type ListRow } from "../core/templates.ts";
 import { draw, resolveLogos, type DrawInfo, type Img, type RenderOptions, type TextAligns, type TextColours } from "../core/renderer.ts";
 import { PARAM_DEFS, docsHtml } from "../core/params.ts";
 import { contextNotes, panelHtml } from "../core/brand.ts";
@@ -83,6 +84,17 @@ export const el = {
   bodyAlign: byId<Sel>("bodyAlign"),
   capAlign: byId<Sel>("capAlign"),
   taglineAlign: byId<Sel>("taglineAlign"),
+  region: byId<Sel>("region"),
+  regionWrap: byId("regionWrap"),
+  subBrand: byId<Sel>("subBrand"),
+  subBrandWrap: byId("subBrandWrap"),
+  iconGrid: byId("iconGrid"),
+  iconFilter: byId<Inp>("iconFilter"),
+  iconPos: byId<Sel>("iconPos"),
+  iconSize: byId<Sel>("iconSize"),
+  iconOpacity: byId<Inp>("iconOpacity"),
+  iconColor: byId<Sel>("iconColor"),
+  iconCustom: byId<Inp>("iconCustom"),
   altText: byId<HTMLTextAreaElement>("altText"),
   previewSizeLabel: byId("previewSizeLabel"),
   lookHint: byId("lookHint"),
@@ -107,6 +119,8 @@ export const state = {
   customLogoData: null as string | null,
   customLogoUrl: null as string | null,
   camraLogoImg: null as Img | null,
+  regionImg: null as Img | null,
+  subBrandImg: null as Img | null,
   /** The saved design the form was loaded from, if any. */
   currentDesignId: null as string | null,
   /** True once the user has changed the form since it was loaded or saved. */
@@ -293,6 +307,35 @@ function syncColorPickers(): void {
   t(el.subColor, el.subCustom);
   t(el.bodyColor, el.bodyCustom);
   t(el.capColor, el.capCustom);
+  t(el.iconColor, el.iconCustom);
+}
+
+/**
+ * What fills the branch slot: the branch logo, or a region or sub-brand logo
+ * chosen under Logo shown (or suggested by the post type when Automatic).
+ */
+export interface Slot {
+  kind: "branch" | "region" | "subBrand";
+  logos: string;
+  name?: string;
+  img?: Img | null;
+}
+
+export function logoSlot(layout: Layout): Slot {
+  const choice = el.logos.value || "auto";
+  if (choice === "region") {
+    const r = findLogo(REGION_LOGOS, el.region.value);
+    return r ? { kind: "region", logos: "branch", name: "CAMRA " + r.name, img: state.regionImg } : { kind: "region", logos: "camra" };
+  }
+  const t = currentTemplate();
+  const subId = choice === "subbrand" ? el.subBrand.value : choice === "auto" && !layout.campaign ? t.subBrand : "";
+  const sb = findLogo(SUB_BRAND_LOGOS, subId);
+  if (sb && (choice === "subbrand" || choice === "auto")) return { kind: "subBrand", logos: "branch", name: sb.name, img: state.subBrandImg };
+  return { kind: "branch", logos: choice === "subbrand" ? "auto" : choice };
+}
+
+function iconColorValue(): string | null {
+  return pickColor(el.iconColor, el.iconCustom);
 }
 
 export type Snapshot = Omit<RenderOptions, "ctx" | "width" | "height">;
@@ -300,6 +343,7 @@ export type Snapshot = Omit<RenderOptions, "ctx" | "width" | "height">;
 // A snapshot of everything the renderer needs, taken once per draw or export
 // so staggered downloads cannot pick up edits made while they run.
 export function renderOptions(layout: Layout): Snapshot {
+  const slot = logoSlot(layout);
   return {
     template: currentTemplate(),
     layout,
@@ -308,6 +352,8 @@ export function renderOptions(layout: Layout): Snapshot {
     branchLogoImg: branchLogo(),
     camraLogoImg: state.camraLogoImg,
     iconName: el.presetIcon.value,
+    iconStyle: { position: el.iconPos.value, size: parseFloat(el.iconSize.value) || 1, opacity: parseFloat(el.iconOpacity.value), color: iconColorValue() },
+    altLogo: slot.kind !== "branch" && slot.name ? { img: slot.img, text: slot.name } : null,
     frame: readFrame(),
     showBranchOnCampaign: el.campaignBranch.checked,
     tagline: el.tagline.value,
@@ -321,7 +367,7 @@ export function renderOptions(layout: Layout): Snapshot {
     bgStyle: el.bgStyle.value || "solid",
     textColors: collectTextColors(),
     logoScale: parseFloat(el.logoScale.value) || 1.25,
-    logos: el.logos.value || "auto",
+    logos: slot.logos,
     logoAlign: el.logoAlign.value || "center",
     textAligns: collectTextAligns(),
     taglineAlign: el.taglineAlign.value || "center",
@@ -351,7 +397,8 @@ function canvasLabel(layout: Layout, p: Preset): string {
 
 /** Plain-language alt text for the current graphic. */
 export function currentAltText(layout: Layout = buildLayout()): string {
-  const who = resolveLogos(el.logos.value, layout.campaign, el.campaignBranch.checked);
+  const slot = logoSlot(layout);
+  const who = resolveLogos(slot.logos, layout.campaign, el.campaignBranch.checked);
   const photo = hasPhoto();
   const showCap = photo ? el.showCaption.checked : true;
   const cap = photo && showCap && el.captionText.value.trim() ? el.captionText.value : undefined;
@@ -363,6 +410,7 @@ export function currentAltText(layout: Layout = buildLayout()): string {
     caption: showCap ? cap : "",
     tagline: el.tagline.value || undefined,
     logo: who.branch ? "branch" : "camra",
+    logoName: who.branch && slot.kind !== "branch" ? slot.name : undefined,
   });
 }
 
@@ -413,8 +461,11 @@ function updateBrand(layout: Layout, clamped: boolean): void {
   el.campaignWrap.classList.toggle("hidden", !layout.campaign);
   const t = currentTemplate();
   const photoFull = !!(state.photoImg && t.allowPhoto && t.layout === "photoTop" && el.frameMode.value === "fullBleed");
-  const who = resolveLogos(el.logos.value, layout.campaign, el.campaignBranch.checked);
+  const slot = logoSlot(layout);
+  const who = resolveLogos(slot.logos, layout.campaign, el.campaignBranch.checked);
   const notes = contextNotes(layout, {
+    slotKind: who.branch ? slot.kind : "branch",
+    slotName: slot.kind === "subBrand" ? slot.name : el.region.value ? slot.name : "",
     showBranchOnCampaign: el.campaignBranch.checked,
     bgColor: el.bgColor.value || "slate",
     logos: el.logos.value,
@@ -547,7 +598,8 @@ export function renderFields(): void {
   const t = currentTemplate();
   t.fields.forEach((f) => el.dynamic.appendChild(f.type === "list" ? makeList(f) : makeInput(f)));
   updatePhotoControls();
-  if (t.defaultIcon) el.presetIcon.value = t.defaultIcon;
+  if (t.defaultIcon && ALL_ICONS[t.defaultIcon]) el.presetIcon.value = t.defaultIcon;
+  syncIconGrid();
 }
 
 export function readValues(): Values {
@@ -677,7 +729,7 @@ async function removeLibraryItem(it: LibraryItem): Promise<void> {
   });
 }
 
-async function useLibraryItem(it: LibraryItem): Promise<void> {
+export async function useLibraryItem(it: LibraryItem): Promise<void> {
   state.dirty = true;
   if (it.kind === "logo") {
     el.branch.value = "custom";
@@ -858,6 +910,8 @@ export function applyParams(qp: URLSearchParams): ApplyResult {
   if (prev && hasOption(el.previewPreset, prev)) el.previewPreset.value = prev;
 
   applyGenericParams(qp);
+  syncIconGrid();
+  syncLogoFields();
   syncColorPickers();
   syncFrameDisabled();
   syncLogoPreset();
@@ -901,7 +955,9 @@ function applyTagline(tg: string): void {
 
 // Orientation and padding are per-post size choices, so they are not part of
 // the look a user saves as their default.
-const LOOK_KEYS = new Set(PARAM_DEFS.filter((d) => d.elId && !d.photoOnly && d.key !== "orient" && d.key !== "pad").map((d) => d.key));
+// The icon style belongs with the icon choice, not the look, for the same reason.
+const NOT_LOOK = new Set(["orient", "pad", "iconpos", "iconsize", "iconopacity", "iconcolor"]);
+const LOOK_KEYS = new Set(PARAM_DEFS.filter((d) => d.elId && !d.photoOnly && !NOT_LOOK.has(d.key)).map((d) => d.key));
 const isLookKey = (k: string) => LOOK_KEYS.has(k);
 
 /** The look controls (colours, logo, alignment, padding, tagline) as a query string. */
@@ -928,6 +984,7 @@ export function resetLook(): void {
   el.tagline.value = CONFIG.tagline;
   syncColorPickers();
   syncLogoPreset();
+  syncLogoFields();
 }
 
 export function applyLook(query: string): void {
@@ -936,6 +993,7 @@ export function applyLook(query: string): void {
   if (qp.has("tagline")) applyTagline(qp.get("tagline") || "");
   syncColorPickers();
   syncLogoPreset();
+  syncLogoFields();
 }
 
 /** Resets the whole form to defaults: built-in, then the user's saved default look. */
@@ -950,6 +1008,7 @@ export function resetForm(opts: { personal: boolean }): void {
   el.captionText.value = "";
   el.frameMode.value = "labelOut";
   el.fbStyle.value = "gradient";
+  resetIconStyle();
   resetFrame();
   clearPhotoState();
   renderFields();
@@ -1048,14 +1107,97 @@ function renderBrand(): void {
 
 function buildSelectors(): void {
   const prefs = store.getPrefs();
-  TEMPLATES.forEach((t) => el.postType.appendChild(option(t.id, t.label)));
+  TEMPLATE_GROUPS.forEach((g) => {
+    const list = TEMPLATES.filter((t) => t.group === g);
+    if (!list.length) return;
+    const og = document.createElement("optgroup");
+    og.label = g;
+    list.forEach((t) => og.appendChild(option(t.id, t.label)));
+    el.postType.appendChild(og);
+  });
   if (prefs.postType && templateById(prefs.postType)) el.postType.value = prefs.postType;
   Object.keys(CONFIG.branches).forEach((k) => el.branch.appendChild(option(k, CONFIG.branches[k].name)));
   el.branch.appendChild(option("custom", "Custom (other branch)"));
   const br = prefs.branch && (prefs.branch === "custom" || CONFIG.branches[prefs.branch]) ? prefs.branch : CONFIG.defaultBranch;
   el.branch.value = br;
   el.presetIcon.appendChild(option("none", "None"));
-  ICON_NAMES.forEach((k) => el.presetIcon.appendChild(option(k, k.charAt(0).toUpperCase() + k.slice(1))));
+  ICON_NAMES.forEach((k) => el.presetIcon.appendChild(option(k, iconLabel(k))));
+  el.region.appendChild(option("", "Choose a region"));
+  REGION_LOGOS.forEach((r) => el.region.appendChild(option(r.id, r.name + (r.logo ? "" : " (text wordmark)"))));
+  el.subBrand.appendChild(option("", "Choose a sub-brand"));
+  SUB_BRAND_LOGOS.forEach((r) => el.subBrand.appendChild(option(r.id, r.name)));
+  buildIconGrid();
+}
+
+// --- decorative icon picker ---
+// A grid of real radio buttons, each showing the icon drawn exactly as the
+// renderer draws it. The hidden presetIcon select stays the single source of
+// truth for share links and saved designs.
+
+function iconRadio(id: string, label: string): HTMLElement {
+  const r = h("input", { type: "radio", name: "iconPick", value: id, "aria-label": label });
+  r.addEventListener("change", () => {
+    el.presetIcon.value = id;
+    state.dirty = true;
+    redraw();
+  });
+  let face: HTMLElement;
+  if (id === "none") face = h("span", { class: "none", "aria-hidden": "true" }, "None");
+  else {
+    const c = h("canvas", { width: 96, height: 96, "aria-hidden": "true" });
+    const cx = c.getContext("2d");
+    if (cx && ALL_ICONS[id]) {
+      cx.fillStyle = "#ffffff";
+      ALL_ICONS[id](cx, 48, 48, 70);
+    }
+    face = c;
+  }
+  return h("label", { class: "icon-opt", title: label, "data-icon": id, "data-label": label.toLowerCase() }, r, face);
+}
+
+function buildIconGrid(): void {
+  el.iconGrid.innerHTML = "";
+  el.iconGrid.appendChild(iconRadio("none", "No icon"));
+  ICON_GROUPS.forEach((g) => {
+    el.iconGrid.appendChild(h("h3", { "data-group": "1" }, g.label));
+    g.icons.forEach((id) => el.iconGrid.appendChild(iconRadio(id, iconLabel(id))));
+  });
+}
+
+function syncIconGrid(): void {
+  const v = el.presetIcon.value || "none";
+  el.iconGrid.querySelectorAll<Inp>("input[name=iconPick]").forEach((r) => (r.checked = r.value === v));
+}
+
+function filterIcons(): void {
+  const q = el.iconFilter.value.trim().toLowerCase();
+  el.iconGrid.querySelectorAll<HTMLElement>(".icon-opt").forEach((o) => {
+    o.hidden = !!q && !(o.dataset.label || "").includes(q) && !(o.dataset.icon || "").includes(q);
+  });
+  el.iconGrid.querySelectorAll<HTMLElement>("h3[data-group]").forEach((hd) => (hd.hidden = !!q));
+}
+
+function resetIconStyle(): void {
+  el.iconPos.value = "top-right";
+  el.iconSize.value = "1";
+  el.iconOpacity.value = "0.1";
+  el.iconColor.value = "auto";
+}
+
+/** Shows the region or sub-brand choice only when that logo is selected. */
+function syncLogoFields(): void {
+  el.regionWrap.classList.toggle("hidden", el.logos.value !== "region");
+  el.subBrandWrap.classList.toggle("hidden", el.logos.value !== "subbrand");
+}
+
+async function loadSlotImages(): Promise<void> {
+  const r = findLogo(REGION_LOGOS, el.region.value);
+  const t = currentTemplate();
+  const sbId = el.logos.value === "subbrand" ? el.subBrand.value : t.subBrand;
+  const sb = findLogo(SUB_BRAND_LOGOS, sbId);
+  const [ri, si] = await Promise.all([loadImg(r && r.logo), loadImg(sb && sb.logo)]);
+  state.regionImg = ri;
+  state.subBrandImg = si;
 }
 
 // Loads the brand typeface before anything is drawn or exported, so canvas
@@ -1089,8 +1231,14 @@ export async function loadFonts(): Promise<void> {
 }
 
 // Loads every image the current state needs, once.
+async function reloadSlotPublic(): Promise<void> {
+  syncLogoFields();
+  await loadSlotImages();
+  redraw();
+}
+
 export async function loadAssets(): Promise<void> {
-  const jobs: Array<Promise<void>> = [];
+  const jobs: Array<Promise<void>> = [loadSlotImages()];
   if (!state.camraLogoImg) jobs.push(loadImg(CONFIG.camraLogo).then((im) => void (state.camraLogoImg = im)));
   if (el.branch.value !== "custom") {
     jobs.push(loadImg(currentBranch().logo).then((im) => void (state.branchLogoImg = im)));
@@ -1118,11 +1266,15 @@ function wireEvents(): void {
   el.reframeWrap.addEventListener("change", markDirty);
   el.controls.addEventListener("submit", (e) => e.preventDefault());
 
-  el.postType.addEventListener("change", () => {
+  el.postType.addEventListener("change", async () => {
     store.setPref("postType", el.postType.value);
     renderFields();
     redraw();
+    // A post type can suggest a sub-brand logo (LocAle, Pub Heritage).
+    await loadSlotImages();
+    redraw();
   });
+  el.logos.addEventListener("change", reloadSlotPublic);
   el.branch.addEventListener("change", async () => {
     const custom = el.branch.value === "custom";
     el.customWrap.classList.toggle("hidden", !custom);
@@ -1170,11 +1322,26 @@ function wireEvents(): void {
     redraw();
   });
   el.presetIcon.addEventListener("change", redraw);
+  el.iconFilter.addEventListener("input", filterIcons);
+  [el.iconPos, el.iconSize].forEach((c) => c.addEventListener("change", redraw));
+  el.iconOpacity.addEventListener("input", redraw);
+  el.iconColor.addEventListener("change", () => {
+    syncColorPickers();
+    redraw();
+  });
+  el.iconCustom.addEventListener("input", redraw);
+  const reloadSlot = async () => {
+    syncLogoFields();
+    await loadSlotImages();
+    redraw();
+  };
+  el.region.addEventListener("change", reloadSlot);
+  el.subBrand.addEventListener("change", reloadSlot);
   el.fitMode.addEventListener("change", () => {
     syncFrameDisabled();
     redraw();
   });
-  [el.frameMode, el.showLabel, el.showText, el.showCaption, el.campaignBranch, el.tagline, el.orient, el.pad, el.bgStyle, el.logos, el.fbStyle, el.previewPreset].forEach((c) =>
+  [el.frameMode, el.showLabel, el.showText, el.showCaption, el.campaignBranch, el.tagline, el.orient, el.pad, el.bgStyle, el.fbStyle, el.previewPreset].forEach((c) =>
     c.addEventListener("change", redraw),
   );
   [el.captionText, el.frameX, el.frameY, el.frameZoom, el.photoOpacity].forEach((c) => c.addEventListener("input", redraw));

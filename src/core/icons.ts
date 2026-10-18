@@ -4,6 +4,8 @@
 // Shapes are built as single paths where possible, using the "evenodd" fill
 // rule to punch holes (a mug handle, a pin hole, barrel hoops, calendar dates)
 // so the icons stay readable at watermark alpha without needing a second colour.
+import LUCIDE from "./data/lucide-icons.json" with { type: "json" };
+
 type Ctx = CanvasRenderingContext2D;
 /** Draws an icon centred on (cx, cy) at the given size, using the current fillStyle. */
 export type IconFn = (ctx: Ctx, cx: number, cy: number, s: number) => void;
@@ -200,4 +202,59 @@ export const ICONS: Record<string, IconFn> = {
   }
 };
 
-export const ICON_NAMES = Object.keys(ICONS);
+// Line icons from Lucide (ISC licence, see THIRD_PARTY_NOTICES.md): 24x24
+// stroke paths drawn with Path2D, in the same colour as the solid icons.
+// Names that clash with a solid icon get an "-outline" suffix.
+const SOLID_ICONS = ICONS;
+const pathCache = new Map<string, Path2D[]>();
+function lineIcon(name: string, paths: string[]): IconFn {
+  return (ctx, cx, cy, s) => {
+    if (typeof Path2D === "undefined") return;
+    let p = pathCache.get(name);
+    if (!p) {
+      p = paths.map((d) => new Path2D(d));
+      pathCache.set(name, p);
+    }
+    ctx.save();
+    ctx.translate(cx - s / 2, cy - s / 2);
+    ctx.scale(s / 24, s / 24);
+    ctx.lineWidth = 1.75;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = ctx.fillStyle;
+    p.forEach((path) => ctx.stroke(path));
+    ctx.restore();
+  };
+}
+
+export const LINE_ICONS: Record<string, IconFn> = {};
+Object.entries(LUCIDE as Record<string, string[]>).forEach(([name, paths]) => {
+  const id = SOLID_ICONS[name] ? name + "-outline" : name;
+  LINE_ICONS[id] = lineIcon(id, paths);
+});
+
+/** Every decorative icon, solid first. */
+export const ALL_ICONS: Record<string, IconFn> = { ...SOLID_ICONS, ...LINE_ICONS };
+export const ICON_NAMES = Object.keys(ALL_ICONS);
+
+export function iconLabel(id: string): string {
+  const base = id.replace(/-outline$/, "").replace(/-/g, " ");
+  return base.charAt(0).toUpperCase() + base.slice(1) + (SOLID_ICONS[id] ? " (solid)" : "");
+}
+
+/** Groups for the icon picker. Every icon appears in exactly one group. */
+export const ICON_GROUPS: Array<{ label: string; icons: string[] }> = (() => {
+  const groups: Array<{ label: string; icons: string[] }> = [
+    { label: "Drinks", icons: ["pint", "mug", "hops", "barrel", "apple", "pear", "beer", "wine", "martini", "glass-water", "cup-soda", "milk", "hop", "apple-outline", "grape", "citrus", "beer-off"] },
+    { label: "Events and fun", icons: ["calendar", "calendar-days", "clock", "ticket", "tent", "party-popper", "sparkles", "mic", "guitar", "dices", "puzzle", "target", "gift", "camera", "utensils"] },
+    { label: "Places and travel", icons: ["pin", "map-pin", "map", "signpost", "bus", "train-front", "bike", "footprints", "store", "house", "factory", "landmark", "church", "castle"] },
+    { label: "Awards", icons: ["trophy", "medal", "award", "star", "crown", "heart"] },
+    { label: "People and campaigning", icons: ["users", "user-plus", "hand-heart", "handshake", "megaphone", "vote", "flag", "newspaper", "book-open", "key", "lightbulb", "piggy-bank", "badge-percent"] },
+    { label: "Nature and seasons", icons: ["wheat", "wheat-outline", "leaf", "trees", "sun", "snowflake"] },
+  ];
+  const placed = new Set(groups.flatMap((g) => g.icons));
+  groups.forEach((g) => (g.icons = g.icons.filter((i) => ALL_ICONS[i])));
+  const rest = ICON_NAMES.filter((i) => !placed.has(i));
+  if (rest.length) groups.push({ label: "More", icons: rest });
+  return groups;
+})();

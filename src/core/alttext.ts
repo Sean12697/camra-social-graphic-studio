@@ -27,6 +27,8 @@ export interface AltTextInput {
   caption?: string;
   tagline?: string;
   logo: "branch" | "camra";
+  /** A region or sub-brand logo shown in place of the branch logo. */
+  logoName?: string;
 }
 
 export function altText(i: AltTextInput): string {
@@ -44,6 +46,6 @@ export function altText(i: AltTextInput): string {
   }
   const cap = i.caption != null ? i.caption : l.footer;
   if (cap) parts.push(sentence(cap));
-  parts.push(sentence((i.logo === "camra" ? "CAMRA logo" : i.branch.name + " logo") + (i.tagline ? ', with the tagline "' + i.tagline + '"' : "")));
+  parts.push(sentence((i.logo === "camra" ? "CAMRA logo" : (i.logoName || i.branch.name) + " logo") + (i.tagline ? ', with the tagline "' + i.tagline + '"' : "")));
   return parts.filter(Boolean).join(" ");
 }

@@ -8,7 +8,8 @@ import { applyTheme, watchSystemTheme } from "./ui/theme.ts";
 import { byId } from "./ui/dom.ts";
 import { initEditor } from "./ui/editor.ts";
 import { initExport, doDownload } from "./ui/export.ts";
-import { initDesigns, refreshDesigns } from "./ui/designs-ui.ts";
+import { initDesigns, refreshDesigns, saveCurrent } from "./ui/designs-ui.ts";
+import { initLogoPicker } from "./ui/logos-ui.ts";
 import { initSettings, refreshSettings } from "./ui/settings-ui.ts";
 import { onDataChanged } from "./ui/backup-ui.ts";
 import { initTips, startTips } from "./ui/tips.ts";
@@ -25,7 +26,15 @@ async function boot(): Promise<void> {
   initExport();
   await initDesigns();
   initSettings();
+  initLogoPicker();
   initTips();
+  // Ctrl or Cmd + S saves the design instead of the browser's "save page".
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      if (!document.querySelector("dialog[open]")) saveCurrent();
+    }
+  });
   onDataChanged(() => {
     refreshDesigns();
     refreshSettings();

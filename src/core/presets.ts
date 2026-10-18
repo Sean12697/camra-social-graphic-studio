@@ -17,11 +17,15 @@ export const PRESETS: Preset[] = [
   { id: "fb-square", platform: "Facebook", label: "Facebook square (1:1)", w: 1080, h: 1080 },
   { id: "fb-landscape", platform: "Facebook", label: "Facebook landscape (1.91:1)", w: 1200, h: 628 },
   { id: "fb-story", platform: "Facebook", label: "Facebook story (9:16)", w: 1080, h: 1920 },
+  { id: "fb-event", platform: "Facebook", label: "Facebook event cover (1.91:1)", w: 1920, h: 1005 },
   { id: "x-landscape", platform: "Twitter/X", label: "Twitter/X landscape (16:9)", w: 1600, h: 900 },
   { id: "x-square", platform: "Twitter/X", label: "Twitter/X square (1:1)", w: 1080, h: 1080 },
   { id: "bsky", platform: "Bluesky", label: "Bluesky (1.91:1)", w: 1200, h: 628 },
   { id: "linkedin", platform: "LinkedIn", label: "LinkedIn (1.91:1)", w: 1200, h: 627 },
   { id: "camra-event", platform: "CAMRA Events", label: "CAMRA Events website (4:3)", w: 1440, h: 1080 },
+  // Print sizes at 300 dpi, for pub noticeboards and flyers.
+  { id: "print-a4", platform: "Print", label: "Print A4 poster (portrait, 300 dpi)", w: 2480, h: 3508 },
+  { id: "print-a5", platform: "Print", label: "Print A5 flyer (portrait, 300 dpi)", w: 1748, h: 2480 },
 ];
 
 export type Orientation = "as" | "landscape" | "portrait";

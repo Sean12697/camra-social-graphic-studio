@@ -62,7 +62,7 @@ test("search and the sample designs", async ({ page }) => {
   await page.locator("#designsBtn").click();
   const dlg = page.locator("#designsDialog");
   await dlg.getByRole("button", { name: "Load sample designs" }).first().click();
-  await expect(dlg.locator(".design")).toHaveCount(9);
+  await expect(dlg.locator(".design")).toHaveCount(12);
   await expect(dlg.locator(".design img").first()).toHaveAttribute("src", /^data:image\/jpeg/);
   await dlg.getByLabel("Search saved designs").fill("copper kettle");
   await expect(dlg.locator(".design")).toHaveCount(1);

@@ -29,7 +29,7 @@ async function studio(theme, viewport, deviceScaleFactor = 1) {
   await page.waitForSelector('html[data-ready="1"]');
   await page.click("#designsBtn");
   await page.getByRole("button", { name: "Load sample designs" }).first().click();
-  await page.waitForSelector("#designsDialog .design >> nth=8");
+  await page.waitForSelector("#designsDialog .design >> nth=11");
   await quiet(page);
   return { ctx, page };
 }
@@ -53,6 +53,16 @@ for (const theme of ["dark", "light"]) {
   await page.screenshot({ path: join(out, `editor-${theme}.png`) });
   shots.push(`editor-${theme}.png`);
   if (theme === "dark") {
+    await page.click("#browseLogos");
+    await page.waitForTimeout(600);
+    await quiet(page);
+    await page.screenshot({ path: join(out, "logos-dark.png") });
+    shots.push("logos-dark.png");
+    await page.keyboard.press("Escape");
+    await page.evaluate(() => { const d = document.querySelector('details[data-group="media"]'); d.open = true; document.getElementById("iconWrap").scrollIntoView({ block: "center" }); });
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: join(out, "icons-dark.png") });
+    shots.push("icons-dark.png");
     await page.click("#settingsBtn");
     await page.waitForTimeout(200);
     await quiet(page);
@@ -71,7 +81,7 @@ for (const theme of ["dark", "light"]) {
 {
   // The graphics themselves, exported exactly as a volunteer would get them.
   const { ctx, page } = await studio("dark", { width: 1280, height: 900 });
-  for (const [name, file] of [["Newcomer: The Copper Kettle", "graphic-newcomer.png"], ["What's on in November", "graphic-whats-on.png"], ["Real Cider: Orchard Gold", "graphic-cider.png"]]) {
+  for (const [name, file] of [["Newcomer: The Copper Kettle", "graphic-newcomer.png"], ["What's on in November", "graphic-whats-on.png"], ["Real Cider: Orchard Gold", "graphic-cider.png"], ["LocAle: The Foundry", "graphic-locale.png"], ["Countdown: Winter Ales Festival", "graphic-countdown.png"], ["Trip: Ropewalk Brewing tour", "graphic-trip.png"]]) {
     await openSample(page, name);
     const data = await page.evaluate(() => document.getElementById("frame").toDataURL("image/png"));
     writeFileSync(join(out, file), Buffer.from(data.split(",")[1], "base64"));
