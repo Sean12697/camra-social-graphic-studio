@@ -1,16 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <!-- Slate background (CAMRA primary). Full-bleed so it survives maskable cropping. -->
-  <rect width="512" height="512" fill="#41495a"/>
-  <!-- Beer fill (amber), kept within the maskable safe zone. -->
-  <path d="M204 188 L308 188 L296 392 L216 392 Z" fill="#f9b13c"/>
-  <!-- Glass outline. -->
-  <path d="M196 150 L316 150 L298 396 L214 396 Z" fill="none" stroke="#ffffff" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/>
-  <!-- Mug handle. -->
-  <path d="M316 196 q56 6 56 70 q0 64 -62 70" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round"/>
-  <!-- Foam head. -->
-  <g fill="#ffffff">
-    <circle cx="218" cy="150" r="30"/>
-    <circle cx="256" cy="138" r="34"/>
-    <circle cx="294" cy="150" r="30"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#41495a"/><path fill="#f9b13c" d="M204 188 L308 188 L296 392 L216 392 Z"/><path fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16" d="M196 150 L316 150 L298 396 L214 396 Z"/><path fill="none" stroke="#fff" stroke-linecap="round" stroke-width="16" d="M316 196 q56 6 56 70 q0 64 -62 70"/><g fill="#fff"><circle cx="218" cy="150" r="30"/><circle cx="256" cy="138" r="34"/><circle cx="294" cy="150" r="30"/></g></svg>
