@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.6.0
+
+### Added
+- Designs and the content calendar are now separate. Designs are templates to reuse (a post tuned beyond the post type's defaults); the calendar holds posts meant for a day. One save dialog saves to the calendar, to designs, or both, and a design or post that is open can be updated or kept with a copy saved as new.
+- Posts saved without a date go on the calendar for today.
+- Repeating posts: every week, month or year, with an optional end date. They show on every day they fall on, are marked as posted day by day, and repeat in the downloaded .ics plan.
+- Download and Share on every calendar post, without opening it first. Share opens the device's share sheet with the image and post text; where a browser cannot share images it downloads the image and copies the text.
+- Save as a design on a calendar post keeps a copy as a template.
+- A clear note in the editor, the save dialog, the calendar and Settings: the studio never posts for you, the calendar only keeps posts on this device to come back to, and nothing is sent to any server. Turning on notifications now explains this before the browser asks.
+- Resizable side panels on wide screens: drag the dividers either side of the preview, or focus one and use the arrow keys (Shift for bigger steps, Enter to reset). Widths are remembered, and Settings can reset them.
+- New CAMRA campaigns and dates: Volunteers' Week, Champion Beer of Britain, Heritage Open Days and the CAMRA Young Members Forum (7 November 2026, Birmingham), plus International Women's Day and Pride Month under national days. Their drafts carry post text written in CAMRA's own social media style.
+- One-off campaigns (rule `once`) and drafts that suit any time (phase `anytime`), suggested for today and spaced out before the day when planned together.
+
+### Changed
+- The header stays pinned to the top while scrolling, and drops its taglines once the page scrolls so the preview keeps its room.
+- On phones the five sections (Designs, Calendar, Campaigns, Settings, Tips) sit in one row of equal tabs, icon over label.
+- The Reframe photo panel opens wider (380px) and the settings panel at 440px.
+- Campaigns buttons say what they do: Plan all drafts as posts in my content calendar (in the studio) and Save the dates to my calendar app (.ics, for Google, Outlook or Apple Calendar). The subscription section is titled Subscribe in your own calendar app.
+- The Designs panel shows designs only, so the calendar filter and the date-to-post sort have moved to the calendar. Posts saved by 2.5 with a date move to the calendar.
+
 ## 2.5.0
 
 ### Added

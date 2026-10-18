@@ -9,7 +9,7 @@
 import data from "./data/campaigns.json" with { type: "json" };
 
 export type CategoryId = "camra" | "beer" | "national";
-export type DraftPhase = "before" | "start" | "end" | "after";
+export type DraftPhase = "before" | "start" | "end" | "after" | "anytime";
 
 export interface Category {
   id: CategoryId;
@@ -22,7 +22,9 @@ export interface Category {
 export type Rule =
   | { kind: "month"; month: number }
   | { kind: "fixed"; month: number; day: number; days?: number }
-  | { kind: "nthWeekday"; month: number; weekday: number; n: number; days?: number; estimate?: boolean };
+  | { kind: "nthWeekday"; month: number; weekday: number; n: number; days?: number; estimate?: boolean }
+  /** A one-off event: it happens only in the years listed under confirmed. */
+  | { kind: "once" };
 
 export interface Draft {
   id: string;
@@ -162,6 +164,11 @@ export function occurrence(c: Campaign, year: number): Occurrence {
   const r = c.rule;
   let start: string;
   let end: string;
+  if (r.kind === "once") {
+    // Only asked for years it happens in; fall back to its first date.
+    const first = Object.values(c.confirmed || {})[0];
+    return { campaign: c, year, start: first ? first.start : ymd(year, 1, 1), end: first ? first.end : ymd(year, 1, 1), estimated: false, venue: first && first.venue };
+  }
   if (r.kind === "month") {
     start = ymd(year, r.month, 1);
     end = ymd(year, r.month, daysInMonth(year, r.month));
@@ -175,10 +182,17 @@ export function occurrence(c: Campaign, year: number): Occurrence {
   return { campaign: c, year, start, end, estimated: r.kind === "nthWeekday" && !!r.estimate };
 }
 
+/** Whether a campaign happens in a year: always, unless it is a one-off for another year. */
+export function occursIn(c: Campaign, year: number): boolean {
+  return c.rule.kind !== "once" || !!(c.confirmed && c.confirmed[String(year)]);
+}
+
 /** Every occurrence of the given campaigns from one year to another, in date order. */
 export function occurrencesBetween(list: Campaign[], fromYear: number, toYear: number): Occurrence[] {
   const out: Occurrence[] = [];
-  for (let y = fromYear; y <= toYear; y++) list.forEach((c) => out.push(occurrence(c, y)));
+  for (let y = fromYear; y <= toYear; y++) list.forEach((c) => {
+    if (occursIn(c, y)) out.push(occurrence(c, y));
+  });
   return out.sort((a, b) => a.start.localeCompare(b.start) || a.campaign.name.localeCompare(b.campaign.name));
 }
 
@@ -384,6 +398,8 @@ export function draftParams(d: Draft, o: Occurrence, today: string): URLSearchPa
 /** Suggested post text for a draft: its message (or the campaign and dates) and the hashtags. */
 export function draftCopy(d: Draft, o: Occurrence, t: Record<string, string> = tokens(o, o.start)): string {
   const v = d.values;
+  // Drafts written in CAMRA's own voice carry their post text.
+  if (typeof v.copy === "string") return fillTokens(v.copy, t);
   const pick = (k: string) => (typeof v[k] === "string" ? fillTokens(v[k] as string, t) : "");
   const days = pick("days");
   const what = pick("event") || pick("campaignName") || pick("occasion") || o.campaign.name;
@@ -405,7 +421,7 @@ export function suggestedDraft(e: TimelineEntry): Draft | undefined {
   return drafts[0];
 }
 
-export const PHASE_LABELS: Record<DraftPhase, string> = { before: "Before", start: "When it starts", end: "Near the end", after: "Afterwards" };
+export const PHASE_LABELS: Record<DraftPhase, string> = { before: "Before", start: "When it starts", end: "Near the end", after: "Afterwards", anytime: "Any time" };
 
 // --- iCalendar (RFC 5545) ---
 
@@ -584,7 +600,7 @@ export function campaignsMarkdown(): string {
   out.push("");
   out.push("## Editing");
   out.push("");
-  out.push("Add or change a campaign in `src/core/data/campaigns.json`. A `rule` gives the date in any year: `month` (the whole month), `fixed` (a day of the year) or `nthWeekday` (for example the last Thursday of September, with `n: -1`). Mark a rule `estimate` when it follows the pattern of recent years rather than a fixed definition, and add `confirmed` dates for a year once they are announced. Draft values can use these tokens:");
+  out.push("Add or change a campaign in `src/core/data/campaigns.json`. A `rule` gives the date in any year: `month` (the whole month), `fixed` (a day of the year), `nthWeekday` (for example the last Thursday of September, with `n: -1`) or `once` (a one-off event that happens only in the years listed under `confirmed`). Mark a rule `estimate` when it follows the pattern of recent years rather than a fixed definition, and add `confirmed` dates for a year once they are announced. A draft's `phase` says when it suits: `before`, `start`, `end`, `after`, or `anytime` for a post any branch can put out whenever it likes (it is suggested for today). A draft can carry its own post text as `copy`; without one, the text is written from its message, dates and hashtags. Draft values can use these tokens:");
   out.push("");
   out.push("| Token | Becomes |");
   out.push("| --- | --- |");
@@ -605,6 +621,7 @@ export function campaignsMarkdown(): string {
 const NTH = ["", "first", "second", "third", "fourth", "fifth"];
 
 export function ruleText(r: Rule): string {
+  if (r.kind === "once") return "A one-off event";
   if (r.kind === "month") return "All of " + MONTHS[r.month - 1];
   if (r.kind === "fixed") return r.day + " " + MONTHS[r.month - 1] + (r.days && r.days > 1 ? " for " + r.days + " days" : "");
   const which = r.n < 0 ? "last" : NTH[r.n] || r.n + "th";

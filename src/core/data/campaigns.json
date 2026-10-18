@@ -89,6 +89,76 @@
       ]
     },
     {
+      "id": "volunteers-week",
+      "name": "Volunteers' Week",
+      "category": "camra",
+      "summary": "The UK's celebration of volunteering, the first week of June. CAMRA is run by its volunteers, so it is the week to thank yours and invite new ones.",
+      "url": "https://camra.org.uk/volunteer",
+      "hashtags": ["#VolunteersWeek", "#CAMRA"],
+      "rule": { "kind": "nthWeekday", "month": 6, "weekday": 1, "n": 1, "days": 7, "estimate": true },
+      "confirmed": {
+        "2026": { "start": "2026-06-01", "end": "2026-06-07" }
+      },
+      "leadDays": 21,
+      "drafts": [
+        { "id": "thank-you", "name": "Thank you", "phase": "start", "type": "occasion", "icon": "hand-heart", "values": { "occasion": "Volunteers' Week", "phase": "now", "heading": "Thank you, volunteers", "dates": "{dates}", "note": "Every festival, pub survey and campaign we run happens because of you.", "copy": "👏 It's #VolunteersWeek, so let's celebrate the brilliant people who make our branch tick!\n\n🙋 Saving pubs, pulling pints at festivals, surveying pubs and scoring beers: our volunteers make CAMRA the force it is.\n\n🍻 Thank you. What's your favourite part of volunteering with us?\n\n#VolunteersWeek #CAMRA" } },
+        { "id": "get-involved", "name": "Get involved", "phase": "start", "type": "volunteers", "icon": "users", "values": { "heading": "Fancy getting involved?", "event": "Volunteers' Week, {dates}", "roles": [{ "role": "Beer festival crew", "when": "Set up, bar and take down" }, { "role": "Pub surveys and beer scoring", "when": "Whenever you're at the pub" }, { "role": "Campaigning", "when": "Helping keep local pubs open" }], "contact": "camra.org.uk/volunteer", "copy": "🙋 Ever thought about volunteering with CAMRA? #VolunteersWeek is the perfect time to start.\n\n🍺 Help at a beer festival, score the beers in your local or campaign to keep pubs open. Give as much or as little time as you like.\n\n➡️ Find out more at camra.org.uk/volunteer, or say hello at our next branch social.\n\n#VolunteersWeek #CAMRA" } }
+      ]
+    },
+    {
+      "id": "champion-beer-of-britain",
+      "name": "Champion Beer of Britain",
+      "category": "camra",
+      "summary": "CAMRA's national cask beer competition, judged blind over two years. The 2026 winners were crowned at Cambridge Beer Festival in May. Celebrate the winners and cheer on local finalists.",
+      "url": "https://camra.org.uk/awards/champion-beer-of-britain",
+      "hashtags": ["#CBOB", "#ChampionBeerOfBritain"],
+      "rule": { "kind": "nthWeekday", "month": 5, "weekday": 2, "n": 3, "days": 1, "estimate": true },
+      "confirmed": {
+        "2026": { "start": "2026-05-19", "end": "2026-05-19", "venue": "Cambridge" }
+      },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "finalist", "name": "Local finalist", "phase": "before", "type": "award", "icon": "trophy", "values": { "award": "Champion Beer of Britain", "scope": "Finalist", "result": "", "recipient": "Beer name, Brewery", "year": "{year}", "copy": "🍺 So proud to see [beer] from [brewery] in the final of CAMRA's Champion Beer of Britain {year}!\n\n🤞 Fingers crossed for the big announcement on {start}. Have you tried it yet?\n\n#CBOB #ChampionBeerOfBritain" } },
+        { "id": "winner", "name": "Winner crowned", "phase": "start", "type": "award", "icon": "trophy", "values": { "award": "Champion Beer of Britain", "result": "gold", "recipient": "Beer name, Brewery", "year": "{year}", "copy": "🏆 The Champion Beer of Britain {year} has been crowned!\n\n🍺 Huge congratulations to [beer] from [brewery]. Keep an eye out for it on a bar near you.\n\n👏 Well done to every brewery that made the final.\n\n#CBOB #ChampionBeerOfBritain" } }
+      ]
+    },
+    {
+      "id": "heritage-open-days",
+      "name": "Heritage Open Days",
+      "category": "camra",
+      "summary": "England's biggest festival of history and culture, ten days every September. A good time to celebrate the historic pub interiors CAMRA's Pub Heritage Group works to protect.",
+      "url": "https://www.heritageopendays.org.uk/",
+      "hashtags": ["#HeritageOpenDays", "#PubHeritage"],
+      "rule": { "kind": "nthWeekday", "month": 9, "weekday": 5, "n": 2, "days": 10, "estimate": true },
+      "confirmed": {
+        "2026": { "start": "2026-09-11", "end": "2026-09-20" },
+        "2027": { "start": "2027-09-10", "end": "2027-09-19" }
+      },
+      "leadDays": 21,
+      "drafts": [
+        { "id": "coming-up", "name": "Coming up", "phase": "before", "type": "occasion", "icon": "landmark", "values": { "occasion": "Heritage Open Days", "phase": "countdown", "days": "{days}", "dates": "{dates}", "note": "Historic pubs are heritage too.", "copy": "🏛️ #HeritageOpenDays runs {dates}!\n\n🍺 Historic pubs are heritage too. Why not plan a visit to one of the unspoilt pub interiors on our patch?\n\n#PubHeritage #CAMRA" } },
+        { "id": "visit", "name": "Visit a historic pub", "phase": "start", "type": "heritage", "icon": "landmark", "values": { "pubName": "Pub name", "listing": "National Inventory of Historic Pub Interiors", "note": "Raise a glass somewhere with a story this Heritage Open Days, {dates}.", "copy": "🏛️ It's #HeritageOpenDays!\n\n🍺 Pubs are some of our oldest and best loved buildings. [Pub name] is one of the gems on CAMRA's National Inventory of Historic Pub Interiors, so why not raise a glass somewhere with a story?\n\n📍 Find historic pubs near you at pubheritage.camra.org.uk\n\n#PubHeritage #CAMRA" } }
+      ]
+    },
+    {
+      "id": "young-members-forum",
+      "name": "CAMRA Young Members Forum",
+      "category": "camra",
+      "summary": "A public national meeting to talk about the issues that matter to CAMRA's young members, with non-members' views welcome too. Saturday 7 November 2026 from 12pm at Attic Brew Taproom, 29b Mary Vale Road, Stirchley, Birmingham B30 2DA. Any branch can share it, any time before the day.",
+      "url": "https://camra.org.uk/event/young-members-forum-84213",
+      "hashtags": ["#CAMRA", "#CAMRAYoungMembers"],
+      "rule": { "kind": "once" },
+      "confirmed": {
+        "2026": { "start": "2026-11-07", "end": "2026-11-07", "venue": "Birmingham" }
+      },
+      "leadDays": 21,
+      "drafts": [
+        { "id": "coming-up", "name": "Coming up", "phase": "anytime", "type": "countdown", "icon": "users", "values": { "event": "CAMRA Young Members Forum", "days": "{days}", "date": "{start}, 12pm", "venue": "Attic Brew Taproom, Stirchley, Birmingham", "copy": "📣 The CAMRA Young Members Forum is coming up!\n\n🗓️ {start}, from 12pm\n📍 Attic Brew Taproom, Stirchley, Birmingham\n\n🍻 A chance to get together and talk about the issues that matter to young members. Not a member yet? Your views are welcome too.\n\n#CAMRA #CAMRAYoungMembers" } },
+        { "id": "see-you-there", "name": "Excited to go", "phase": "anytime", "type": "announcement", "icon": "party-popper", "values": { "heading": "See you at the Young Members Forum!", "body": "{start}, from 12pm\nAttic Brew Taproom, Stirchley, Birmingham\nCome and help shape the future of the campaign.", "copy": "🙌 We can't wait for the CAMRA Young Members Forum on {start}!\n\n📍 Attic Brew Taproom, Stirchley, Birmingham, from 12pm.\n\n🍺 Come along, meet young members from across the country and help shape where the campaign goes next. Who's coming with us?\n\n#CAMRA #CAMRAYoungMembers" } },
+        { "id": "proud", "name": "Proud to support", "phase": "anytime", "type": "announcement", "icon": "heart", "values": { "heading": "Proud to back our young members", "body": "The future of the campaign is in good hands.\nYoung Members Forum, {start}, Birmingham", "copy": "💛 Proud to see CAMRA putting young members front and centre.\n\n🍻 The Young Members Forum on {start} in Birmingham is a chance for young drinkers to have their say on pubs, pints and the future of the campaign. Members and non-members are welcome.\n\n➡️ Details at camra.org.uk/event/young-members-forum-84213\n\n#CAMRA #CAMRAYoungMembers" } }
+      ]
+    },
+    {
       "id": "tryanuary",
       "name": "Tryanuary",
       "category": "beer",
@@ -247,6 +317,31 @@
       "leadDays": 10,
       "drafts": [
         { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "flag", "values": { "occasion": "St Andrew's Day", "phase": "today", "heading": "Happy St Andrew's Day", "note": "Raise a glass of Scottish ale at your local." } }
+      ]
+    },
+    {
+      "id": "international-womens-day",
+      "name": "International Women's Day",
+      "category": "national",
+      "summary": "8 March every year. A day to celebrate the women who brew, pour, run pubs and campaign for them. Breweries often mark it with the International Women's Collaboration Brew Day.",
+      "url": "https://www.internationalwomensday.com/",
+      "hashtags": ["#InternationalWomensDay", "#IWD{year}"],
+      "rule": { "kind": "fixed", "month": 3, "day": 8 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "today", "name": "On the day", "phase": "start", "type": "occasion", "icon": "sparkles", "values": { "occasion": "International Women's Day", "phase": "today", "heading": "Celebrating women in beer and pubs", "dates": "{start}", "note": "Here's to the women who brew, pour, run our pubs and campaign for them.", "copy": "💜 Happy #InternationalWomensDay!\n\n🍺 Today we're celebrating the women who brew our beer and cider, pour our pints, run our pubs and campaign to keep them thriving.\n\n🙌 Tag a woman in beer or pubs who inspires you.\n\n#IWD{year} #CAMRA" } }
+      ]
+    },
+    {
+      "id": "pride-month",
+      "name": "Pride Month",
+      "category": "national",
+      "summary": "June. A month to show that pubs, and CAMRA, are for everyone.",
+      "hashtags": ["#PrideMonth", "#Pride{year}"],
+      "rule": { "kind": "month", "month": 6 },
+      "leadDays": 14,
+      "drafts": [
+        { "id": "on-now", "name": "Pubs are for everyone", "phase": "start", "type": "occasion", "icon": "heart", "values": { "occasion": "Pride Month", "phase": "now", "heading": "Pubs are for everyone", "dates": "{dates}", "note": "Proud to campaign for pubs where everyone is welcome.", "copy": "🏳️‍🌈 Happy #PrideMonth!\n\n🍻 Pubs are at their best when everyone feels welcome at the bar. We're proud to campaign for pubs, pints and people. All people.\n\n💬 Know a pub that's a brilliant, welcoming space? Give it a shout out below.\n\n#Pride{year} #CAMRA" } }
       ]
     }
   ]

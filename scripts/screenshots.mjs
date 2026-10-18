@@ -100,8 +100,8 @@ for (const theme of ["dark", "light"]) {
   await page.fill("#postOn", "2027-04-14");
   await page.fill("#postAt", "19:30");
   await page.click("#planSave");
-  await page.fill("#promptInput", "Newcomer: The Copper Kettle");
-  await page.click("#promptOk");
+  await page.fill("#saveName", "Newcomer: The Copper Kettle");
+  await page.click("#saveOk");
   await page.click("#calendarBtn");
   await page.locator('.cal-day[data-day="2027-04-24"]').click();
   await page.waitForTimeout(300);

@@ -29,10 +29,10 @@ import {
   type Feed,
   type TimelineEntry,
 } from "../core/campaigns.ts";
-import { newId, type Design } from "../core/designs.ts";
-import { planLabel, postAlert, suggestedPostDate, type PostAlert } from "../core/calendar.ts";
+import { kindOf, newId, type Design } from "../core/designs.ts";
+import { currentPostDay, planLabel, postAlert, suggestedPostDate, type PostAlert } from "../core/calendar.ts";
 import { byId, copyText, downloadBlob, flashLabel, h } from "./dom.ts";
-import { closeDialog, openDialog } from "./dialog.ts";
+import { closeDialog, confirmDialog, openDialog } from "./dialog.ts";
 import { notify } from "./notices.ts";
 import { store } from "./store.ts";
 import * as E from "./editor.ts";
@@ -107,7 +107,7 @@ function renderBanner(alerts: Alert[], posts: PostAlert | null): void {
         h(
           "div",
           { class: "camp-alert-actions" },
-          h("button", { type: "button", class: "btn primary", onclick: () => calendarOpener(posts.today.length ? posts.day : (posts.overdue[0].postOn as string)) }, "Open the calendar"),
+          h("button", { type: "button", class: "btn primary", onclick: () => calendarOpener(posts.today.length ? posts.day : currentPostDay(posts.overdue[0], today()) || posts.day) }, "Open the calendar"),
           h("button", { type: "button", class: "ghost", onclick: () => dismissPosts(posts), "aria-label": "Dismiss today's post reminder" }, "Dismiss"),
         ),
       ),
@@ -213,17 +213,19 @@ async function useDraft(e: TimelineEntry, d: Draft): Promise<void> {
   const postOn = suggestedPostDate(e.occ.campaign, e.occ, d, today());
   await E.restoreForm({ params: draftQuery(e, d, postOn).toString(), photo: null, logo, postOn, postAt: null, campaign: refFor(e, d) });
   E.state.currentDesignId = null;
+  E.state.currentPostId = null;
   E.state.dirty = true;
   closeDialog(dlg());
-  notify("success", "Draft ready: " + e.occ.campaign.name + ", " + d.name.toLowerCase() + ", suggested for " + planLabel({ postOn } as Design) + ". Check the details and the post text, then save it to the calendar or download it.");
+  notify("success", "Draft ready: " + e.occ.campaign.name + ", " + d.name.toLowerCase() + ", suggested for " + planLabel({ postOn } as Design) + ". Check the details and the post text, then save it to your content calendar or download it.");
 }
 
 async function planDrafts(e: TimelineEntry): Promise<void> {
   const saved = E.captureForm();
   const savedId = E.state.currentDesignId;
+  const savedPost = E.state.currentPostId;
   const savedDirty = E.state.dirty;
   const now = new Date().toISOString();
-  const existing = new Set(store.getDesigns().filter((x) => !x.deletedAt && x.campaign).map((x) => x.campaign!.id + ":" + x.campaign!.year + ":" + x.campaign!.draft));
+  const existing = new Set(store.getDesigns().filter((x) => !x.deletedAt && x.campaign && kindOf(x) === "post").map((x) => x.campaign!.id + ":" + x.campaign!.year + ":" + x.campaign!.draft));
   const out: Design[] = [];
   let skipped = 0;
   for (const d of e.occ.campaign.drafts) {
@@ -231,10 +233,11 @@ async function planDrafts(e: TimelineEntry): Promise<void> {
       skipped++;
       continue;
     }
-    const postOn = suggestedPostDate(e.occ.campaign, e.occ, d, today());
+    const postOn = suggestedPostDate(e.occ.campaign, e.occ, d, today(), true);
     await E.restoreForm({ params: draftQuery(e, d, postOn).toString(), photo: null, logo: saved.logo });
     out.push({
-      id: newId("dsn"),
+      id: newId("pst"),
+      kind: "post",
       name: e.occ.campaign.name + " " + e.occ.year + ": " + d.name,
       typeId: d.type,
       params: E.serialize().toString(),
@@ -251,9 +254,10 @@ async function planDrafts(e: TimelineEntry): Promise<void> {
   }
   await E.restoreForm(saved);
   E.state.currentDesignId = savedId;
+  E.state.currentPostId = savedPost;
   E.state.dirty = savedDirty;
   if (!out.length) {
-    notify("info", "These drafts are already in your calendar.", { action: { label: "Open calendar", run: () => { closeDialog(dlg()); calendarOpener(e.occ.start); } } });
+    notify("info", "These drafts are already in your content calendar.", { action: { label: "Open calendar", run: () => { closeDialog(dlg()); calendarOpener(e.occ.start); } } });
     return;
   }
   if (!(await store.putDesigns(out))) {
@@ -261,7 +265,7 @@ async function planDrafts(e: TimelineEntry): Promise<void> {
     return;
   }
   const first = out[0].postOn as string;
-  notify("success", "Planned " + out.length + (out.length === 1 ? " post" : " posts") + " for " + e.occ.campaign.name + " in your calendar" + (skipped ? " (" + skipped + " already there)" : "") + ". Change any of them before the day.", { action: { label: "Open calendar", run: () => { closeDialog(dlg()); calendarOpener(first); } } });
+  notify("success", "Planned " + out.length + (out.length === 1 ? " post" : " posts") + " for " + e.occ.campaign.name + " in your content calendar" + (skipped ? " (" + skipped + " already there)" : "") + ". Change any of them before the day.", { action: { label: "Open calendar", run: () => { closeDialog(dlg()); calendarOpener(first); } } });
   refreshCampaigns();
   changedHooks.forEach((f) => f());
 }
@@ -322,8 +326,8 @@ function calendarSection(): HTMLElement {
   return h(
     "section",
     { class: "dlg-section" },
-    h("h3", {}, "Add to your calendar"),
-    h("p", { class: "note" }, "Subscribe and your calendar stays in sync: new campaigns and confirmed dates arrive by themselves. Events carry a reminder when it is time to schedule posts."),
+    h("h3", {}, "Subscribe in your own calendar app"),
+    h("p", { class: "note" }, "Puts the campaign dates in Google, Outlook or Apple Calendar and keeps them in sync: new campaigns and confirmed dates arrive by themselves. Events carry a reminder when it is time to schedule posts. This is separate from the studio's own content calendar, which holds the posts you plan."),
     h("fieldset", { class: "field" }, h("legend", {}, "Which calendar"), seg),
     h("p", { class: "note" }, feed.description.replace(/ From the unofficial CAMRA Social Graphics Studio\./, "")),
     links,
@@ -383,8 +387,8 @@ function entryCard(e: TimelineEntry, prefs: CampaignPrefs): HTMLElement {
     h(
       "div",
       { class: "row-actions campaign-more" },
-      h("button", { type: "button", class: "ghost", onclick: () => planDrafts(e) }, c.drafts.length === 1 ? "Plan it in my calendar" : "Plan all " + c.drafts.length + " in my calendar"),
-      h("button", { type: "button", class: "ghost", onclick: () => downloadIcs(c.id + "-" + e.occ.year + ".ics", buildIcs([e.occ], { name: c.name, description: c.summary, now: new Date(), version: __APP_VERSION__, siteUrl: hosted() ? siteBase() : undefined, leadOverride: prefs.leadDays })) }, "Add this one to my calendar"),
+      h("button", { type: "button", class: "btn", onclick: () => planDrafts(e), title: "Saves the drafts as posts in the studio's content calendar, on suggested days, ready to change before you post them." }, c.drafts.length === 1 ? "Plan the draft as a post in my content calendar" : "Plan all " + c.drafts.length + " drafts as posts in my content calendar"),
+      h("button", { type: "button", class: "ghost", onclick: () => downloadIcs(c.id + "-" + e.occ.year + ".ics", buildIcs([e.occ], { name: c.name, description: c.summary, now: new Date(), version: __APP_VERSION__, siteUrl: hosted() ? siteBase() : undefined, leadOverride: prefs.leadDays })), title: "Downloads a calendar file with this campaign's dates, to open in Google, Outlook or Apple Calendar." }, "Save the dates to my calendar app (.ics)"),
       c.url ? h("a", { class: "ghost", href: c.url, target: "_blank", rel: "noopener" }, "About " + c.name) : null,
       h("label", { class: "check", for: mute.id }, mute, " Remind me"),
     ),
@@ -533,6 +537,15 @@ export async function setSystem(on: boolean): Promise<boolean> {
     if (!systemSupported()) {
       notify("info", "This browser cannot show notifications. Reminders still appear in the studio.");
       return false;
+    }
+    if (Notification.permission === "default") {
+      const ok = await confirmDialog({
+        title: "Turn on notifications?",
+        body: "Your browser will ask for permission next. Notifications remind you about campaigns and posts you have planned. They are worked out on this device from what you have saved here: nothing is sent to any server, and the studio never posts anything for you. You can turn them off in Settings at any time.",
+        confirmLabel: "Ask my browser",
+        cancelLabel: "Not now",
+      });
+      if (!ok) return false;
     }
     const perm = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
     if (perm !== "granted") {

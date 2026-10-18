@@ -50,7 +50,8 @@ test("every draft uses a real post type, real fields and a real icon", () => {
       const t = templateById(d.type);
       assert.ok(t, x.id + "/" + d.id + " type " + d.type);
       const keys = new Set(t.fields.map((f) => f.key));
-      for (const k of Object.keys(d.values)) assert.ok(keys.has(k), x.id + "/" + d.id + " field " + k);
+      // copy is the post text, which every post type carries.
+      for (const k of Object.keys(d.values)) assert.ok(k === "copy" || keys.has(k), x.id + "/" + d.id + " field " + k);
       if (d.icon) assert.ok(ICON_NAMES.includes(d.icon), x.id + "/" + d.id + " icon " + d.icon);
       const phase = d.values.phase;
       if (phase) {
@@ -87,6 +88,7 @@ test("occurrences match the dates published for 2026 and 2027", () => {
 test("the rules for estimated campaigns reproduce the confirmed years", () => {
   // If a rule fits the years we know, it is a fair guess for the next one.
   for (const x of CAMPAIGNS) {
+    if (x.rule.kind === "once") continue;
     for (const [y, conf] of Object.entries(x.confirmed || {})) {
       const bare = occurrence({ ...x, confirmed: undefined }, Number(y));
       assert.deepEqual([bare.start, bare.end], [conf.start, conf.end], x.id + " " + y);

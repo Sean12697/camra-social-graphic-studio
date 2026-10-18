@@ -132,6 +132,10 @@ export function cleanDesign(v: unknown): Design | string {
     postAt: isYmd(v.postOn) && isHm(v.postAt) ? v.postAt : null,
     postedAt: str(v.postedAt),
     campaign: cleanRef(v.campaign),
+    kind: v.kind === "post" || v.kind === "design" ? v.kind : isYmd(v.postOn) ? "post" : "design",
+    repeat: isYmd(v.postOn) && (v.repeat === "week" || v.repeat === "month" || v.repeat === "year") ? v.repeat : null,
+    repeatUntil: isYmd(v.postOn) && isYmd(v.repeatUntil) && v.repeat ? v.repeatUntil : null,
+    postedDays: Array.isArray(v.postedDays) ? v.postedDays.filter(isYmd).slice(0, 1000) : null,
   };
 }
 

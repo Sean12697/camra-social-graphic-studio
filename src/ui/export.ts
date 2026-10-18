@@ -8,6 +8,7 @@ import { byId, copyText, downloadBlob, flashLabel } from "./dom.ts";
 import { notify } from "./notices.ts";
 import { store } from "./store.ts";
 import * as E from "./editor.ts";
+import type { Design } from "../core/designs.ts";
 
 const CORS_MSG = "the photo or logo host blocks cross-origin use, so the browser refuses to save the image. Upload the file instead.";
 
@@ -131,6 +132,68 @@ async function doShare(): Promise<void> {
   } else {
     notify("warn", "Sharing files is not supported in this browser. Use Download instead.");
   }
+}
+
+// --- a saved post, without opening it ---
+
+/**
+ * Renders a saved post through the form, runs fn, then puts the user's own
+ * form back exactly as it was. Used by the calendar's Download and Share.
+ */
+async function withRecord<T>(d: Design, fn: () => Promise<T>): Promise<T> {
+  const saved = E.captureForm();
+  const keep = { design: E.state.currentDesignId, post: E.state.currentPostId, dirty: E.state.dirty, local: E.state.localCopies };
+  try {
+    await E.restoreForm({ params: d.params, photo: d.photo || null, logo: d.logo || null });
+    return await fn();
+  } finally {
+    await E.restoreForm(saved);
+    E.state.currentDesignId = keep.design;
+    E.state.currentPostId = keep.post;
+    E.state.dirty = keep.dirty;
+    E.state.localCopies = keep.local;
+  }
+}
+
+/** Downloads every size of a saved post, as the Download button would for it. */
+export async function downloadRecord(d: Design): Promise<void> {
+  await withRecord(d, () => doDownload());
+}
+
+/**
+ * Shares a saved post through the device's share sheet: the image with its
+ * post text. Where files cannot be shared, the image downloads and the text
+ * is copied instead.
+ */
+export async function shareRecord(d: Design): Promise<void> {
+  const copy = new URLSearchParams(d.params).get("copy") || "";
+  const r = await withRecord(d, async () => {
+    const b = await currentBlob();
+    return b ? { ...b, alt: E.currentAltText() } : null;
+  });
+  if (!r) return;
+  const file = new File([r.blob], r.name, { type: "image/png" });
+  const data: ShareData = { files: [file], title: d.name, text: copy || r.alt };
+  let canFiles = false;
+  try {
+    canFiles = !!(navigator.canShare && navigator.canShare(data));
+  } catch {
+    canFiles = false;
+  }
+  if (canFiles) {
+    try {
+      await navigator.share(data);
+    } catch (e) {
+      // Preparing the image can outlast the tap that asked for it; offer a fresh one.
+      if (e instanceof DOMException && e.name === "NotAllowedError") {
+        notify("info", d.name + " is ready to share.", { action: { label: "Share now", run: () => void navigator.share(data).catch(() => undefined) } });
+      }
+    }
+    return;
+  }
+  downloadBlob(r.blob, r.name);
+  const copied = copy ? await copyText(copy) : false;
+  notify("info", "This browser cannot share images, so " + d.name + " downloaded instead" + (copied ? " and its post text is copied, ready to paste." : "."));
 }
 
 async function doCopyImage(btn: HTMLElement): Promise<void> {

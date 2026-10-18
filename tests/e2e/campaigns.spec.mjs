@@ -70,7 +70,8 @@ test("the Campaigns panel lists drafts, deep links and plans drafts in the calen
   await expect(dlg.getByRole("link", { name: "Download the .ics file" })).toHaveAttribute("href", "calendar/campaigns.ics");
 
   const mild = dlg.locator('[data-campaign="mild-month"]').first();
-  await mild.getByRole("button", { name: "Plan all 4 in my calendar" }).click();
+  await expect(mild.getByRole("button", { name: "Save the dates to my calendar app (.ics)" })).toBeVisible();
+  await mild.getByRole("button", { name: "Plan all 4 drafts as posts in my content calendar" }).click();
   await expect(page.locator("#notices")).toContainText("Planned 4 posts for Mild Month");
   await page.locator("#notices").getByRole("button", { name: "Open calendar" }).click();
   const cal = page.locator("#calendarDialog");
@@ -109,4 +110,14 @@ test("campaign panel and banner are accessible in both themes", async ({ page })
     expect(await axeViolations(page)).toEqual([]);
     await page.evaluate(() => sessionStorage.clear());
   }
+});
+
+test("the Young Members Forum drafts can be used any time before the day", async ({ page }) => {
+  await openStudio(page, { campaigns: true, now: "2026-10-19T10:00:00", query: "?campaign=young-members-forum" });
+  const dlg = page.locator("#campaignsDialog");
+  const ymf = dlg.locator('[data-campaign="young-members-forum"]').first();
+  await expect(ymf).toContainText("Saturday 7 November 2026");
+  await ymf.getByRole("button", { name: /Use the Excited to go draft/ }).click();
+  await expect(page.locator("#notices")).toContainText("suggested for Monday 19 October 2026");
+  await expect(page.locator("#postCopy")).toHaveValue(/Attic Brew Taproom/);
 });

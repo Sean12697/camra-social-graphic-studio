@@ -140,3 +140,4 @@ test("designs filter and sort by the calendar", () => {
   assert.deepEqual(queryDesigns(list, { plan: "posted" }).map((x) => x.id), ["c"]);
   assert.deepEqual(plannedPosts(list).map((x) => x.id), ["c", "e", "a"]);
 });
+

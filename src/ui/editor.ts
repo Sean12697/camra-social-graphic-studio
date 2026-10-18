@@ -13,7 +13,7 @@ import { PARAM_DEFS, docsHtml } from "../core/params.ts";
 import { contextNotes, panelHtml } from "../core/brand.ts";
 import { altText as buildAltText } from "../core/alttext.ts";
 import { escapeHtml as esc } from "../core/html.ts";
-import { newId, type LibraryItem } from "../core/designs.ts";
+import { newId, type LibraryItem, type Repeat } from "../core/designs.ts";
 import { byId, fileToDataUrl, h, option, reveal } from "./dom.ts";
 import { notify } from "./notices.ts";
 import { store } from "./store.ts";
@@ -110,6 +110,9 @@ export const el = {
   copyCount: byId("copyCount"),
   postOn: byId<Inp>("postOn"),
   postAt: byId<Inp>("postAt"),
+  postRepeat: byId<Sel>("postRepeat"),
+  postUntil: byId<Inp>("postUntil"),
+  postUntilWrap: byId("postUntilWrap"),
   planNote: byId("planNote"),
 };
 
@@ -129,8 +132,10 @@ export const state = {
   camraLogoImg: null as Img | null,
   regionImg: null as Img | null,
   subBrandImg: null as Img | null,
-  /** The saved design the form was loaded from, if any. */
+  /** The saved design (template) the form was loaded from or last saved as, if any. */
   currentDesignId: null as string | null,
+  /** The calendar post the form was loaded from or last saved as, if any. */
+  currentPostId: null as string | null,
   /** True once the user has changed the form since it was loaded or saved. */
   dirty: false,
   /** The campaign draft the form was started from, kept when it is saved. */
@@ -1035,10 +1040,14 @@ export function resetForm(opts: { personal: boolean }): void {
   el.postCopy.value = "";
   el.postOn.value = "";
   el.postAt.value = "";
+  el.postRepeat.value = "";
+  el.postUntil.value = "";
+  syncRepeat();
   state.campaignRef = null;
   state.localCopies = false;
   updateCopyCount();
   state.currentDesignId = null;
+  state.currentPostId = null;
   state.dirty = false;
 }
 
@@ -1077,6 +1086,17 @@ function syncLogoPreset(): void {
   el.logoPreset.value = match || "custom";
 }
 
+/** The repeat chosen in the Post text and date group, if any. */
+export function readRepeat(): Repeat | null {
+  const v = el.postRepeat.value;
+  return v === "week" || v === "month" || v === "year" ? v : null;
+}
+
+/** Shows the "until" date only for a repeating post. */
+export function syncRepeat(): void {
+  el.postUntilWrap.hidden = !readRepeat();
+}
+
 // --- saved designs: capture and restore the whole form ---
 
 export interface FormSnapshot {
@@ -1086,6 +1106,8 @@ export interface FormSnapshot {
   /** Content calendar plan; absent means leave the plan fields empty. */
   postOn?: string | null;
   postAt?: string | null;
+  repeat?: Repeat | null;
+  repeatUntil?: string | null;
   campaign?: CampaignRef | null;
 }
 
@@ -1109,6 +1131,8 @@ export function captureForm(): FormSnapshot {
     logo: custom ? (state.customLogoUrl ? localCopy(state.customLogoImg) : state.customLogoData) : null,
     postOn: isYmd(el.postOn.value) ? el.postOn.value : null,
     postAt: isYmd(el.postOn.value) && isHm(el.postAt.value) ? el.postAt.value : null,
+    repeat: isYmd(el.postOn.value) ? readRepeat() : null,
+    repeatUntil: isYmd(el.postOn.value) && readRepeat() && isYmd(el.postUntil.value) && el.postUntil.value >= el.postOn.value ? el.postUntil.value : null,
     campaign: state.campaignRef,
   };
 }
@@ -1124,6 +1148,9 @@ export async function restoreForm(s: FormSnapshot): Promise<void> {
   state.localCopies = !!(s.logo || s.photo);
   el.postOn.value = s.postOn && isYmd(s.postOn) ? s.postOn : "";
   el.postAt.value = el.postOn.value && s.postAt && isHm(s.postAt) ? s.postAt : "";
+  el.postRepeat.value = el.postOn.value && s.repeat ? s.repeat : "";
+  el.postUntil.value = el.postRepeat.value && s.repeatUntil && isYmd(s.repeatUntil) ? s.repeatUntil : "";
+  syncRepeat();
   state.campaignRef = s.campaign || null;
   await loadAssets();
   updatePhotoControls();

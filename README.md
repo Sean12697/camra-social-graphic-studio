@@ -8,21 +8,25 @@ An unofficial, static, browser-based studio for making on-brand CAMRA social gra
 
 ## What it does
 
-Pick one of 23 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, write the text that goes with it, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved, planned in a content calendar, shared as links and backed up.
+Pick one of 23 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, write the text that goes with it, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved as templates, posts planned in a content calendar, shared as links and backed up. The studio never posts anything for you, and nothing you add leaves your device.
 
 ![Logo picker](docs/screenshots/logos-dark.png)
 
 ## Content calendar
 
-Under Post text and date, write the words that go with the graphic (the counter shows which platforms it fits) and pick the day, and optionally the time, to post it. Save to calendar stores the whole post as a saved design with that date: every form setting, the text, and local copies of every image, so the post can be reopened and changed at any point before the day. The text travels in share links as `copy`; the date stays on this device.
+Designs and calendar posts are kept apart. A design is a template: a post tuned the way you like it, to reuse and tweak. A calendar post is something you mean to put out on a day, once or on repeat. One save dialog saves to either or both, and when a design or post is open it can be updated or kept with a copy saved as new.
 
-The Calendar button opens a month view and a list of what is coming up. Planned posts and campaigns sit side by side; choosing a day shows both, with buttons to open, copy the text of, mark as posted, move or remove each post, and to plan a new one. Campaign drafts can be planned in one go from Campaigns, each on a suggested day, and a countdown recounts its days to go when moved. On the day, a reminder appears under the top bar and Calendar shows a count. The plan can be downloaded as an .ics file for any calendar app; unlike the campaign feeds it is a snapshot, because the plan only exists in this browser.
+Under Post text and date, write the words that go with the graphic (the counter shows which platforms it fits) and pick the day, and optionally the time and a repeat (every week, month or year, with an optional end), to post it. Without a date, a post goes on today. Save to calendar keeps every form setting, the text and local copies of every image, so the post can be reopened and changed at any point before the day. The text travels in share links as `copy`; the date stays on this device.
+
+The studio never posts for you. The calendar is a reminder on this device: on the day, download or share the graphic and paste the text yourself. Reminders only appear if they are on, notifications only with the browser's permission, and nothing is sent to any server.
+
+The Calendar button opens a month view and a list of what is coming up. Planned posts and campaigns sit side by side; choosing a day shows both, with buttons to open, copy the text of, download, share (through the device's share sheet), mark as posted, keep as a design, move or delete each post, and to plan a new one. Campaign drafts can be planned in one go from Campaigns, each on a suggested day, and a countdown recounts its days to go when moved. On the day, a reminder appears under the top bar and Calendar shows a count. The plan can be downloaded as an .ics file for any calendar app; unlike the campaign feeds it is a snapshot, because the plan only exists in this browser.
 
 ![Content calendar](docs/screenshots/calendar-dark.png)
 
 ## Campaigns
 
-The studio knows the national and annual campaigns branches post about: Mild Month, Cider and Perry Month, the Good Beer Guide launch, Members' Weekend, Cask Ale Week, Beer Day Britain and more, listed in [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md). Before each one starts (two to six weeks ahead, depending on the campaign) a reminder appears under the top bar so there is time to schedule posts, and another appears while it is on. Each reminder opens the Campaigns panel, where every campaign has ready-made drafts (countdown, launch, last week, thank you) that open in the editor with your branch and default look, the dates and days to go already filled in.
+The studio knows the national and annual campaigns branches post about: Mild Month, Cider and Perry Month, the Good Beer Guide launch, Members' Weekend, Volunteers' Week, Champion Beer of Britain, Heritage Open Days, the Young Members Forum, Cask Ale Week, Beer Day Britain and more, listed in [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md). Before each one starts (two to six weeks ahead, depending on the campaign) a reminder appears under the top bar so there is time to schedule posts, and another appears while it is on. Each reminder opens the Campaigns panel, where every campaign has ready-made drafts (countdown, launch, last week, thank you) that open in the editor with your branch and default look, the dates, days to go and suggested post text already filled in. Plan all drafts as posts adds them to the studio's own content calendar; Save the dates to my calendar app downloads an .ics file for Google, Outlook or Apple Calendar instead.
 
 Reminders can be snoozed, dismissed, muted per campaign, or limited to CAMRA campaigns, beer and pub days or national days in Settings. Turning on system notifications shows them as device notifications too; an installed copy in Chrome or Edge can also check while closed. Everything is worked out on the device from the bundled list.
 
@@ -64,7 +68,7 @@ flowchart LR
 
 ## Data
 
-Saved designs, the content library, the remembered logo and which reminders were dismissed live in this browser's IndexedDB; settings (including campaign reminder settings) in localStorage. Backups are ZIP files with `manifest.json`, `designs.json`, `library.json`, optional `prefs.json` and an `assets/` folder. `seeds/demo.json` holds the sample designs and `seeds/test.json` the edge-case fixtures used by the tests.
+Designs, calendar posts, the content library, the remembered logo and which reminders were dismissed live in this browser's IndexedDB; settings (including campaign reminder settings) in localStorage. Backups are ZIP files with `manifest.json`, `designs.json`, `library.json`, optional `prefs.json` and an `assets/` folder. `seeds/demo.json` holds the sample designs and `seeds/test.json` the edge-case fixtures used by the tests.
 
 ## Screenshots
 

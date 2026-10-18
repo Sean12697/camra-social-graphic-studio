@@ -55,3 +55,19 @@
 | Week view with times | Low | Medium | Proposed |
 | Post directly to social platforms | High | High | Rejected: needs a server and platform accounts; the site stays static |
 | Shared team calendar across devices | High | High | Rejected for now: needs a backend; backups move plans between devices |
+
+## Round 5
+
+| Idea | Value | Effort | Status |
+| --- | --- | --- | --- |
+| Designs as templates, calendar posts as their own kind, one save dialog for either or both | High | Medium | Built |
+| Repeating posts (week, month, year) marked posted day by day | Low | Medium | Built: rare, but cheap once the calendar existed |
+| Download and Share from calendar cards | High | Low | Built |
+| Plain statement that nothing is posted or uploaded, and consent before notifications | High | Low | Built |
+| Pinned header, one-row tabs on phones, resizable panels | High | Low | Built |
+| CAMRA's own dates and voice: Volunteers' Week, Champion Beer of Britain, Heritage Open Days, Young Members Forum | High | Low | Built |
+| National Pub of the Year announcement | Medium | Low | Proposed: January, but no fixed date to rule from |
+| Pub Saving Award and budget lobbying days | Medium | Low | Proposed: dates move every year, better as confirmed one-offs |
+| Templates that remember which fields to leave blank for the next post | Medium | Medium | Proposed |
+| Skip one day of a repeating post | Low | Low | Proposed |
+

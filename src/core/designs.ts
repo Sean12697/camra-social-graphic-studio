@@ -1,11 +1,20 @@
-// The saved-design model and the pure list operations behind the Designs panel.
-// A design is the whole form captured as the same query string a share link
-// uses, plus any uploaded images (which cannot travel in a link) and a small
-// preview thumbnail. Reusing the link format means one serialiser serves share
-// links, saved designs and backups alike.
+// The saved-record model and the pure list operations behind the Designs panel
+// and the content calendar. A record is the whole form captured as the same
+// query string a share link uses, plus any uploaded images (which cannot
+// travel in a link) and a small preview thumbnail. Reusing the link format
+// means one serialiser serves share links, designs, posts and backups alike.
+//
+// Records come in two kinds. A design is a template to reuse: how the user has
+// tuned a post beyond the post type's defaults. A post is something to put out
+// on a day, once or on repeat, and lives on the content calendar.
+
+export type RecordKind = "design" | "post";
+export type Repeat = "week" | "month" | "year";
 
 export interface Design {
   id: string;
+  /** A reusable design (template) or a post on the calendar. Older records without it are posts when they have a date. */
+  kind?: RecordKind;
   name: string;
   /** Post type id, kept alongside params for filtering without parsing. */
   typeId: string;
@@ -31,6 +40,18 @@ export interface Design {
   postedAt?: string | null;
   /** The campaign draft it was planned from, if any. */
   campaign?: { id: string; year: number; draft: string } | null;
+  /** A post that repeats: every week, month or year from postOn. */
+  repeat?: Repeat | null;
+  /** The last day a repeating post can fall on (YYYY-MM-DD), if it ends. */
+  repeatUntil?: string | null;
+  /** The days a repeating post has been marked as posted. */
+  postedDays?: string[] | null;
+}
+
+/** Whether a record is a reusable design or a post on the calendar. */
+export function kindOf(d: Pick<Design, "kind" | "postOn">): RecordKind {
+  if (d.kind === "post" || d.kind === "design") return d.kind;
+  return d.postOn ? "post" : "design";
 }
 
 export interface LibraryItem {
@@ -49,6 +70,8 @@ export type PlanFilter = "" | "planned" | "unplanned" | "posted";
 
 export interface DesignQuery {
   q?: string;
+  /** Only designs or only posts. Recently deleted always shows both. */
+  kind?: RecordKind | "";
   type?: string;
   plan?: PlanFilter;
   sort?: DesignSort;
@@ -87,6 +110,7 @@ export function queryDesigns(list: Design[], q: DesignQuery = {}): Design[] {
   const words = norm(q.q || "").split(/\s+/).filter(Boolean);
   const out = list.filter((d) => {
     if (!!d.deletedAt !== !!q.trash) return false;
+    if (!q.trash && q.kind && kindOf(d) !== q.kind) return false;
     if (q.type && d.typeId !== q.type) return false;
     if (q.plan === "planned" && (!d.postOn || d.postedAt)) return false;
     if (q.plan === "unplanned" && d.postOn) return false;
@@ -125,6 +149,7 @@ export function duplicateDesign(d: Design, existing: Design[], now: Date = new D
     deletedAt: null,
     sample: false,
     postedAt: null,
+    postedDays: null,
   };
 }
 

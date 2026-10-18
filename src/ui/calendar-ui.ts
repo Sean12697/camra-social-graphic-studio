@@ -1,12 +1,14 @@
 // The content calendar: a month grid and a list of planned posts, with the
-// national campaigns alongside. Planned posts are saved designs with a day
-// (and optionally a time) to post them, so they keep every image locally and
-// can be changed right up to the day. Also wires the Post text and date group
-// in the editor.
+// national campaigns alongside. Posts are saved records with a day (and
+// optionally a time and a repeat) to post them, so they keep every image
+// locally and can be changed right up to the day. They are separate from
+// designs, which are templates. Also wires the Post text and date group in
+// the editor. The studio never posts anything itself.
 
 import {
   CAMPAIGNS,
   addMonths,
+  currentPostDay,
   isHm,
   isYmd,
   itemsByDay,
@@ -16,18 +18,22 @@ import {
   planLabel,
   planStatus,
   plannedPosts,
+  postDays,
+  postedOn,
+  repeatLabel,
   retimeParams,
   weekdayHeaders,
   type DayItems,
 } from "../core/calendar.ts";
 import { addDays, daysBetween, longDate, normalisePrefs, rangeLabel, type Occurrence } from "../core/campaigns.ts";
-import type { Design } from "../core/designs.ts";
+import { newId, type Design } from "../core/designs.ts";
 import { byId, copyText, downloadBlob, flashLabel, h } from "./dom.ts";
 import { closeDialog, confirmDialog, openDialog } from "./dialog.ts";
 import { notify } from "./notices.ts";
 import { store } from "./store.ts";
 import * as E from "./editor.ts";
-import { confirmReplace, onDesignsChanged, openDesign, replan, saveCurrent, setCalendarOpener as setDesignsOpener, updateDesigns } from "./designs-ui.ts";
+import { confirmReplace, onDesignsChanged, openDesign, openDesigns, replan, saveCurrent, setCalendarOpener as setDesignsOpener, updateDesigns } from "./designs-ui.ts";
+import { downloadRecord, shareRecord } from "./export.ts";
 import { onPlanned, openCampaigns, refreshCampaigns, setCalendarOpener as setCampaignsOpener, today } from "./campaigns-ui.ts";
 
 declare const __APP_VERSION__: string;
@@ -77,16 +83,21 @@ async function save(items: Design[], msg?: string): Promise<void> {
   refreshAll();
 }
 
-async function markPosted(d: Design, on: boolean): Promise<void> {
-  await save([{ ...d, postedAt: on ? new Date().toISOString() : null, updatedAt: new Date().toISOString() }], on ? "Marked " + d.name + " as posted." : "Marked " + d.name + " as not posted.");
+async function markPosted(d: Design, day: string, on: boolean): Promise<void> {
+  const now = new Date().toISOString();
+  const next: Design = d.repeat
+    ? { ...d, postedDays: on ? Array.from(new Set((d.postedDays || []).concat(day))).sort() : (d.postedDays || []).filter((x) => x !== day), updatedAt: now }
+    : { ...d, postedAt: on ? now : null, updatedAt: now };
+  const when = d.repeat ? " for " + longDate(day) : "";
+  await save([next], on ? "Marked " + d.name + " as posted" + when + "." : "Marked " + d.name + " as not posted" + when + ".");
 }
 
 async function move(d: Design, day: string, time: string | null): Promise<void> {
   if (!isYmd(day)) return void notify("warn", "Pick a date to move it to.");
   const next = replan(d, day, time && isHm(time) ? time : null);
   const daysNote = next.params !== d.params ? " The days to go now count from the new date." : "";
-  await save([next], "Moved " + d.name + " to " + planLabel(next) + "." + daysNote);
-  if (E.state.currentDesignId === d.id) {
+  await save([next], "Moved " + d.name + " to " + planLabel(next) + (d.repeat ? ", repeating from there" : "") + "." + daysNote);
+  if (E.state.currentPostId === d.id) {
     E.el.postOn.value = next.postOn || "";
     E.el.postAt.value = next.postAt || "";
   }
@@ -95,19 +106,19 @@ async function move(d: Design, day: string, time: string | null): Promise<void> 
   render(true);
 }
 
-async function unplan(d: Design): Promise<void> {
-  await save([{ ...replan(d, null), postAt: null }]);
-  if (E.state.currentDesignId === d.id) {
-    E.el.postOn.value = "";
-    E.el.postAt.value = "";
-  }
-  notify("info", "Took " + d.name + " off the calendar. It is still in your designs.", { action: { label: "Undo", run: () => save([d]) } });
+/** Keeps a copy of a post as a design, a template to reuse. The post stays on the calendar. */
+async function keepAsDesign(d: Design): Promise<void> {
+  const now = new Date().toISOString();
+  const copy: Design = { ...d, id: newId("dsn"), kind: "design", createdAt: now, updatedAt: now, postOn: null, postAt: null, postedAt: null, repeat: null, repeatUntil: null, postedDays: null, campaign: null };
+  if (!(await updateDesigns([copy]))) return void notify("error", "Could not save the design: this browser's storage is full.");
+  notify("success", "Saved a copy of " + d.name + " to your designs, ready to reuse.", { action: { label: "View designs", run: () => { closeDialog(dlg()); openDesigns(); } } });
 }
 
 async function trash(d: Design): Promise<void> {
-  const ok = await confirmDialog({ title: "Delete " + d.name + "?", body: "It moves to Recently deleted in your designs, where you can restore it for 30 days.", confirmLabel: "Delete", danger: true });
+  const ok = await confirmDialog({ title: "Delete " + d.name + "?", body: (d.repeat ? "This deletes every day it repeats on. " : "") + "It moves to Recently deleted (in Designs), where you can restore it for 30 days.", confirmLabel: "Delete", danger: true });
   if (!ok) return;
   await save([{ ...d, deletedAt: new Date().toISOString() }]);
+  if (E.state.currentPostId === d.id) E.state.currentPostId = null;
   notify("info", "Moved " + d.name + " to Recently deleted.", { action: { label: "Undo", run: () => save([d]) } });
 }
 
@@ -126,15 +137,18 @@ async function planNew(day: string): Promise<void> {
   E.redrawNow();
   updatePlanNote();
   revealPlan();
-  notify("info", "New post for " + longDate(day) + ". Fill it in and write the post text, then choose Save to calendar.");
+  notify("info", "New post for " + longDate(day) + ". Fill it in or open one of your designs, write the post text, then choose Save to calendar.");
 }
 
 /** Plans the post that is open in the editor for a day. */
 async function planCurrent(day: string): Promise<void> {
-  E.el.postOn.value = day;
+  if (E.el.postOn.value !== day) {
+    E.el.postOn.value = day;
+    E.el.postOn.dispatchEvent(new Event("change"));
+  }
   updatePlanNote();
   closeDialog(dlg());
-  const d = await saveCurrent();
+  const d = await saveCurrent("post");
   if (!d) openCalendar(day);
 }
 
@@ -148,12 +162,12 @@ function revealPlan(): void {
 
 // --- the month grid ---
 
-function chipsFor(items: DayItems | undefined): HTMLElement | null {
+function chipsFor(items: DayItems | undefined, day: string): HTMLElement | null {
   if (!items || (!items.posts.length && !items.campaigns.length)) return null;
   const t = today();
   const all: HTMLElement[] = [];
   items.campaigns.forEach((o) => all.push(h("span", { class: "chip camp " + o.campaign.category }, o.campaign.name)));
-  items.posts.forEach((d) => all.push(h("span", { class: "chip post " + planStatus(d, t) }, (d.postAt ? d.postAt + " " : "") + d.name)));
+  items.posts.forEach((d) => all.push(h("span", { class: "chip post " + planStatus(d, t, day) }, (d.postAt ? d.postAt + " " : "") + d.name)));
   const max = 3;
   const shown = all.slice(0, max);
   if (all.length > max) shown.push(h("span", { class: "chip more" }, "+" + (all.length - max) + " more"));
@@ -188,7 +202,7 @@ function monthView(map: Map<string, DayItems>): HTMLElement {
         { type: "button", class: cls, "data-day": day, "aria-label": dayLabel(day, items), "aria-pressed": day === view.selected ? "true" : "false", tabindex: day === view.selected ? "0" : "-1", onclick: () => select(day) },
         h("span", { class: "num", "aria-hidden": "true" }, String(Number(day.slice(8)))),
         h("span", { class: "dots", "aria-hidden": "true" }, items && items.campaigns.length ? h("i", { class: "dot camp" }) : null, items && items.posts.length ? h("i", { class: "dot post" }) : null),
-        chipsFor(items),
+        chipsFor(items, day),
       );
       tr.append(h("td", { role: "gridcell" }, btn));
     });
@@ -229,32 +243,52 @@ function focusMonth(day: string): void {
 
 // --- one day, and one post ---
 
-function postCard(d: Design): HTMLElement {
+function postCard(d: Design, day: string = currentPostDay(d, today()) || (d.postOn as string)): HTMLElement {
   const t = today();
-  const st = planStatus(d, t);
+  const st = planStatus(d, t, day);
   const copy = new URLSearchParams(d.params).get("copy") || "";
-  const dateIn = h("input", { type: "date", value: d.postOn || "", "aria-label": "New date for " + d.name });
+  const dateIn = h("input", { type: "date", value: d.postOn || "", "aria-label": (d.repeat ? "New first date for " : "New date for ") + d.name });
   const timeIn = h("input", { type: "time", value: d.postAt || "", "aria-label": "New time for " + d.name + " (optional)" });
   const copyBtn = h("button", { type: "button", class: "ghost" }, "Copy post text");
   copyBtn.addEventListener("click", async () => flashLabel(copyBtn, (await copyText(copy)) ? "Copied" : "Copy failed"));
+  const busy = (b: HTMLButtonElement, run: () => Promise<void>) => async () => {
+    b.disabled = true;
+    try {
+      await run();
+    } finally {
+      b.disabled = false;
+    }
+  };
+  const dl = h("button", { type: "button", class: "ghost", "aria-label": "Download the graphics for " + d.name }, "Download");
+  dl.addEventListener("click", busy(dl, () => downloadRecord(d)));
+  const share = h("button", { type: "button", class: "ghost", "aria-label": "Share " + d.name + " with another app" }, "Share");
+  share.addEventListener("click", busy(share, () => shareRecord(d)));
+  const done = postedOn(d, day);
   const statusText = st === "posted" ? "Posted" : st === "overdue" ? "Not posted yet" : st === "today" ? "Post today" : "Planned";
+  const posted = d.repeat ? (done ? " \u00b7 posted" : "") : d.postedAt ? " \u00b7 posted " + longDate(d.postedAt.slice(0, 10)) : "";
   return h(
     "li",
-    { class: "plan-post " + st, "data-design": d.id },
+    { class: "plan-post " + st, "data-design": d.id, "data-day": day },
     d.thumb ? h("img", { src: d.thumb, alt: "", width: 72, height: 72, loading: "lazy" }) : h("span", { class: "thumb-ph", "aria-hidden": "true" }),
     h(
       "div",
       { class: "plan-main" },
-      h("p", { class: "design-name" }, d.name, h("span", { class: "badge plan " + st }, statusText)),
-      h("p", { class: "design-meta" }, planLabel(d) + (d.postedAt ? " \u00b7 posted " + longDate(d.postedAt.slice(0, 10)) : "")),
+      h("p", { class: "design-name" }, d.name, h("span", { class: "badge plan " + st }, statusText), d.repeat ? h("span", { class: "badge" }, "Repeats") : null),
+      h("p", { class: "design-meta" }, planLabel(d, day) + posted + (d.repeat ? " \u00b7 " + repeatLabel(d) : "")),
       copy ? h("p", { class: "plan-copy" }, copy) : h("p", { class: "note" }, "No post text yet. Open it to write some."),
       h(
         "div",
         { class: "design-actions" },
         h("button", { type: "button", class: "btn primary", onclick: () => open(d), "aria-label": "Open " + d.name + " in the editor" }, "Open"),
         copy ? copyBtn : null,
-        h("button", { type: "button", class: "ghost", onclick: () => markPosted(d, !d.postedAt) }, d.postedAt ? "Mark as not posted" : "Mark as posted"),
-        h("button", { type: "button", class: "ghost", onclick: () => unplan(d) }, "Take off calendar"),
+        dl,
+        share,
+      ),
+      h(
+        "div",
+        { class: "design-actions" },
+        h("button", { type: "button", class: "ghost", onclick: () => markPosted(d, day, !done) }, done ? "Mark as not posted" : "Mark as posted"),
+        h("button", { type: "button", class: "ghost", onclick: () => keepAsDesign(d), "aria-label": "Save a copy of " + d.name + " as a design" }, "Save as a design"),
         h("button", { type: "button", class: "ghost", onclick: () => trash(d), "aria-label": "Delete " + d.name }, "Delete"),
       ),
       h(
@@ -288,12 +322,12 @@ function dayPanel(map: Map<string, DayItems>): HTMLElement {
     { class: "cal-day-panel", "aria-labelledby": "calDayTitle" },
     h("h3", { id: "calDayTitle", tabindex: "-1" }, longDate(day) + " " + day.slice(0, 4) + (day === today() ? " (today)" : "")),
     items.campaigns.length ? h("ul", { class: "plan-list" }, ...items.campaigns.map((o) => campaignLine(o, day))) : null,
-    items.posts.length ? h("ul", { class: "plan-list" }, ...items.posts.map(postCard)) : h("p", { class: "note" }, past ? "Nothing was planned for this day." : "Nothing planned for this day yet."),
+    items.posts.length ? h("ul", { class: "plan-list" }, ...items.posts.map((d) => postCard(d, day))) : h("p", { class: "note" }, past ? "Nothing was planned for this day." : "Nothing planned for this day yet."),
     h(
       "div",
       { class: "row-actions" },
       h("button", { type: "button", class: "btn primary", onclick: () => planNew(day) }, "Plan a new post on this day"),
-      h("button", { type: "button", class: "ghost", onclick: () => planCurrent(day) }, E.state.currentDesignId ? "Move the open post to this day" : "Plan the open post on this day"),
+      h("button", { type: "button", class: "ghost", onclick: () => planCurrent(day) }, E.state.currentPostId && store.getDesign(E.state.currentPostId) ? "Move the open post to this day" : "Plan the open post on this day"),
     ),
   );
 }
@@ -304,7 +338,7 @@ function listView(map: Map<string, DayItems>): HTMLElement {
   const t = today();
   const wrap = h("div", { class: "cal-list" });
   const late = plannedPosts(posts()).filter((d) => planStatus(d, t) === "overdue");
-  if (late.length) wrap.append(h("section", { class: "dlg-section" }, h("h3", {}, "Not posted yet"), h("p", { class: "note" }, "Planned for an earlier day and not marked as posted."), h("ul", { class: "plan-list" }, ...late.map(postCard))));
+  if (late.length) wrap.append(h("section", { class: "dlg-section" }, h("h3", {}, "Not posted yet"), h("p", { class: "note" }, "Planned for an earlier day and not marked as posted."), h("ul", { class: "plan-list" }, ...late.map((d) => postCard(d)))));
   const days = Array.from(map.keys()).filter((d) => d >= t).sort();
   let any = false;
   days.forEach((day) => {
@@ -319,12 +353,12 @@ function listView(map: Map<string, DayItems>): HTMLElement {
         { class: "dlg-section cal-list-day" },
         h("h3", {}, longDate(day) + (day.slice(0, 4) !== t.slice(0, 4) ? " " + day.slice(0, 4) : "") + (day === t ? " (today)" : "")),
         camps.length ? h("ul", { class: "plan-list" }, ...camps.map((o) => campaignLine(o, day))) : null,
-        it.posts.length ? h("ul", { class: "plan-list" }, ...it.posts.map(postCard)) : null,
+        it.posts.length ? h("ul", { class: "plan-list" }, ...it.posts.map((d) => postCard(d, day))) : null,
       ),
     );
   });
   if (!any && !late.length) {
-    wrap.append(h("div", { class: "empty" }, h("p", {}, "Nothing planned in the next three months. Plan a post from the editor's Post text and date section, or plan a campaign's drafts in one go from Campaigns."), h("div", { class: "row-actions" }, h("button", { type: "button", class: "btn", onclick: () => { closeDialog(dlg()); openCampaigns(); } }, "Open Campaigns"))));
+    wrap.append(h("div", { class: "empty" }, h("p", {}, "Nothing planned in the next three months. Plan a post from the editor's Post text and date section, or add a campaign's drafts in one go from Campaigns."), h("div", { class: "row-actions" }, h("button", { type: "button", class: "btn", onclick: () => { closeDialog(dlg()); openCampaigns(); } }, "Open Campaigns"))));
   }
   return wrap;
 }
@@ -369,15 +403,16 @@ function render(keepFocus = false): void {
   body.append(h("div", { class: "cal-bar" }, nav, h("fieldset", { class: "cal-mode-wrap" }, h("legend", { class: "sr-only" }, "Calendar view"), seg), h("label", { class: "check", for: showCamp.id }, showCamp, " Show campaigns")));
 
   const planned = plannedPosts(posts());
-  const upcoming = planned.filter((d) => !d.postedAt && (d.postOn as string) >= t).length;
+  const upcoming = planned.filter((d) => postDays(d, t, addDays(t, 366)).some((x) => !postedOn(d, x))).length;
   const late = planned.filter((d) => planStatus(d, t) === "overdue").length;
   body.append(
     h(
       "p",
       { class: "note" },
-      (planned.length ? n(upcoming, "post") + " coming up" + (late ? ", " + late + " not marked as posted" : "") + ". " : "Nothing planned yet. ") + "Planned posts keep their images on this device, so you can change them right up to the day. ",
-      planned.length ? h("button", { type: "button", class: "linkish", onclick: () => downloadPlan() }, "Add my plan to a calendar app (.ics)") : null,
+      (planned.length ? n(upcoming, "post") + " coming up" + (late ? ", " + late + " not marked as posted" : "") + ". " : "Nothing planned yet. ") + "Posts keep their images on this device, so you can change them right up to the day. ",
+      planned.length ? h("button", { type: "button", class: "linkish", onclick: () => downloadPlan() }, "Download my plan for Google, Outlook or Apple Calendar (.ics)") : null,
     ),
+    h("p", { class: "note privacy-note" }, h("strong", {}, "The studio never posts for you. "), "This calendar is a reminder on this device only: on the day, download or share the graphic and paste the post text yourself. Nothing is sent to any server."),
   );
 
   if (view.mode === "month") {
@@ -428,7 +463,7 @@ function refreshAll(): void {
 
 function renderBadge(): void {
   const t = today();
-  const due = plannedPosts(posts()).filter((d) => !d.postedAt && d.postOn === t).length;
+  const due = plannedPosts(posts()).filter((d) => postDays(d, t, t).some((x) => !postedOn(d, x))).length;
   const btn = byId("calendarBtn");
   const badge = btn.querySelector<HTMLElement>(".count-badge");
   if (badge) {
@@ -445,14 +480,16 @@ let lastDay = "";
 function updatePlanNote(): void {
   const day = E.el.postOn.value;
   if (!isYmd(day)) {
-    E.el.planNote.textContent = "Not on the calendar. Pick a date to plan it.";
+    E.el.planNote.textContent = "No date yet. Save it to the calendar and it is planned for today, or pick a date first.";
     return;
   }
   const on = itemsByDay([], shownCampaigns(), day, day).get(day);
   const camp = on && on.campaigns.length ? " That is during " + on.campaigns.map((o) => o.campaign.name).join(" and ") + "." : "";
   const t = today();
   const when = day < t ? " That date has passed." : day === t ? " That is today." : " That is in " + n(daysBetween(t, day), "day") + ".";
-  E.el.planNote.textContent = longDate(day) + " " + day.slice(0, 4) + "." + when + camp;
+  const rep = E.readRepeat();
+  const repText = rep ? " " + repeatLabel({ repeat: rep, repeatUntil: isYmd(E.el.postUntil.value) ? E.el.postUntil.value : null }) + "." : "";
+  E.el.planNote.textContent = longDate(day) + " " + day.slice(0, 4) + "." + when + repText + camp;
 }
 
 // A countdown planned from a campaign keeps its days to go in step with the date.
@@ -488,21 +525,24 @@ function wireEditor(): void {
     updatePlanNote();
     E.redraw();
   });
+  const onRepeat = () => {
+    E.syncRepeat();
+    E.state.dirty = true;
+    updatePlanNote();
+  };
+  E.el.postRepeat.addEventListener("change", onRepeat);
+  E.el.postUntil.addEventListener("change", onRepeat);
   byId("clearPlan").addEventListener("click", () => {
     E.el.postOn.value = "";
     E.el.postAt.value = "";
+    E.el.postRepeat.value = "";
+    E.el.postUntil.value = "";
+    E.syncRepeat();
     E.state.dirty = true;
     updatePlanNote();
     E.redraw();
   });
-  byId("planSave").addEventListener("click", async () => {
-    if (!isYmd(E.el.postOn.value)) {
-      notify("info", "Pick the date you mean to post it first.");
-      E.el.postOn.focus();
-      return;
-    }
-    await saveCurrent();
-  });
+  byId("planSave").addEventListener("click", () => saveCurrent("post"));
   byId("openCalendar").addEventListener("click", () => openCalendar(isYmd(E.el.postOn.value) ? E.el.postOn.value : undefined));
   // Restoring a design or using a draft sets the fields directly.
   E.onRedraw(() => {

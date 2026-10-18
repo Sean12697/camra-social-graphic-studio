@@ -11,6 +11,8 @@ import { applyTheme, type ThemePref } from "./theme.ts";
 import { exportAll, pickImportFile } from "./backup-ui.ts";
 import { startTips } from "./tips.ts";
 import * as E from "./editor.ts";
+import { panelsCustomised, resetPanels } from "./panels.ts";
+import { kindOf } from "../core/designs.ts";
 import { CATEGORIES, LEAD_OPTIONS } from "../core/campaigns.ts";
 import { calendarPrefs, setCalendarPrefs } from "./calendar-ui.ts";
 import { backgroundActive, getPrefs as campaignPrefs, openCampaigns, refreshCampaigns, resetReminders, setPrefs as setCampaignPrefs, setSystem, systemSupported } from "./campaigns-ui.ts";
@@ -49,6 +51,9 @@ async function render(): Promise<void> {
         applyTheme(v as ThemePref);
       }),
       h("p", { class: "note" }, "Changes the studio only. Graphics always use the CAMRA brand colours."),
+      panelsCustomised()
+        ? h("div", { class: "row-actions" }, h("button", { type: "button", class: "ghost", onclick: () => { resetPanels(); notify("info", "The side panels are back to their standard widths."); render(); } }, "Reset the panel widths"))
+        : h("p", { class: "note" }, "On a wide screen, drag the dividers either side of the preview to widen the panels."),
     ),
   );
 
@@ -131,7 +136,8 @@ async function render(): Promise<void> {
       "Content calendar",
       radioGroup("weekStartPref", "Weeks start on", [["1", "Monday"], ["0", "Sunday"]], String(calp.weekStart), (v) => setCalendarPrefs({ weekStart: v === "0" ? 0 : 1 })),
       h("label", { class: "check", for: postRem.id }, postRem, " Remind me on the day a planned post is due"),
-      h("p", { class: "note" }, "Planned posts are saved designs with a date, so they are included in backups."),
+      h("p", { class: "note" }, "Calendar posts are kept separately from your designs and both are included in backups."),
+      h("p", { class: "note privacy-note" }, h("strong", {}, "The studio never posts for you. "), "The calendar only keeps your posts on this device so you can come back to them, and reminds you if you turn reminders on. Everything stays in this browser: nothing is sent to any server."),
     ),
   );
 
@@ -150,7 +156,7 @@ async function render(): Promise<void> {
   const library = store.getLibrary();
   const est = await store.estimate();
   const persisted = await store.persisted();
-  const usage = h("p", { class: "note" }, (est ? "Using " + formatBytes(est.usage) + (est.quota ? " of about " + formatBytes(est.quota) + " available" : "") + ". " : "") + designs.filter((d) => !d.deletedAt).length + " saved designs, " + designs.filter((d) => d.deletedAt).length + " recently deleted, " + library.length + " library items. Stored in " + (store.kind === "indexeddb" ? "this browser's database" : "this browser's local storage") + " only; nothing is uploaded.");
+  const usage = h("p", { class: "note" }, (est ? "Using " + formatBytes(est.usage) + (est.quota ? " of about " + formatBytes(est.quota) + " available" : "") + ". " : "") + designs.filter((d) => !d.deletedAt && kindOf(d) === "design").length + " designs, " + designs.filter((d) => !d.deletedAt && kindOf(d) === "post").length + " calendar posts, " + designs.filter((d) => d.deletedAt).length + " recently deleted, " + library.length + " library items. Stored in " + (store.kind === "indexeddb" ? "this browser's database" : "this browser's local storage") + " only; nothing is uploaded.");
   const choice = { designs: true, trash: false, library: true, prefs: true };
   const cbx = (label: string, key: keyof typeof choice) => {
     const cb = h("input", { type: "checkbox" });
@@ -168,8 +174,8 @@ async function render(): Promise<void> {
           ? h("p", { class: "note" }, "The browser has agreed to keep this data even when space runs low.")
           : null,
       h("p", {}, "Back up to a file you can import on another browser or device."),
-      cbx("Saved designs", "designs"),
-      cbx("Include recently deleted designs", "trash"),
+      cbx("Designs and calendar posts", "designs"),
+      cbx("Include recently deleted ones", "trash"),
       cbx("Content library", "library"),
       cbx("Settings and remembered logo", "prefs"),
       h("div", { class: "row-actions" },
@@ -184,7 +190,7 @@ async function render(): Promise<void> {
             const n = designs.length;
             const ok = await confirmDialog({
               title: "Delete everything in this browser?",
-              body: "This permanently deletes " + n + (n === 1 ? " design" : " designs") + " (including recently deleted), " + library.length + " library items, your settings and the remembered logo. Download a backup first if you might want them. This cannot be undone.",
+              body: "This permanently deletes " + n + (n === 1 ? " design or post" : " designs and posts") + " (including recently deleted), " + library.length + " library items, your settings and the remembered logo. Download a backup first if you might want them. This cannot be undone.",
               confirmLabel: "Delete everything",
               danger: true,
             });

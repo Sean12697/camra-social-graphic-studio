@@ -50,8 +50,9 @@ test("the icon picker, position, pattern and colour", async ({ page }) => {
   await page.locator("#iconPos").selectOption("pattern");
   await page.locator("#iconColor").selectOption("white");
   await page.locator("#designsBtn").click();
-  await page.getByRole("button", { name: "Save current design" }).click();
-  await page.locator("#promptOk").click();
+  await page.getByRole("button", { name: "Save the current post as a design" }).click();
+  await expect(page.locator("#saveToDesigns")).toBeChecked();
+  await page.locator("#saveOk").click();
   await page.keyboard.press("Escape");
   await page.locator("#designsBtn").click();
   await page.locator("#designsDialog").getByRole("button", { name: /^Open / }).first().click();
@@ -67,9 +68,10 @@ test("print sizes export at 300 dpi", async ({ page }) => {
   expect(d.suggestedFilename()).toBe("festival-print-a5-1748x2480.png");
 });
 
-test("Ctrl+S saves the design", async ({ page }) => {
+test("Ctrl+S opens the save dialog", async ({ page }) => {
   await openStudio(page);
   await page.locator("#postType").focus();
   await page.keyboard.press("Control+s");
-  await expect(page.locator("#promptDialog")).toBeVisible();
+  await expect(page.locator("#saveDialog")).toBeVisible();
+  await expect(page.locator("#saveToCal")).toBeChecked();
 });

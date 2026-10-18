@@ -37,3 +37,19 @@
 .trash-toggle{margin-top:var(--s3);}
 .dlg-body > .row-actions{margin:0 0 var(--s3);}
 .design-actions .ghost,.design-actions .btn{min-height:var(--target);}
+
+/* The save dialog: calendar, designs or both */
+.save-targets{display:grid;gap:var(--s2);border:0;padding:0;margin:var(--s3) 0 0;}
+.save-targets > legend{font-weight:700;margin-bottom:var(--s2);}
+.save-target{border:1px solid var(--line);border-radius:var(--radius);padding:var(--s2) var(--s3);background:var(--field);}
+.save-target > .check{align-items:flex-start;padding-top:6px;}
+.save-target > .check input{margin-top:1px;}
+.note-inline{display:block;font-size:13px;color:var(--subtle);font-weight:400;margin-top:2px;}
+.save-sub{margin:var(--s2) 0 var(--s1) 28px;display:grid;gap:var(--s2);min-width:0;}
+.save-targets,.save-target{min-width:0;}
+@media (max-width:480px){.save-sub{margin-left:0;}.save-target{padding:var(--s2);}}
+.save-sub[hidden]{display:none;}
+.save-mode{border:0;padding:0;margin:0;display:grid;gap:0;min-width:0;}
+.save-mode[hidden]{display:none;}
+.save-mode .check{min-height:36px;}
+.privacy-note{border-left:3px solid var(--accent);padding:2px 0 2px 10px;margin:var(--s3) 0 0;}

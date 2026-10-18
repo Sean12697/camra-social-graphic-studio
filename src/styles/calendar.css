@@ -1,12 +1,14 @@
 /* The content calendar dialog and the Post text and date group. */
 .ico-calendar{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M4 1h2v2h4V1h2v2h2v12H2V3h2zM4 7v6h8V7z'/%3E%3Cpath d='M5 8h2v2H5zM9 8h2v2H9zM5 11h2v1H5z'/%3E%3C/svg%3E");}
 .ico-campaigns{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 6h3l6-4v12l-6-4H2zM12.5 5.5a3.5 3.5 0 0 1 0 5z'/%3E%3C/svg%3E");}
-.topnav{flex-wrap:wrap;}
 
-.plan-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--s2);}
-.plan-cell{display:flex;flex-direction:column;gap:4px;}
+.plan-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--s2);}
+.plan-row + .plan-row{margin-top:var(--s2);}
+.plan-cell{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.plan-cell[hidden]{display:none;}
 .plan-cell label{font-size:13px;color:var(--subtle);}
 .plan-cell input,.plan-move input{min-height:var(--target);font-size:16px;padding:6px 10px;}
+.plan-cell input,.plan-cell select{width:100%;min-width:0;}
 .copy-count{margin:4px 0 0;}
 .copy-count.over{color:var(--danger);}
 #postCopy{min-height:110px;}
@@ -79,7 +81,9 @@
 .cal-day-panel .plan-post{grid-template-columns:52px 1fr;gap:var(--s2);}
 .cal-day-panel .plan-post img,.cal-day-panel .plan-post .thumb-ph{width:52px;height:52px;}
 .cal-day-panel .design-name{white-space:normal;}
-.cal-day-panel .design-actions button{padding:4px 10px;font-size:13px;}
+.cal-day-panel .design-actions button{padding:4px 9px;font-size:13px;}
+.plan-main .design-actions + .design-actions{margin-top:6px;}
 .cal-day-panel .plan-move input{max-width:none;flex:1 1 110px;}
 .cal-day-panel .row-actions .btn,.cal-day-panel .row-actions .ghost{flex:1 1 auto;}
 @media (min-width:1000px){ .cal-layout{grid-template-columns:minmax(0,1fr) 380px;} }
+.cal-day-panel .design-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));}

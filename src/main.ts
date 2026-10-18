@@ -16,6 +16,7 @@ import { initCalendar, refreshCalendar } from "./ui/calendar-ui.ts";
 import { onDataChanged } from "./ui/backup-ui.ts";
 import { initTips, startTips } from "./ui/tips.ts";
 import { registerServiceWorker } from "./ui/sw-register.ts";
+import { initPanels } from "./ui/panels.ts";
 
 async function boot(): Promise<void> {
   initNotices(byId("notices"), byId("alerts"));
@@ -24,6 +25,7 @@ async function boot(): Promise<void> {
   const prefs = store.getPrefs();
   applyTheme(prefs.theme);
   watchSystemTheme(() => store.getPrefs().theme);
+  initPanels();
   const result = await initEditor();
   initExport();
   await initDesigns();
@@ -32,7 +34,7 @@ async function boot(): Promise<void> {
   initCampaigns();
   initCalendar();
   initTips();
-  // Ctrl or Cmd + S saves the design instead of the browser's "save page".
+  // Ctrl or Cmd + S saves (to the calendar, or over the open design) instead of the browser's "save page".
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "s") {
       e.preventDefault();

@@ -3,8 +3,8 @@
 // design to Recently deleted, where it can be restored for TRASH_DAYS days.
 
 import { TEMPLATES, templateById } from "../core/templates.ts";
-import { defaultDesignName, duplicateDesign, newId, purgeExpired, queryDesigns, TRASH_DAYS, type Design, type DesignSort, type PlanFilter } from "../core/designs.ts";
-import { planLabel, planStatus, retimeParams, todayYmd } from "../core/calendar.ts";
+import { defaultDesignName, duplicateDesign, kindOf, newId, purgeExpired, queryDesigns, TRASH_DAYS, type Design, type DesignSort, type Repeat } from "../core/designs.ts";
+import { isHm, isYmd, planLabel, repeatLabel, retimeParams, todayYmd } from "../core/calendar.ts";
 import { cleanDesign } from "../core/bundle.ts";
 import { byId, h, option, relativeTime } from "./dom.ts";
 import { closeDialog, confirmDialog, openDialog, promptDialog } from "./dialog.ts";
@@ -15,7 +15,7 @@ import { exportSelection, pickImportFile } from "./backup-ui.ts";
 import demoSeed from "../../seeds/demo.json";
 
 const dlg = () => byId<HTMLDialogElement>("designsDialog");
-const view = { q: "", type: "", plan: "" as PlanFilter, sort: "updated" as DesignSort, trash: false, selected: new Set<string>() };
+const view = { q: "", type: "", sort: "updated" as DesignSort, trash: false, selected: new Set<string>() };
 const changed: Array<() => void> = [];
 /** Called whenever saved designs change from this panel, so the calendar can follow. */
 export function onDesignsChanged(fn: () => void): void {
@@ -30,49 +30,227 @@ function typeLabel(id: string): string {
   return t ? t.label.replace(/\s*\(.*\)$/, "") : "Post";
 }
 
-/** Saves the current form, as a new design or over the one it was opened from. */
-export async function saveCurrent(): Promise<Design | null> {
-  const layout = E.buildLayout();
-  const current = E.state.currentDesignId ? store.getDesign(E.state.currentDesignId) : undefined;
-  const suggested = current && !current.deletedAt ? current.name : defaultDesignName(layout.title, E.currentTemplate().label);
-  const snap = E.captureForm();
-  const when = snap.postOn ? " It is planned for " + planLabel({ postOn: snap.postOn, postAt: snap.postAt } as Design) + "." : "";
-  const res = await promptDialog(
-    current && !current.deletedAt
-      ? { title: snap.postOn ? "Save planned post" : "Save design", label: "Design name", value: suggested, confirmLabel: "Update this design", secondaryLabel: "Save as a new design", note: when }
-      : { title: snap.postOn ? "Save planned post" : "Save design", label: "Design name", value: suggested, confirmLabel: snap.postOn ? "Save to calendar" : "Save design", note: when },
-  );
-  if (!res) return null;
-  const now = new Date().toISOString();
-  const update = !!(current && !current.deletedAt && !res.secondary);
-  const d: Design = {
-    id: update && current ? current.id : newId("dsn"),
-    name: res.value,
-    typeId: E.currentTemplate().id,
-    params: snap.params,
-    photo: snap.photo,
-    logo: snap.logo,
-    thumb: E.thumbnail(),
-    createdAt: update && current ? current.createdAt : now,
-    updatedAt: now,
-    deletedAt: null,
-    postOn: snap.postOn || null,
-    postAt: snap.postAt || null,
-    // Moving a post to another day means it has not been posted yet.
-    postedAt: update && current && current.postedAt && current.postOn === snap.postOn ? current.postedAt : null,
-    campaign: snap.campaign || null,
+/** Where a save starts: the calendar, designs, or whichever the open record is. */
+export type SaveTarget = "post" | "design" | "auto";
+
+interface SaveChoice {
+  name: string;
+  toPost: boolean;
+  toDesign: boolean;
+  postNew: boolean;
+  designNew: boolean;
+  postOn: string;
+  postAt: string | null;
+  repeat: Repeat | null;
+  repeatUntil: string | null;
+}
+
+function liveRecord(id: string | null): Design | undefined {
+  const d = id ? store.getDesign(id) : undefined;
+  return d && !d.deletedAt ? d : undefined;
+}
+
+function readRepeatSel(sel: HTMLSelectElement): Repeat | null {
+  const v = sel.value;
+  return v === "week" || v === "month" || v === "year" ? v : null;
+}
+
+/**
+ * The save dialog. Designs are templates to reuse; the calendar holds posts
+ * meant for a day. Either or both can be ticked, and an open design or post
+ * can be updated or kept with a copy saved as new.
+ */
+function saveDialog(o: { target: "post" | "design"; post?: Design; design?: Design; name: string }): Promise<SaveChoice | null> {
+  const d = byId<HTMLDialogElement>("saveDialog");
+  const form = byId<HTMLFormElement>("saveForm");
+  const name = byId<HTMLInputElement>("saveName");
+  const toCal = byId<HTMLInputElement>("saveToCal");
+  const toDes = byId<HTMLInputElement>("saveToDesigns");
+  const on = byId<HTMLInputElement>("saveOn");
+  const at = byId<HTMLInputElement>("saveAt");
+  const rep = byId<HTMLSelectElement>("saveRepeat");
+  const until = byId<HTMLInputElement>("saveUntil");
+  const ok = byId<HTMLButtonElement>("saveOk");
+  const nameErr = byId("saveNameError");
+  const targetErr = byId("saveTargetError");
+  const postMode = byId("savePostMode");
+  const designMode = byId("saveDesignMode");
+  const radio = (group: string, v: string) => form.querySelector<HTMLInputElement>('input[name="' + group + '"][value="' + v + '"]') as HTMLInputElement;
+
+  name.value = o.name;
+  toCal.checked = o.target === "post";
+  toDes.checked = o.target === "design";
+  on.value = isYmd(E.el.postOn.value) ? E.el.postOn.value : todayYmd();
+  at.value = isHm(E.el.postAt.value) ? E.el.postAt.value : "";
+  rep.value = E.el.postRepeat.value;
+  until.value = E.el.postUntil.value;
+  postMode.hidden = !o.post;
+  designMode.hidden = !o.design;
+  radio("savePostMode", "update").checked = true;
+  radio("saveDesignMode", "update").checked = true;
+  if (o.post) byId("savePostUpdateLabel").textContent = "Update " + o.post.name;
+  if (o.design) byId("saveDesignUpdateLabel").textContent = "Update " + o.design.name;
+  [nameErr, targetErr].forEach((e) => (e.textContent = ""));
+  name.removeAttribute("aria-invalid");
+
+  const sync = () => {
+    byId("saveCalOpts").hidden = !toCal.checked;
+    byId("saveDesignOpts").hidden = !toDes.checked || !o.design;
+    byId("saveUntilWrap").hidden = !readRepeatSel(rep);
+    const postUpd = !!o.post && radio("savePostMode", "update").checked;
+    const desUpd = !!o.design && radio("saveDesignMode", "update").checked;
+    const t = toCal.checked && toDes.checked ? "Save to the calendar and designs" : toCal.checked ? "Save to the calendar" : toDes.checked ? "Save as a design" : "Save";
+    byId("saveTitle").textContent = t;
+    ok.textContent = toCal.checked && toDes.checked ? "Save to both" : toCal.checked ? (postUpd ? "Update the post" : "Save to calendar") : toDes.checked ? (desUpd ? "Update the design" : "Save design") : "Save";
+    if (toCal.checked || toDes.checked) targetErr.textContent = "";
   };
-  if (!(await store.putDesigns([d]))) {
-    notify("error", "Could not save: this browser's storage is full. Delete some saved designs or library items (Settings shows how much is used), then try again.");
+  sync();
+
+  return new Promise((resolve) => {
+    let result: SaveChoice | null = null;
+    const onSubmit = (e: Event) => {
+      e.preventDefault();
+      const v = name.value.trim();
+      if (!v) {
+        nameErr.textContent = "Give it a name, for example the pub or event.";
+        name.setAttribute("aria-invalid", "true");
+        name.focus();
+        return;
+      }
+      if (!toCal.checked && !toDes.checked) {
+        targetErr.textContent = "Tick the calendar, designs or both.";
+        toCal.focus();
+        return;
+      }
+      const day = isYmd(on.value) ? on.value : todayYmd();
+      const r = readRepeatSel(rep);
+      if (toCal.checked && r && isYmd(until.value) && until.value < day) {
+        targetErr.textContent = "The repeat ends before the first day. Pick a later end date, or clear it.";
+        until.focus();
+        return;
+      }
+      result = {
+        name: v.slice(0, 200),
+        toPost: toCal.checked,
+        toDesign: toDes.checked,
+        postNew: !o.post || radio("savePostMode", "new").checked,
+        designNew: !o.design || radio("saveDesignMode", "new").checked,
+        postOn: day,
+        postAt: isHm(at.value) ? at.value : null,
+        repeat: r,
+        repeatUntil: r && isYmd(until.value) ? until.value : null,
+      };
+      closeDialog(d);
+    };
+    const onClose = () => {
+      form.removeEventListener("submit", onSubmit);
+      form.removeEventListener("change", sync);
+      d.removeEventListener("close", onClose);
+      resolve(result);
+    };
+    form.addEventListener("submit", onSubmit);
+    form.addEventListener("change", sync);
+    d.addEventListener("close", onClose);
+    openDialog(d, name);
+    name.select();
+  });
+}
+
+/** Writes the chosen day back to the editor, so campaign countdowns follow it. */
+function applyPlan(c: SaveChoice): void {
+  if (E.el.postOn.value !== c.postOn) {
+    E.el.postOn.value = c.postOn;
+    E.el.postOn.dispatchEvent(new Event("change"));
+  }
+  E.el.postAt.value = c.postAt || "";
+  E.el.postRepeat.value = c.repeat || "";
+  E.el.postUntil.value = c.repeatUntil || "";
+  E.syncRepeat();
+}
+
+/**
+ * Saves the current form: to the calendar as a post, to designs as a
+ * template, or both. "auto" follows what is open: a post, else a design,
+ * else the calendar.
+ */
+export async function saveCurrent(target: SaveTarget = "auto"): Promise<Design | null> {
+  const post = liveRecord(E.state.currentPostId);
+  const design = liveRecord(E.state.currentDesignId);
+  const t: "post" | "design" = target === "auto" ? (post ? "post" : design ? "design" : "post") : target;
+  const fallback = defaultDesignName(E.buildLayout().title, E.currentTemplate().label);
+  const choice = await saveDialog({ target: t, post, design, name: (t === "post" ? post && post.name : design && design.name) || fallback });
+  if (!choice) return null;
+  if (choice.toPost) applyPlan(choice);
+  const snap = E.captureForm();
+  const thumb = E.thumbnail();
+  const now = new Date().toISOString();
+  const out: Design[] = [];
+  let savedPost: Design | null = null;
+  let savedDesign: Design | null = null;
+  if (choice.toPost) {
+    const was = choice.postNew ? undefined : post;
+    const sameDay = !!(was && was.postOn === choice.postOn && !choice.repeat);
+    savedPost = {
+      id: was ? was.id : newId("pst"),
+      kind: "post",
+      name: choice.name,
+      typeId: E.currentTemplate().id,
+      params: snap.params,
+      photo: snap.photo,
+      logo: snap.logo,
+      thumb,
+      createdAt: was ? was.createdAt : now,
+      updatedAt: now,
+      deletedAt: null,
+      postOn: choice.postOn,
+      postAt: choice.postAt,
+      repeat: choice.repeat,
+      repeatUntil: choice.repeatUntil,
+      // Moving a one-off post to another day means it has not been posted yet.
+      postedAt: sameDay && was ? was.postedAt || null : null,
+      postedDays: choice.repeat && was && was.repeat ? was.postedDays || null : null,
+      campaign: snap.campaign || null,
+    };
+    out.push(savedPost);
+  }
+  if (choice.toDesign) {
+    const was = choice.designNew ? undefined : design;
+    savedDesign = {
+      id: was ? was.id : newId("dsn"),
+      kind: "design",
+      name: choice.name,
+      typeId: E.currentTemplate().id,
+      params: snap.params,
+      photo: snap.photo,
+      logo: snap.logo,
+      thumb,
+      createdAt: was ? was.createdAt : now,
+      updatedAt: now,
+      deletedAt: null,
+      postOn: null,
+      postAt: null,
+      postedAt: null,
+      campaign: null,
+    };
+    out.push(savedDesign);
+  }
+  if (!(await store.putDesigns(out))) {
+    notify("error", "Could not save: this browser's storage is full. Delete some saved designs, posts or library items (Settings shows how much is used), then try again.");
     return null;
   }
-  E.state.currentDesignId = d.id;
+  if (savedPost) E.state.currentPostId = savedPost.id;
+  if (savedDesign) E.state.currentDesignId = savedDesign.id;
   E.state.dirty = false;
-  const planned = d.postOn ? " Planned for " + planLabel(d) + "." : "";
-  notify("success", (update ? "Updated " : "Saved ") + d.name + "." + planned, { action: d.postOn ? { label: "Open calendar", run: () => openCalendarHook(d.postOn as string) } : { label: "View designs", run: openDesigns } });
+  const verb = (rec: Design | null, was: Design | undefined, isNew: boolean) => (rec && was && !isNew ? "Updated" : "Saved");
+  let msg: string;
+  if (savedPost && savedDesign) msg = "Saved " + choice.name + " to the calendar for " + planLabel(savedPost) + " and to your designs.";
+  else if (savedPost) msg = verb(savedPost, post, choice.postNew) + " " + choice.name + " in the calendar for " + planLabel(savedPost) + (savedPost.repeat ? ", " + repeatLabel(savedPost).toLowerCase() : "") + ".";
+  else msg = verb(savedDesign, design, choice.designNew) + " the design " + choice.name + ".";
+  const day = savedPost ? savedPost.postOn : null;
+  notify("success", msg, { action: day ? { label: "Open calendar", run: () => openCalendarHook(day) } : { label: "View designs", run: openDesigns } });
   if (dlg().open) render();
   emitChanged();
-  return d;
+  return savedPost || savedDesign;
 }
 
 let openCalendarHook: (day: string) => void = () => undefined;
@@ -100,7 +278,7 @@ export async function confirmReplace(): Promise<boolean> {
   if (!E.state.dirty) return true;
   return confirmDialog({
     title: "Replace the current post?",
-    body: "You have changes that are not saved as a design. Opening another design replaces them.",
+    body: "You have changes that are not saved. Opening something else replaces them.",
     confirmLabel: "Replace it",
     danger: true,
   });
@@ -108,11 +286,13 @@ export async function confirmReplace(): Promise<boolean> {
 
 export async function openDesign(d: Design): Promise<boolean> {
   if (!(await confirmReplace())) return false;
-  await E.restoreForm({ params: d.params, photo: d.photo || null, logo: d.logo || null, postOn: d.postOn, postAt: d.postAt, campaign: d.campaign });
-  E.state.currentDesignId = d.sample ? null : d.id;
+  const post = kindOf(d) === "post";
+  await E.restoreForm(post ? { params: d.params, photo: d.photo || null, logo: d.logo || null, postOn: d.postOn, postAt: d.postAt, repeat: d.repeat, repeatUntil: d.repeatUntil, campaign: d.campaign } : { params: d.params, photo: d.photo || null, logo: d.logo || null });
+  E.state.currentDesignId = post || d.sample ? null : d.id;
+  E.state.currentPostId = post ? d.id : null;
   E.state.dirty = false;
   closeDialog(dlg());
-  notify("info", "Opened " + d.name + ".");
+  notify("info", post ? "Opened the post " + d.name + ". Save keeps your changes in the calendar." : "Opened the design " + d.name + ". Change it for today's post and save it to the calendar, or save it back as a design.");
   return true;
 }
 
@@ -126,7 +306,7 @@ export async function newPost(): Promise<void> {
 }
 
 async function rename(d: Design): Promise<void> {
-  const res = await promptDialog({ title: "Rename design", label: "Design name", value: d.name, confirmLabel: "Rename" });
+  const res = await promptDialog({ title: kindOf(d) === "post" ? "Rename post" : "Rename design", label: "Name", value: d.name, confirmLabel: "Rename" });
   if (!res || res.value === d.name) return;
   await store.putDesigns([{ ...d, name: res.value, updatedAt: new Date().toISOString() }]);
   emitChanged();
@@ -148,8 +328,9 @@ async function moveToTrash(items: Design[]): Promise<void> {
   emitChanged();
   items.forEach((d) => view.selected.delete(d.id));
   if (items.some((d) => d.id === E.state.currentDesignId)) E.state.currentDesignId = null;
+  if (items.some((d) => d.id === E.state.currentPostId)) E.state.currentPostId = null;
   render();
-  const what = items.length === 1 ? items[0].name : items.length + " designs";
+  const what = items.length === 1 ? items[0].name : items.length + (items.every((d) => kindOf(d) === "post") ? " posts" : " designs");
   notify("info", "Moved " + what + " to Recently deleted.", {
     action: {
       label: "Undo",
@@ -226,8 +407,8 @@ function designCard(d: Design): HTMLElement {
   });
   const thumb = d.thumb ? h("img", { src: d.thumb, alt: "", width: 72, height: 72, loading: "lazy" }) : h("span", { class: "thumb-ph", "aria-hidden": "true" });
   const when = view.trash && d.deletedAt ? "Deleted " + relativeTime(d.deletedAt) : "Updated " + relativeTime(d.updatedAt);
-  const st = planStatus(d, todayYmd());
-  const planBadge = st === "unplanned" ? null : h("span", { class: "badge plan " + st }, st === "posted" ? "Posted" : st === "overdue" ? "Not posted yet" : st === "today" ? "Post today" : "Planned");
+  const isPost = kindOf(d) === "post";
+  const planBadge = isPost ? h("span", { class: "badge plan" }, "Calendar post") : null;
   const actions = view.trash
     ? [
         h("button", { type: "button", class: "btn", onclick: () => restore([d]) }, "Restore"),
@@ -248,7 +429,7 @@ function designCard(d: Design): HTMLElement {
       "div",
       { class: "design-main" },
       h("p", { class: "design-name", title: d.name }, d.name, d.sample ? h("span", { class: "badge" }, "Sample") : null, d.id === E.state.currentDesignId ? h("span", { class: "badge" }, "Open") : null, planBadge),
-      h("p", { class: "design-meta" }, typeLabel(d.typeId) + " \u00b7 " + (d.postOn ? planLabel(d) + " \u00b7 " : "") + when),
+      h("p", { class: "design-meta" }, typeLabel(d.typeId) + " \u00b7 " + (isPost && d.postOn ? planLabel(d) + (d.repeat ? " (" + repeatLabel(d).toLowerCase() + ")" : "") + " \u00b7 " : "") + when),
       h("div", { class: "design-actions" }, ...actions),
     ),
   );
@@ -257,8 +438,8 @@ function designCard(d: Design): HTMLElement {
 function render(): void {
   const body = byId("designsBody");
   const all = store.getDesigns();
+  const list = queryDesigns(all, { ...view, kind: "design" });
   const trashCount = all.filter((d) => d.deletedAt).length;
-  const list = queryDesigns(all, view);
   const liveIds = new Set(list.map((d) => d.id));
   view.selected.forEach((id) => {
     if (!liveIds.has(id)) view.selected.delete(id);
@@ -269,7 +450,7 @@ function render(): void {
   const top = h(
     "div",
     { class: "row-actions" },
-    h("button", { type: "button", class: "btn primary", onclick: () => saveCurrent() }, E.state.currentDesignId ? "Save changes" : "Save current design"),
+    h("button", { type: "button", class: "btn primary", onclick: () => saveCurrent("design") }, liveRecord(E.state.currentDesignId) ? "Save changes to the open design" : "Save the current post as a design"),
     h("button", { type: "button", class: "ghost", onclick: () => newPost() }, "Start a new post"),
     h("button", { type: "button", class: "ghost", onclick: () => pickImportFile() }, "Import a backup"),
   );
@@ -286,23 +467,19 @@ function render(): void {
     view.type = type.value;
     render();
   });
-  const plan = h("select", { id: "designPlan", "aria-label": "Filter by calendar" }, option("", "Planned or not"), option("planned", "Planned, not posted"), option("unplanned", "Not on the calendar"), option("posted", "Posted"));
-  plan.value = view.plan;
-  plan.addEventListener("change", () => {
-    view.plan = plan.value as PlanFilter;
-    render();
-  });
-  const sort = h("select", { id: "designSort", "aria-label": "Sort designs" }, option("updated", "Recently updated"), option("created", "Recently created"), option("planned", "Date to post"), option("name", "Name A to Z"));
+  const sort = h("select", { id: "designSort", "aria-label": "Sort designs" }, option("updated", "Recently updated"), option("created", "Recently created"), option("name", "Name A to Z"));
   sort.value = view.sort;
   sort.addEventListener("change", () => {
     view.sort = sort.value as DesignSort;
     render();
   });
-  body.append(h("div", { class: "toolbar", role: "search" }, search, type, plan, sort));
+  body.append(h("div", { class: "toolbar", role: "search" }, search, type, sort));
   body.append(h("h3", { class: "sr-only" }, view.trash ? "Recently deleted" : "Your designs"));
 
   if (view.trash) {
-    body.append(h("p", { class: "note" }, "Deleted designs stay here for " + TRASH_DAYS + " days, then they are removed for good."));
+    body.append(h("p", { class: "note" }, "Deleted designs and calendar posts stay here for " + TRASH_DAYS + " days, then they are removed for good."));
+  } else {
+    body.append(h("p", { class: "note" }, "Designs are your templates: a post tuned the way you like it, ready to reuse. Posts for a particular day live in the ", h("button", { type: "button", class: "linkish", onclick: () => { closeDialog(dlg()); openCalendarHook(todayYmd()); } }, "content calendar"), "."));
   }
 
   if (view.selected.size) {
@@ -332,8 +509,8 @@ function render(): void {
 
   if (list.length) {
     body.append(h("ul", { class: "design-list" }, ...list.map(designCard)));
-  } else if (view.q || view.type || view.plan) {
-    body.append(h("div", { class: "empty" }, h("p", {}, "No designs match that search."), h("button", { type: "button", class: "ghost", onclick: () => { view.q = ""; view.type = ""; view.plan = ""; render(); } }, "Clear search")));
+  } else if (view.q || view.type) {
+    body.append(h("div", { class: "empty" }, h("p", {}, "No designs match that search."), h("button", { type: "button", class: "ghost", onclick: () => { view.q = ""; view.type = ""; render(); } }, "Clear search")));
   } else if (view.trash) {
     body.append(h("div", { class: "empty" }, h("p", {}, "Nothing in Recently deleted.")));
   } else {
@@ -341,7 +518,7 @@ function render(): void {
       h(
         "div",
         { class: "empty" },
-        h("p", {}, "No saved designs yet. Fill in a post, then choose Save design to keep it for next time. Or load the sample designs to see what the studio can do."),
+        h("p", {}, "No saved designs yet. Tune a post the way you like it, then choose Save design to reuse it as a template. Or load the sample designs to see what the studio can do."),
         h("div", { class: "row-actions" }, h("button", { type: "button", class: "btn", onclick: () => loadSamples() }, "Load sample designs"), h("button", { type: "button", class: "ghost", onclick: () => pickImportFile() }, "Import a backup")),
       ),
     );
@@ -384,6 +561,6 @@ export async function initDesigns(): Promise<void> {
   }
   const btn = byId("designsBtn");
   btn.addEventListener("click", openDesigns);
-  byId("saveDesign").addEventListener("click", () => saveCurrent());
-  byId("quickSave").addEventListener("click", () => saveCurrent());
+  byId("saveDesign").addEventListener("click", () => saveCurrent("design"));
+  byId("quickSave").addEventListener("click", () => saveCurrent("auto"));
 }

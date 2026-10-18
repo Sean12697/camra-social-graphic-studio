@@ -51,6 +51,19 @@ export async function openGroup(page, group) {
   if (!(await d.evaluate((e) => e.open))) await d.locator("summary").click();
 }
 
+/** Saves through the save dialog, to the calendar, designs or both (whatever is ticked by default when neither is given). */
+export async function saveVia(page, opener, { name, calendar, designs, mode } = {}) {
+  await opener();
+  const dlg = page.locator("#saveDialog");
+  await expect(dlg).toBeVisible();
+  if (calendar !== undefined) await dlg.locator("#saveToCal").setChecked(calendar);
+  if (designs !== undefined) await dlg.locator("#saveToDesigns").setChecked(designs);
+  if (mode) await dlg.getByRole("radio", { name: mode }).check();
+  if (name !== undefined) await dlg.locator("#saveName").fill(name);
+  await dlg.locator("#saveOk").click();
+  await expect(dlg).toBeHidden();
+}
+
 export async function fieldByLabel(page, label) {
   return page.locator("#dynamicFields").getByLabel(label, { exact: true });
 }

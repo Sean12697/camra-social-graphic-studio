@@ -23,7 +23,7 @@ import {
   type Draft,
   type Occurrence,
 } from "./campaigns.ts";
-import type { Design } from "./designs.ts";
+import { kindOf, type Design, type Repeat } from "./designs.ts";
 
 /** Which campaign draft a planned post came from, so it can follow the campaign. */
 export interface CampaignRef {
@@ -80,19 +80,93 @@ export function weekdayHeaders(weekStart: 0 | 1 = 1): string[] {
   return Array.from({ length: 7 }, (_, i) => WEEKDAY_SHORT[(i + weekStart) % 7]);
 }
 
-/** Live (not deleted) designs with a day to post them. */
+/** Live (not deleted) posts with a day to post them. Designs (templates) never appear. */
 export function plannedPosts(designs: Design[]): Design[] {
   return designs
-    .filter((d) => !d.deletedAt && !d.sample && isYmd(d.postOn))
+    .filter((d) => !d.deletedAt && !d.sample && kindOf(d) === "post" && isYmd(d.postOn))
     .sort((a, b) => (a.postOn as string).localeCompare(b.postOn as string) || (a.postAt || "99:99").localeCompare(b.postAt || "99:99") || a.name.localeCompare(b.name));
 }
 
-export function planStatus(d: Design, today: string): PlanStatus {
-  if (d.postedAt) return "posted";
-  if (!isYmd(d.postOn)) return "unplanned";
-  if (d.postOn < today) return "overdue";
-  if (d.postOn === today) return "today";
+function daysIn(y: number, m: number): number {
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+/**
+ * Every day a post falls on from `from` to `to` (inclusive). A one-off post
+ * falls on its day; a repeating one every week, month or year from its first
+ * day until repeatUntil. Monthly posts on the 31st skip shorter months and
+ * yearly posts on 29 February skip other years, as calendar apps do.
+ */
+export function postDays(d: Pick<Design, "postOn" | "repeat" | "repeatUntil">, from: string, to: string): string[] {
+  const start = d.postOn;
+  if (!isYmd(start)) return [];
+  if (!d.repeat) return start >= from && start <= to ? [start] : [];
+  const last = isYmd(d.repeatUntil) && d.repeatUntil < to ? d.repeatUntil : to;
+  const out: string[] = [];
+  if (start > last) return out;
+  if (d.repeat === "week") {
+    let day = start;
+    if (day < from) day = addDays(start, Math.ceil(daysBetween(start, from) / 7) * 7);
+    for (; day <= last; day = addDays(day, 7)) out.push(day);
+    return out;
+  }
+  const [y0, m0, d0] = start.split("-").map(Number);
+  const step = d.repeat === "month" ? 1 : 12;
+  const fy = Number(from.slice(0, 4));
+  const fm = Number(from.slice(5, 7));
+  // Jump close to `from` rather than walking from a start years back.
+  let i = Math.max(0, Math.floor(((fy - y0) * 12 + (fm - m0)) / step) - 1);
+  for (; ; i++) {
+    const idx = m0 - 1 + i * step;
+    const y = y0 + Math.floor(idx / 12);
+    const m = (idx % 12) + 1;
+    const first = y + "-" + String(m).padStart(2, "0") + "-01";
+    if (first > last) break;
+    if (d0 > daysIn(y, m)) continue;
+    const day = y + "-" + String(m).padStart(2, "0") + "-" + String(d0).padStart(2, "0");
+    if (day >= from && day <= last && day >= start) out.push(day);
+  }
+  return out;
+}
+
+/** Whether a post has been marked as posted on a day (any day, for a one-off post). */
+export function postedOn(d: Design, day: string): boolean {
+  if (d.repeat) return !!(d.postedDays && d.postedDays.includes(day));
+  return !!d.postedAt;
+}
+
+/**
+ * The day that matters for a post now: for a one-off post its day; for a
+ * repeating one the most recent day in the last 30 not yet posted, else the
+ * next day it falls on, else its last day.
+ */
+export function currentPostDay(d: Design, today: string): string | null {
+  if (!isYmd(d.postOn)) return null;
+  if (!d.repeat) return d.postOn;
+  const back = postDays(d, addDays(today, -30), today).filter((x) => !postedOn(d, x));
+  if (back.length) return back[back.length - 1];
+  const next = postDays(d, addDays(today, 1), addDays(today, 400));
+  if (next.length) return next[0];
+  const past = postDays(d, d.postOn, today);
+  return past.length ? past[past.length - 1] : d.postOn;
+}
+
+/** The status of a post on a day (or on the day that matters now, when no day is given). */
+export function planStatus(d: Design, today: string, day?: string): PlanStatus {
+  if (!isYmd(d.postOn)) return d.postedAt ? "posted" : "unplanned";
+  const on = day || currentPostDay(d, today) || d.postOn;
+  if (postedOn(d, on)) return "posted";
+  if (on < today) return "overdue";
+  if (on === today) return "today";
   return "upcoming";
+}
+
+const REPEAT_WORDS: Record<Repeat, string> = { week: "Every week", month: "Every month", year: "Every year" };
+
+/** "Every week until Monday 1 March 2027", or "" for a one-off post. */
+export function repeatLabel(d: Pick<Design, "repeat" | "repeatUntil">): string {
+  if (!d.repeat) return "";
+  return REPEAT_WORDS[d.repeat] + (isYmd(d.repeatUntil) ? " until " + longDate(d.repeatUntil) + " " + d.repeatUntil.slice(0, 4) : "");
 }
 
 export interface DayItems {
@@ -112,7 +186,7 @@ export function itemsByDay(designs: Design[], campaigns: Campaign[], from: strin
     return it;
   };
   plannedPosts(designs).forEach((d) => {
-    if ((d.postOn as string) >= from && (d.postOn as string) <= to) slot(d.postOn as string).posts.push(d);
+    postDays(d, from, to).forEach((day) => slot(day).posts.push(d));
   });
   const y1 = Number(from.slice(0, 4));
   const y2 = Number(to.slice(0, 4));
@@ -132,11 +206,19 @@ export function itemsByDay(designs: Design[], campaigns: Campaign[], from: strin
  * The day a campaign draft is best posted: a week before for countdowns
  * (later "before" drafts closer to the start), the first day for launches,
  * the last week for "last week" posts and the day after for thank yous.
- * Never earlier than today.
+ * "Any time" drafts suit today, or are spaced out before the day when a
+ * whole campaign is planned at once. Never earlier than today.
  */
-export function suggestedPostDate(c: Campaign, o: Occurrence, d: Draft, today: string): string {
+export function suggestedPostDate(c: Campaign, o: Occurrence, d: Draft, today: string, spread = false): string {
   const before = c.drafts.filter((x) => x.phase === "before");
   let day: string;
+  if (d.phase === "anytime") {
+    // Any time suits; planning them all at once spaces them out before the day.
+    if (!spread) return today;
+    const any = c.drafts.filter((x) => x.phase === "anytime");
+    const span = Math.max(0, daysBetween(today, o.start) - 1);
+    return addDays(today, Math.floor((any.indexOf(d) * span) / any.length));
+  }
   if (d.phase === "before") {
     const i = before.indexOf(d);
     day = addDays(o.start, -7 + Math.min(i, 2) * 3);
@@ -223,9 +305,9 @@ export interface PostAlert {
 
 /** One reminder a day: posts planned for today, plus any planned earlier and not yet marked posted. */
 export function postAlert(designs: Design[], today: string, dismissed: Record<string, boolean>): PostAlert | null {
-  const live = plannedPosts(designs).filter((d) => !d.postedAt);
-  const due = live.filter((d) => d.postOn === today);
-  const late = live.filter((d) => (d.postOn as string) < today && daysBetween(d.postOn as string, today) <= 30);
+  const live = plannedPosts(designs);
+  const due = live.filter((d) => postDays(d, today, today).some((x) => !postedOn(d, x)));
+  const late = live.filter((d) => postDays(d, addDays(today, -30), addDays(today, -1)).some((x) => !postedOn(d, x)));
   if (!due.length && !late.length) return null;
   const key = "posts:" + today;
   if (dismissed[key]) return null;
@@ -275,8 +357,13 @@ export function planIcs(designs: Design[], now: Date, o: { name?: string; versio
     } else {
       lines.push("DTSTART;VALUE=DATE:" + day.replace(/-/g, ""), "DTEND;VALUE=DATE:" + addDays(day, 1).replace(/-/g, ""));
     }
-    lines.push("SUMMARY:" + icsText("Post: " + d.name), "DESCRIPTION:" + icsText(desc), "STATUS:" + (d.postedAt ? "CONFIRMED" : "TENTATIVE"), "TRANSP:TRANSPARENT");
-    if (!d.postedAt) {
+    if (d.repeat) {
+      const until = isYmd(d.repeatUntil) ? ";UNTIL=" + d.repeatUntil.replace(/-/g, "") + (isHm(d.postAt) ? "T235959" : "") : "";
+      lines.push("RRULE:FREQ=" + { week: "WEEKLY", month: "MONTHLY", year: "YEARLY" }[d.repeat] + until);
+    }
+    const done = !d.repeat && !!d.postedAt;
+    lines.push("SUMMARY:" + icsText("Post: " + d.name), "DESCRIPTION:" + icsText(desc), "STATUS:" + (done ? "CONFIRMED" : "TENTATIVE"), "TRANSP:TRANSPARENT");
+    if (!done) {
       lines.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + icsText("Time to post: " + d.name), isHm(d.postAt) ? "TRIGGER:-PT15M" : "TRIGGER:PT9H", "END:VALARM");
     }
     lines.push("END:VEVENT");
@@ -285,11 +372,12 @@ export function planIcs(designs: Design[], now: Date, o: { name?: string; versio
   return lines.map(foldLine).join("\r\n") + "\r\n";
 }
 
-/** "Thursday 24 September 2026, 19:30" style label for a planned post. */
-export function planLabel(d: Design): string {
-  if (!isYmd(d.postOn)) return "";
+/** "Thursday 24 September 2026, 19:30" style label for a planned post (or one of its days). */
+export function planLabel(d: Pick<Design, "postOn" | "postAt">, day?: string): string {
+  const on = day || d.postOn;
+  if (!isYmd(on)) return "";
   const t = isHm(d.postAt) ? ", " + d.postAt : "";
-  return longDate(d.postOn) + " " + d.postOn.slice(0, 4) + t;
+  return longDate(on) + " " + on.slice(0, 4) + t;
 }
 
 export function todayYmd(): string {

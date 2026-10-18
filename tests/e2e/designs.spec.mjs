@@ -1,12 +1,10 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { openStudio, fieldByLabel } from "./helpers.mjs";
+import { openStudio, fieldByLabel, saveVia } from "./helpers.mjs";
 
 async function saveAs(page, name) {
-  await page.locator("#quickSave").click();
-  await page.locator("#promptInput").fill(name);
-  await page.locator("#promptOk").click();
-  await expect(page.locator("#notices")).toContainText("Saved " + name);
+  await saveVia(page, () => page.locator("#saveDesign").click(), { name });
+  await expect(page.locator("#notices")).toContainText("Saved the design " + name);
 }
 
 test("save, open, rename, duplicate, delete with undo, restore and purge", async ({ page }) => {
@@ -21,6 +19,12 @@ test("save, open, rename, duplicate, delete with undo, restore and purge", async
   await dlg.getByRole("button", { name: "Open Lamplighter welcome" }).click();
   await page.locator("#confirmOk").click(); // replace unsaved changes
   await expect(await fieldByLabel(page, "Pub name")).toHaveValue("The Lamplighter");
+  // Saving a loaded design offers to update it or keep it and save a new one.
+  await page.locator("#saveDesign").click();
+  await expect(page.locator("#saveDesignMode")).toBeVisible();
+  await expect(page.locator("#saveDesignMode")).toContainText("Update Lamplighter welcome");
+  await expect(page.locator("#saveOk")).toHaveText("Update the design");
+  await page.locator("#saveDialog").getByRole("button", { name: "Cancel" }).click();
 
   await page.locator("#designsBtn").click();
   await dlg.getByRole("button", { name: "Rename Lamplighter welcome" }).click();

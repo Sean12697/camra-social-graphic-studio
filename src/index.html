@@ -18,7 +18,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to the editor</a>
-<header class="topbar">
+<header class="topbar" id="topbar">
   <div class="brandline">
     <h1>CAMRA Social Graphics Studio</h1>
     <p class="tagline">On-brand CAMRA social graphics, made in your browser.</p>
@@ -295,11 +295,23 @@
           <p class="note copy-count" id="copyCount"></p>
           <div class="row-actions"><button type="button" class="ghost" id="copyPostText">Copy post text</button></div>
         </div>
-        <fieldset class="field" data-tip="Pick the day you mean to post it, then save it to the calendar. You get a reminder on the day, and you can change the post right up to then.">
+        <fieldset class="field" data-tip="Pick the day you mean to post it, then save it to the calendar. Leave the date empty and it is planned for today. It can repeat every week, month or year, and you can change it right up to the day.">
           <legend>When to post it (content calendar)</legend>
           <div class="plan-row">
             <div class="plan-cell"><label for="postOn">Date</label><input type="date" id="postOn"></div>
             <div class="plan-cell"><label for="postAt">Time (optional)</label><input type="time" id="postAt"></div>
+          </div>
+          <div class="plan-row">
+            <div class="plan-cell">
+              <label for="postRepeat">Repeat</label>
+              <select id="postRepeat">
+                <option value="">Does not repeat</option>
+                <option value="week">Every week</option>
+                <option value="month">Every month</option>
+                <option value="year">Every year</option>
+              </select>
+            </div>
+            <div class="plan-cell" id="postUntilWrap" hidden><label for="postUntil">Until (optional)</label><input type="date" id="postUntil"></div>
           </div>
           <p class="note" id="planNote" aria-live="polite"></p>
           <div class="row-actions">
@@ -307,6 +319,7 @@
             <button type="button" class="ghost" id="clearPlan">Clear the date</button>
             <button type="button" class="ghost" id="openCalendar">Open the calendar</button>
           </div>
+          <p class="note privacy-note"><strong>The studio never posts for you.</strong> The calendar keeps your post on this device so you can come back to it, download it and post it yourself on the day. Reminders only appear if you turn them on. Nothing is sent to any server.</p>
         </fieldset>
       </div>
     </details>
@@ -358,6 +371,7 @@
       <div id="brandBody"></div>
     </section>
   </form>
+  <div class="splitter" id="splitControls" role="separator" aria-orientation="vertical" aria-controls="controls" aria-label="Resize the settings panel" tabindex="0" title="Drag to resize. Double-click to reset."><span class="grip" aria-hidden="true"></span></div>
   <section class="preview" aria-label="Preview">
     <div class="canvas-wrap">
       <canvas id="frame" width="1080" height="1080" role="img" aria-label="Preview of your social graphic"></canvas>
@@ -368,6 +382,7 @@
       <button type="button" class="ghost" id="quickSave">Save</button>
     </div>
   </section>
+  <div class="splitter" id="splitReframe" role="separator" aria-orientation="vertical" aria-controls="reframeWrap" aria-label="Resize the reframe photo panel" tabindex="0" title="Drag to resize. Double-click to reset."><span class="grip" aria-hidden="true"></span></div>
   <details class="reframe-col hidden" id="reframeWrap" open>
     <summary>Reframe photo</summary>
       <p class="note">Choose how the photo fills each frame, then nudge it into place. The same framing is used for every size you download.</p>
@@ -488,6 +503,67 @@
     <button type="button" class="ghost" id="confirmCancel" data-close>Cancel</button>
     <button type="button" class="btn primary" id="confirmOk">OK</button>
   </div>
+</dialog>
+
+<dialog id="saveDialog" class="dlg" aria-labelledby="saveTitle" aria-describedby="savePrivacy">
+  <form id="saveForm" method="dialog" novalidate>
+    <div class="dlg-head">
+      <h2 id="saveTitle">Save</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close without saving">×</button>
+    </div>
+    <div class="dlg-body">
+      <div class="field">
+        <label for="saveName">Name</label>
+        <input type="text" id="saveName" maxlength="200" autocomplete="off" aria-describedby="saveNameError">
+        <p class="field-error" id="saveNameError" aria-live="polite"></p>
+      </div>
+      <fieldset class="field save-targets">
+        <legend>Save it to</legend>
+        <div class="save-target">
+          <label class="check"><input type="checkbox" id="saveToCal"> <span><strong>My content calendar</strong><span class="note-inline">A post to put out on a day, once or on repeat.</span></span></label>
+          <div class="save-sub" id="saveCalOpts">
+            <div class="plan-row">
+              <div class="plan-cell"><label for="saveOn">Date</label><input type="date" id="saveOn"></div>
+              <div class="plan-cell"><label for="saveAt">Time (optional)</label><input type="time" id="saveAt"></div>
+            </div>
+            <div class="plan-row">
+              <div class="plan-cell">
+                <label for="saveRepeat">Repeat</label>
+                <select id="saveRepeat">
+                  <option value="">Does not repeat</option>
+                  <option value="week">Every week</option>
+                  <option value="month">Every month</option>
+                  <option value="year">Every year</option>
+                </select>
+              </div>
+              <div class="plan-cell" id="saveUntilWrap" hidden><label for="saveUntil">Until (optional)</label><input type="date" id="saveUntil"></div>
+            </div>
+            <fieldset class="save-mode" id="savePostMode" hidden>
+              <legend class="sr-only">Calendar post</legend>
+              <label class="check"><input type="radio" name="savePostMode" value="update" checked> <span id="savePostUpdateLabel">Update the post</span></label>
+              <label class="check"><input type="radio" name="savePostMode" value="new"> Save as a new post</label>
+            </fieldset>
+          </div>
+        </div>
+        <div class="save-target">
+          <label class="check"><input type="checkbox" id="saveToDesigns"> <span><strong>My designs</strong><span class="note-inline">A template to reuse and tweak for future posts.</span></span></label>
+          <div class="save-sub" id="saveDesignOpts">
+            <fieldset class="save-mode" id="saveDesignMode" hidden>
+              <legend class="sr-only">Design</legend>
+              <label class="check"><input type="radio" name="saveDesignMode" value="update" checked> <span id="saveDesignUpdateLabel">Update the design</span></label>
+              <label class="check"><input type="radio" name="saveDesignMode" value="new"> Save as a new design</label>
+            </fieldset>
+          </div>
+        </div>
+        <p class="field-error" id="saveTargetError" aria-live="polite"></p>
+      </fieldset>
+      <p class="note privacy-note" id="savePrivacy">Saved only on this device, with its images, so you can change it right up to the day. The studio never posts for you and sends nothing to any server.</p>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="ghost" data-close>Cancel</button>
+      <button type="submit" class="btn primary" id="saveOk">Save</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="promptDialog" class="dlg dlg-small" aria-labelledby="promptTitle">

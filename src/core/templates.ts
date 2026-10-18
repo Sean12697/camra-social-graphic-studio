@@ -117,6 +117,10 @@ const OCCASIONS = [
   "St Patrick's Day",
   "St George's Day",
   "St Andrew's Day",
+  "Volunteers' Week",
+  "Heritage Open Days",
+  "International Women's Day",
+  "Pride Month",
 ];
 
 // The eyebrow, title, subtitle and lines for a post with an optional stage.

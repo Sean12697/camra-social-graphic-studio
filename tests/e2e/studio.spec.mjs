@@ -120,3 +120,41 @@ test("a library saved by an earlier version is migrated", async ({ page }) => {
   await expect(page.locator(".lib-item")).toHaveCount(1);
   expect(await page.evaluate(() => localStorage.getItem("camra-studio:library"))).toBeNull();
 });
+
+test("the header stays pinned with every option in reach after scrolling", async ({ page }) => {
+  await openStudio(page);
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  await expect(page.locator("html")).toHaveClass(/scrolled/);
+  const box = await page.locator("#topbar").boundingBox();
+  expect(Math.round(box.y)).toBe(0);
+  for (const id of ["designsBtn", "calendarBtn", "campaignsBtn", "settingsBtn", "helpBtn"]) await expect(page.locator("#" + id)).toBeInViewport();
+  // The nav is a single row: every button shares the same top edge.
+  const tops = await page.locator(".topnav .nav-btn").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1);
+  // The preview sits below the header, never underneath it.
+  const pv = await page.locator(".preview").boundingBox();
+  const hdr = await page.locator("#topbar").boundingBox();
+  expect(pv.y).toBeGreaterThanOrEqual(hdr.y + hdr.height - 1);
+});
+
+test("the side panels can be resized from the keyboard and remember their width", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Dividers only show on wide screens.");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openStudio(page, { query: "?type=newcomer&pubName=Test&photo=assets/icons/icon-512.png" });
+  const controls = page.locator("#controls");
+  const before = (await controls.boundingBox()).width;
+  const sep = page.locator("#splitControls");
+  await expect(sep).toHaveAttribute("role", "separator");
+  await sep.focus();
+  await page.keyboard.press("Shift+ArrowRight");
+  await expect.poll(async () => Math.round((await controls.boundingBox()).width)).toBe(Math.round(before + 64));
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "1");
+  await expect.poll(async () => Math.round((await controls.boundingBox()).width)).toBe(Math.round(before + 64));
+  await page.locator("#splitControls").dblclick();
+  await expect.poll(async () => Math.round((await controls.boundingBox()).width)).toBe(Math.round(before));
+  // The reframe panel starts wide enough to use and its divider shows with it.
+  await expect(page.locator("#reframeWrap")).toBeVisible();
+  expect((await page.locator("#reframeWrap").boundingBox()).width).toBeGreaterThanOrEqual(379);
+  await expect(page.locator("#splitReframe")).toBeVisible();
+});

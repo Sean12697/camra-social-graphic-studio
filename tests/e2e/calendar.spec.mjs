@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { axeViolations, fieldByLabel, openGroup, openStudio, pngFile } from "./helpers.mjs";
+import { axeViolations, fieldByLabel, openGroup, openStudio, pngFile, saveVia } from "./helpers.mjs";
 
 // Saturday 10 April 2027.
 const NOW = "2027-04-10T10:00:00";
@@ -11,16 +11,20 @@ async function planPost(page, { pub, text, date, time = "", name }) {
   await page.locator("#postOn").fill(date);
   if (time) await page.locator("#postAt").fill(time);
   await page.locator("#planSave").click();
-  await expect(page.locator("#promptTitle")).toHaveText("Save planned post");
-  await page.locator("#promptInput").fill(name);
-  await page.locator("#promptOk").click();
-  await expect(page.locator("#notices")).toContainText("Saved " + name);
+  const dlg = page.locator("#saveDialog");
+  await expect(dlg.locator("#saveTitle")).toHaveText("Save to the calendar");
+  await expect(dlg.locator("#saveToCal")).toBeChecked();
+  await expect(dlg.locator("#saveToDesigns")).not.toBeChecked();
+  await expect(dlg.locator("#saveOn")).toHaveValue(date);
+  await dlg.locator("#saveName").fill(name);
+  await dlg.locator("#saveOk").click();
+  await expect(page.locator("#notices")).toContainText("Saved " + name + " in the calendar");
 }
 
 test("plan a post with its text, find it in the calendar, mark it posted and move it", async ({ page }) => {
   await openStudio(page, { now: NOW });
   await openGroup(page, "copy");
-  await expect(page.locator("#planNote")).toContainText("Not on the calendar");
+  await expect(page.locator("#planNote")).toContainText("No date yet");
   await planPost(page, { pub: "The Copper Kettle", text: "Welcome to the Good Beer Guide! #GBG", date: "2027-04-20", time: "19:30", name: "Copper Kettle welcome" });
   await expect(page.locator("#planNote")).toContainText("Tuesday 20 April 2027. That is in 10 days.");
 
@@ -35,6 +39,16 @@ test("plan a post with its text, find it in the calendar, mark it posted and mov
   await expect(panel).toContainText("Copper Kettle welcome");
   await expect(panel).toContainText("Welcome to the Good Beer Guide! #GBG");
   await expect(panel).toContainText("19:30");
+  await expect(panel.getByRole("button", { name: "Download the graphics for Copper Kettle welcome" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Share Copper Kettle welcome with another app" })).toBeVisible();
+  await expect(cal).toContainText("The studio never posts for you.");
+  // A calendar post is not a design.
+  await page.keyboard.press("Escape");
+  await page.locator("#designsBtn").click();
+  await expect(page.locator("#designsDialog .design")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.locator("#calendarBtn").click();
+  await cal.locator('.cal-day[data-day="2027-04-20"]').click();
 
   await panel.getByRole("button", { name: "Mark as posted" }).click();
   await expect(panel.locator(".badge.plan")).toHaveText("Posted");
@@ -111,7 +125,7 @@ test("a campaign countdown keeps its days to go in step when moved", async ({ pa
   await openStudio(page, { now: NOW, campaigns: true });
   await page.locator("#campaignsBtn").click();
   const camp = page.locator("#campaignsDialog");
-  await camp.locator('[data-campaign="mild-month"]').first().getByRole("button", { name: "Plan all 4 in my calendar" }).click();
+  await camp.locator('[data-campaign="mild-month"]').first().getByRole("button", { name: "Plan all 4 drafts as posts in my content calendar" }).click();
   await page.locator("#notices").getByRole("button", { name: "Open calendar" }).click();
   const cal = page.locator("#calendarDialog");
   await cal.getByLabel("New date for Mild Month 2027: Countdown").fill("2027-04-27");
@@ -123,8 +137,8 @@ test("a campaign countdown keeps its days to go in step when moved", async ({ pa
   await expect(page.locator("#postCopy")).toHaveValue(/#MildMay/);
   // Planning again does not duplicate.
   await page.locator("#campaignsBtn").click();
-  await camp.locator('[data-campaign="mild-month"]').first().getByRole("button", { name: "Plan all 4 in my calendar" }).click();
-  await expect(page.locator("#notices")).toContainText("already in your calendar");
+  await camp.locator('[data-campaign="mild-month"]').first().getByRole("button", { name: "Plan all 4 drafts as posts in my content calendar" }).click();
+  await expect(page.locator("#notices")).toContainText("already in your content calendar");
 });
 
 test("the calendar is accessible in both themes and both views", async ({ page }) => {
@@ -139,4 +153,59 @@ test("the calendar is accessible in both themes and both views", async ({ page }
     await page.locator("#calendarDialog").getByRole("radio", { name: "Month" }).check();
     await page.evaluate(() => sessionStorage.clear());
   }
+});
+
+test("a post saved without a date goes on today, and can also be kept as a design", async ({ page }) => {
+  await openStudio(page, { now: NOW });
+  await (await fieldByLabel(page, "Pub name")).fill("The Wheatsheaf");
+  await saveVia(page, () => page.locator("#quickSave").click(), { name: "Wheatsheaf", designs: true });
+  await expect(page.locator("#notices")).toContainText("Saved Wheatsheaf to the calendar for Saturday 10 April 2027 and to your designs.");
+  await page.locator("#designsBtn").click();
+  await expect(page.locator("#designsDialog .design")).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await page.locator("#calendarBtn").click();
+  await expect(page.locator("#calendarDialog .cal-day-panel")).toContainText("Wheatsheaf");
+  // Saving again updates the open post rather than adding another.
+  await page.keyboard.press("Escape");
+  await (await fieldByLabel(page, "Pub name")).fill("The Wheatsheaf Inn");
+  await saveVia(page, () => page.locator("#quickSave").click(), {});
+  await expect(page.locator("#notices")).toContainText("Updated Wheatsheaf in the calendar");
+  await page.locator("#calendarBtn").click();
+  await expect(page.locator("#calendarDialog .plan-post")).toHaveCount(1);
+});
+
+test("a repeating post shows on every day it falls on and is marked posted day by day", async ({ page }) => {
+  await openStudio(page, { now: NOW });
+  await (await fieldByLabel(page, "Pub name")).fill("The Crown");
+  await openGroup(page, "copy");
+  await page.locator("#postOn").fill("2027-04-08");
+  await page.locator("#planSave").click();
+  const dlg = page.locator("#saveDialog");
+  await dlg.locator("#saveRepeat").selectOption("week");
+  await expect(dlg.locator("#saveUntil")).toBeVisible();
+  await dlg.locator("#saveName").fill("Thursday quiz");
+  await dlg.locator("#saveOk").click();
+  await expect(page.locator("#notices")).toContainText("every week");
+  await page.locator("#calendarBtn").click();
+  const cal = page.locator("#calendarDialog");
+  for (const d of ["2027-04-08", "2027-04-15", "2027-04-22", "2027-04-29"]) await expect(cal.locator('.cal-day[data-day="' + d + '"]')).toHaveAttribute("aria-label", /1 planned post/);
+  await expect(cal.locator('.cal-day[data-day="2027-04-16"]')).not.toHaveAttribute("aria-label", /planned post/);
+  await cal.locator('.cal-day[data-day="2027-04-15"]').click();
+  await cal.getByRole("button", { name: "Mark as posted" }).click();
+  await expect(cal.locator(".badge.plan")).toHaveText("Posted");
+  await cal.locator('.cal-day[data-day="2027-04-22"]').click();
+  await expect(cal.locator(".badge.plan")).toHaveText("Planned");
+});
+
+test("download from a calendar card leaves the open post untouched", async ({ page }) => {
+  await openStudio(page, { now: NOW });
+  await planPost(page, { pub: "The Kings Head", text: "Beer festival", date: "2027-04-13", name: "Kings Head" });
+  await (await fieldByLabel(page, "Pub name")).fill("Something else");
+  await page.locator("#calendarBtn").click();
+  const cal = page.locator("#calendarDialog");
+  await cal.locator('.cal-day[data-day="2027-04-13"]').click();
+  const [d] = await Promise.all([page.waitForEvent("download"), cal.getByRole("button", { name: "Download the graphics for Kings Head" }).click()]);
+  expect(d.suggestedFilename()).toMatch(/\.(png|zip)$/);
+  await page.keyboard.press("Escape");
+  await expect(await fieldByLabel(page, "Pub name")).toHaveValue("Something else");
 });
