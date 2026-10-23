@@ -74,3 +74,117 @@
 
 ### Fixed
 - Unknown `tagline` values no longer silently hide the tagline; share links work from file pages; unticking Remember logo now forgets it; unknown dropdown values in links no longer blank the control.
+
+## 2.1.3
+
+### Changed
+- One logo per graphic: Logo shown is Automatic, CAMRA or Branch. Campaigns default to the CAMRA logo and everything else to the branch logo, and choosing the branch logo on a campaign shows an off-brand warning.
+- The logo is larger by default, with Standard (1.25x), Larger (1.6x) and Massive (2x) presets, and never smaller than Standard so small text in branch logos stays readable.
+- The footer and the corner panel size branch and CAMRA logos the same way.
+
+## 2.1.2
+
+### Added
+- Full bleed for panel posts (What's On, Social tour, Hybrid, Meeting or AGM, Announcement): the photo can sit behind the whole graphic, and the corner panel style works there too.
+- Photo opacity, with an `opacity` parameter, to fade a photo back so text reads more easily, in every framing mode.
+
+### Changed
+- The fixed darkening over full bleed panel photos is replaced by the opacity control.
+
+## 2.1.1
+
+### Added
+- Background style: solid colour or a subtle gradient of it, never applied to photos.
+- A fine-tune slider for the logo size alongside the presets.
+
+### Changed
+- The full bleed corner panel is a larger curved sweep with the logo in the corner and more room for text, and the photo runs to the bottom edge.
+- Clearer decorative icons: pint, mug, apple, pear, hops, barrel, trophy, calendar, wheat and map pin.
+
+### Fixed
+- Branch and CAMRA logos share one consistent logo box in the corner panel.
+
+## 2.1.0
+
+### Added
+- Mobile-first layout: one column with the preview pinned while the form scrolls, larger touch targets, and 16px form text so iOS does not zoom.
+- Share image, through the device's share sheet where supported.
+- Optional Arboria web font with Arial as the fallback, loaded before the first draw so exports never use the wrong typeface.
+- Warnings when text is too long for the layout.
+- A browser test page covering post types, sizes and parameters.
+- The version number in the page footer.
+
+### Changed
+- Notices in the page replace browser alert boxes for blocked exports and full storage.
+- Images saved to the content library are scaled down first, saving space.
+- One parameter list drives reading links, building links and the in-app docs, so they always agree.
+- Tips close with Escape, and the preview has a clearer description for screen readers.
+- Share links are cached once for offline use, not once per link.
+
+## 2.0.0
+
+### Added
+- Photos on every post type: panel posts such as What's On, Social tour, Hybrid, Meeting and Announcement take a rounded photo header, with the same crop, fit, pan and zoom controls.
+
+### Changed
+- Text and caption alignment applies to photo and non-photo layouts alike, and lists stay readable on graphics with a photo.
+
+## 1.4.0
+
+### Added
+- Alignment for the title, subtitle, body text, caption and tagline, and left, centre or right for the logo, all carried in share links.
+
+### Changed
+- One logo by default: the branch logo on everyday posts and the CAMRA logo on campaigns. Both can still be shown, with a warning on campaign posts. Branch logos with small text are sized and centred better.
+
+### Fixed
+- The platform and size list could fail to load.
+- Installed copies could keep old files after an update.
+
+## 1.3.0
+
+### Added
+- Install as an app and use it offline: a web app manifest, an app icon and a service worker that always fetches the latest files when online, with install instructions for Android, desktop and iOS.
+- Custom post type: any label, title, subtitle and body, or an image on its own.
+- Background colour (brand colours or any colour), logo size, and Logo shown: automatic, CAMRA only, branch only or both.
+- Full bleed styles: a footer band with gradient, or a curved corner panel.
+- Colour pickers for the title, subtitle, body text and caption, with a contrast check that warns when text is hard to read, and `titlecolor`, `subcolor`, `bodycolor` and `capcolor` parameters.
+
+### Changed
+- Brand notes cover custom colours and unusual logo choices.
+
+## 1.2.0
+
+### Added
+- Image size: framed with the label above, framed with the label on the image, or full bleed to the edges with a gradient, with an `fmode` parameter.
+- Show or hide the label, the title and subtitle, and the caption line, with your own caption text (`label`, `text` and `caption` parameters, `caption=off` to hide it).
+- Orientation (force landscape or portrait) and Padding (standard, comfortable, or spacious for social safe areas), with `orient` and `pad` parameters.
+- A CAMRA Events website size (1440 by 1080).
+
+## 1.1.0
+
+### Added
+- Marked clearly as unofficial: made by a CAMRA volunteer, not affiliated with or endorsed by CAMRA.
+- Gold, silver and bronze for medal results, and a Drink type on One to Try for beer, or cider and perry.
+- Photo reframing: fill the frame, fit the whole image or stretch, with horizontal, vertical and zoom controls and a reset, applied to every size.
+- Query parameters for every setting, `download=1` for automatic export, Copy share link and Copy auto-download link buttons, and a parameter reference in the studio (`?docs=1`). List fields take URL-encoded JSON.
+- A Brand guidelines panel (`?brand=1`) explaining colours, logos, type, taglines and the brand hierarchy, linked to the CAMRA Brand Hub, with notes as you build a post.
+- Campaign posts (One to Try, Real Cider and Perry) show the CAMRA logo, with a warning if the branch logo is chosen instead.
+- A choice of the approved taglines, or none.
+
+### Changed
+- Cider and perry posts use Blue.
+- The reframing controls sit beside the preview, and the preview follows the shape of the selected size.
+
+### Fixed
+- Campaign detection for cider awards, hybrid posts and pub features, tagline drawing, canvas centring, and tips that pointed at hidden controls or covered what they described.
+
+## 1.0.0
+
+### Added
+- A static, browser-based studio for on-brand social graphics: no build step, no dependencies, nothing uploaded.
+- Post types: Newcomer, Award, What's On, Social tour, Hybrid, Meeting, Festival, Pub feature, One to Try and Announcement.
+- Sizes for Instagram, Facebook, Twitter/X, Bluesky and LinkedIn, with one PNG for every ticked size.
+- A branch choice, with Custom for any branch and its own uploaded logo, an optional photo, decorative icons and a live preview.
+- A content library of saved logos and images, and remembered choices, all stored in the browser.
+- A tips walkthrough on the first visit.

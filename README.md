@@ -4,35 +4,79 @@
 
 An unofficial, static, browser-based studio for making on-brand CAMRA social graphics. Nothing is uploaded. Made by Sean O'Mahoney, a CAMRA volunteer; not affiliated with or endorsed by CAMRA.
 
-![Editor, dark theme](docs/screenshots/editor-dark.png)
+Pick a post type, choose your branch or any CAMRA logo, add a photo or an icon and the words that go with it, then download every size you need for Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Save posts as templates, plan them in a content calendar alongside CAMRA's campaigns and dates, and share them as links. The studio never posts for you, and nothing you add leaves your device.
 
-## What it does
+![The editor](docs/screenshots/editor-dark.png)
 
-Pick one of 23 post types (or Custom), choose a branch, region or sub-brand logo from the built-in library of every CAMRA logo, add a photo or a decorative icon, write the text that goes with it, then download every size you need: Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print. Designs can be saved as templates, posts planned in a content calendar, shared as links and backed up. The studio never posts anything for you, and nothing you add leaves your device.
+## Features
 
-![Logo picker](docs/screenshots/logos-dark.png)
+Each group links to its section of [docs/FEATURES.md](docs/FEATURES.md), and each feature name links to its full explanation there.
 
-## Content calendar
+### [Making a graphic](docs/FEATURES.md#making-a-graphic)
 
-Designs and calendar posts are kept apart. A design is a template: a post tuned the way you like it, to reuse and tweak. A calendar post is something you mean to put out on a day, once or on repeat. One save dialog saves to either or both, and when a design or post is open it can be updated or kept with a copy saved as new.
+- [Post types](docs/FEATURES.md#post-types): 22 ready-made post types plus Custom, each with its own fields and layout.
+- [Logo library](docs/FEATURES.md#logo-library): Every CAMRA branch, region and sub-brand logo built in, with a searchable picker and custom uploads.
+- [Photos and reframing](docs/FEATURES.md#photos-and-reframing): Add a photo to any post, then frame, fit, nudge, zoom and fade it, the same for every size.
+- [Decorative icons](docs/FEATURES.md#decorative-icons): 72 icons for posts without a photo, with a picker, position, size, strength and colour.
+- [Colours, text and alignment](docs/FEATURES.md#colours-text-and-alignment): Background colour and gradient, colours and alignment for each kind of text, logo size and position, and the tagline.
+- [Brand rules built in](docs/FEATURES.md#brand-rules-built-in): Graphics follow the CAMRA Brand Guidelines by default, with notes, contrast checks and a guidelines panel.
+- [Platforms and sizes](docs/FEATURES.md#platforms-and-sizes): Instagram, Facebook, Twitter/X, Bluesky, LinkedIn, the CAMRA Events site and print, in one download.
 
-Under Post text and date, write the words that go with the graphic (the counter shows which platforms it fits) and pick the day, and optionally the time and a repeat (every week, month or year, with an optional end), to post it. Without a date, a post goes on today. Save to calendar keeps every form setting, the text and local copies of every image, so the post can be reopened and changed at any point before the day. The text travels in share links as `copy`; the date stays on this device.
+![A photo post with the Reframe photo panel beside the preview](docs/screenshots/reframe-dark.png)
 
-The studio never posts for you. The calendar is a reminder on this device: on the day, download or share the graphic and paste the text yourself. Reminders only appear if they are on, notifications only with the browser's permission, and nothing is sent to any server.
+### [Exporting and sharing](docs/FEATURES.md#exporting-and-sharing)
 
-The Calendar button opens a month view and a list of what is coming up. Planned posts and campaigns sit side by side; choosing a day shows both, with buttons to open, copy the text of, download, share (through the device's share sheet), mark as posted, keep as a design, move or delete each post, and to plan a new one. Campaign drafts can be planned in one go from Campaigns, each on a suggested day, and a countdown recounts its days to go when moved. On the day, a reminder appears under the top bar and Calendar shows a count. The plan can be downloaded as an .ics file for any calendar app; unlike the campaign feeds it is a snapshot, because the plan only exists in this browser.
+- [Downloads](docs/FEATURES.md#downloads): Separate PNGs or one ZIP for every ticked size, named by post type and size.
+- [Share, copy image and alt text](docs/FEATURES.md#share-copy-image-and-alt-text): The device's share sheet, copy to clipboard, and alt text written from the post.
+- [Share links and automation](docs/FEATURES.md#share-links-and-automation): Links that fill the form, auto-download links and a full query parameter reference.
 
-![Content calendar](docs/screenshots/calendar-dark.png)
+<p><img src="docs/screenshots/graphic-newcomer.png" width="32%" alt="A Newcomer graphic"> <img src="docs/screenshots/graphic-whats-on.png" width="32%" alt="A What's on graphic"> <img src="docs/screenshots/graphic-countdown.png" width="32%" alt="A Countdown graphic"></p>
 
-## Campaigns
+### [Designs and the content library](docs/FEATURES.md#designs-and-the-content-library)
 
-The studio knows the national and annual campaigns branches post about: Mild Month, Cider and Perry Month, the Good Beer Guide launch, Members' Weekend, Volunteers' Week, Champion Beer of Britain, Heritage Open Days, the Young Members Forum, Cask Ale Week, Beer Day Britain and more, listed in [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md). Before each one starts (two to six weeks ahead, depending on the campaign) a reminder appears under the top bar so there is time to schedule posts, and another appears while it is on. Each reminder opens the Campaigns panel, where every campaign has ready-made drafts (countdown, launch, last week, thank you) that open in the editor with your branch and default look, the dates, days to go and suggested post text already filled in. Plan all drafts as posts adds them to the studio's own content calendar; Save the dates to my calendar app downloads an .ics file for Google, Outlook or Apple Calendar instead.
+- [Designs as templates](docs/FEATURES.md#designs-as-templates): Save a post as a template, then update it or save a new one as it changes.
+- [Finding and tidying designs](docs/FEATURES.md#finding-and-tidying-designs): Search, filter, sort, rename, duplicate, select many, and Recently deleted with undo.
+- [Content library](docs/FEATURES.md#content-library): Saved logos and photos to reuse in any post.
 
-Reminders can be snoozed, dismissed, muted per campaign, or limited to CAMRA campaigns, beer and pub days or national days in Settings. Turning on system notifications shows them as device notifications too; an installed copy in Chrome or Edge can also check while closed. Everything is worked out on the device from the bundled list.
+![Saved designs with the sample designs loaded](docs/screenshots/designs-dark.png)
 
-The build publishes the same list as calendar feeds in `calendar/`: `campaigns.ics` (everything), `camra.ics` (CAMRA only) and `planning.ics` (a reminder on the day to start scheduling, for calendars such as Google that ignore alarms in subscribed feeds). Subscribe from the Campaigns panel and the calendar stays in sync with every redeploy. Set `SITE_URL` (for example `https://graphics.example.org/`) in the build environment to add a link back to each campaign's drafts in the events.
+### [Content calendar](docs/FEATURES.md#content-calendar)
 
-To add a campaign or confirm a year's dates, edit `src/core/data/campaigns.json` and run `npm run docs`.
+- [Post text](docs/FEATURES.md#post-text): The words that go with the graphic, with character counts for every platform.
+- [Saving to the calendar, designs or both](docs/FEATURES.md#saving-to-the-calendar-designs-or-both): One save dialog, with a date that defaults to today and a choice to update or save as new.
+- [Repeating posts](docs/FEATURES.md#repeating-posts): Every week, month or year, with an optional end date, marked posted day by day.
+- [Month and list views](docs/FEATURES.md#month-and-list-views): A month grid and a list of what is coming up, with campaigns alongside.
+- [Working with a planned post](docs/FEATURES.md#working-with-a-planned-post): Open, copy the text, download, share, mark as posted, keep as a design, move or delete.
+- [Reminders for planned posts](docs/FEATURES.md#reminders-for-planned-posts): A reminder and a count on Calendar when posts are due, and an .ics plan for calendar apps.
+
+![The content calendar with planned posts and campaigns](docs/screenshots/calendar-dark.png)
+
+### [Campaigns](docs/FEATURES.md#campaigns)
+
+- [Campaign catalogue](docs/FEATURES.md#campaign-catalogue): CAMRA campaigns and dates, beer and pub days and national days, with dates for any year.
+- [Campaign reminders](docs/FEATURES.md#campaign-reminders): A reminder in time to schedule posts, and another while it is on.
+- [Campaign drafts](docs/FEATURES.md#campaign-drafts): Ready-made drafts with dates, days to go and post text in CAMRA's own style.
+- [Planning a whole campaign](docs/FEATURES.md#planning-a-whole-campaign): Plan all drafts as posts in the content calendar, each on a suggested day.
+- [Calendar feeds](docs/FEATURES.md#calendar-feeds): Subscribe in Google, Outlook or Apple Calendar and the dates stay in sync.
+- [Notifications](docs/FEATURES.md#notifications): Optional device notifications, asked for only with your consent.
+
+![The Campaigns panel with Mild Month's drafts](docs/screenshots/campaigns-dark.png)
+
+### [Your data and privacy](docs/FEATURES.md#your-data-and-privacy)
+
+- [Nothing leaves your device](docs/FEATURES.md#nothing-leaves-your-device): No uploads, no accounts, and the studio never posts for you.
+- [Backups](docs/FEATURES.md#backups): Back up everything or a selection to a ZIP, and import it on another device.
+- [Storage](docs/FEATURES.md#storage): See how much space is used, ask the browser to keep it, or delete everything.
+
+![Settings, including reminders and your data](docs/screenshots/settings-dark.png)
+
+### [The studio itself](docs/FEATURES.md#the-studio-itself)
+
+- [Works offline and installs as an app](docs/FEATURES.md#works-offline-and-installs-as-an-app): Install it on a phone or desktop and use it offline.
+- [Layout on phones and wide screens](docs/FEATURES.md#layout-on-phones-and-wide-screens): A pinned header, one row of tabs on phones, and resizable panels on wide screens.
+- [Themes, tips and accessibility](docs/FEATURES.md#themes-tips-and-accessibility): Dark, light or system theme, a tips walkthrough, and full keyboard and screen reader support.
+
+![The studio on a phone](docs/screenshots/mobile-dark.png)
 
 ## Quick start
 
@@ -73,3 +117,7 @@ Designs, calendar posts, the content library, the remembered logo and which remi
 ## Screenshots
 
 Regenerate with `npm run build && npm run screenshots` (writes `docs/screenshots/`).
+
+## Documentation
+
+[docs/FEATURES.md](docs/FEATURES.md), [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md), [docs/QUERY_PARAMETERS.md](docs/QUERY_PARAMETERS.md), [docs/LOGOS.md](docs/LOGOS.md), [docs/DIVERGENT_THINKING.md](docs/DIVERGENT_THINKING.md) and [CHANGELOG.md](CHANGELOG.md).

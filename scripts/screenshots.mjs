@@ -108,6 +108,42 @@ for (const theme of ["dark", "light"]) {
   await quiet(page);
   await page.screenshot({ path: join(out, "calendar-dark.png") });
   shots.push("calendar-dark.png");
+  await page.keyboard.press("Escape");
+  // Campaigns, opened at Mild Month with its drafts.
+  await page.click("#campaignsBtn");
+  await page.locator('#campaignsDialog [data-campaign="mild-month"]').first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  await quiet(page);
+  await page.screenshot({ path: join(out, "campaigns-dark.png") });
+  shots.push("campaigns-dark.png");
+  await page.keyboard.press("Escape");
+  // The save dialog: calendar, designs or both.
+  await page.click("#saveDesign");
+  await page.check("#saveToCal");
+  await page.fill("#saveName", "Newcomer: The Copper Kettle");
+  await page.waitForTimeout(200);
+  await quiet(page);
+  await page.screenshot({ path: join(out, "save-dark.png") });
+  shots.push("save-dark.png");
+  await page.keyboard.press("Escape");
+  await ctx.close();
+}
+{
+  // A photo post with the Reframe photo panel beside the preview.
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: "dark" });
+  await ctx.addInitScript(() => {
+    if (sessionStorage.getItem("__shot")) return;
+    sessionStorage.setItem("__shot", "1");
+    localStorage.setItem("camra-studio:tipsSeen", "true");
+    localStorage.setItem("camra-studio:prefs", JSON.stringify({ theme: "dark", campaigns: { enabled: false }, groups: { look: false, library: false } }));
+  });
+  const page = await ctx.newPage();
+  await page.goto(`http://127.0.0.1:${port}/?type=newcomer&pubName=The%20Copper%20Kettle&photo=assets/icons/icon-512.png`);
+  await page.waitForSelector('html[data-ready="1"]');
+  await page.waitForTimeout(400);
+  await quiet(page);
+  await page.screenshot({ path: join(out, "reframe-dark.png") });
+  shots.push("reframe-dark.png");
   await ctx.close();
 }
 {
