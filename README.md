@@ -76,8 +76,6 @@ Each group links to its section of [docs/FEATURES.md](docs/FEATURES.md), and eac
 - [Layout on phones and wide screens](docs/FEATURES.md#layout-on-phones-and-wide-screens): A pinned header, one row of tabs on phones, and resizable panels on wide screens.
 - [Themes, tips and accessibility](docs/FEATURES.md#themes-tips-and-accessibility): Dark, light or system theme, a tips walkthrough, and full keyboard and screen reader support.
 
-![The studio on a phone](docs/screenshots/mobile-dark.png)
-
 ## Quick start
 
 ```sh
@@ -120,4 +118,4 @@ Regenerate with `npm run build && npm run screenshots` (writes `docs/screenshots
 
 ## Documentation
 
-[docs/FEATURES.md](docs/FEATURES.md), [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md), [docs/QUERY_PARAMETERS.md](docs/QUERY_PARAMETERS.md), [docs/LOGOS.md](docs/LOGOS.md), [docs/DIVERGENT_THINKING.md](docs/DIVERGENT_THINKING.md) and [CHANGELOG.md](CHANGELOG.md).
+[docs/FEATURES.md](docs/FEATURES.md), [docs/CAMPAIGNS.md](docs/CAMPAIGNS.md), [docs/QUERY_PARAMETERS.md](docs/QUERY_PARAMETERS.md), [docs/LOGOS.md](docs/LOGOS.md) and [CHANGELOG.md](CHANGELOG.md).
