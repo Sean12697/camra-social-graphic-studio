@@ -228,22 +228,22 @@ Every logo the studio offers, with the id share links use (`branch=`, `region=` 
 
 | Name | Id | Logo |
 | --- | --- | --- |
-| East Anglia | `east-anglia` | text wordmark |
-| East Central | `east-central` | text wordmark |
-| East Midlands | `east-midlands` | text wordmark |
-| Greater London | `greater-london` | text wordmark |
-| Merseyside and Cheshire | `merseyside-and-cheshire` | text wordmark |
-| North East | `north-east` | text wordmark |
-| North West | `north-west` | text wordmark |
-| Northern Ireland | `northern-ireland` | text wordmark |
-| Scotland | `scotland` | text wordmark |
-| South Central | `south-central` | text wordmark |
-| South East | `south-east` | text wordmark |
-| South West | `south-west` | text wordmark |
-| Wales | `wales` | text wordmark |
-| West Central | `west-central` | text wordmark |
-| West Midlands | `west-midlands` | text wordmark |
-| Yorkshire | `yorkshire` | text wordmark |
+| Region Logo North West | `region-logo-north-west` | PNG |
+| Region-Logo-East-Anglia | `region-logo-east-anglia` | PNG |
+| Region-Logo-East-Central | `region-logo-east-central` | PNG |
+| Region-Logo-East-Midlands | `region-logo-east-midlands` | PNG |
+| Region-Logo-Greater-London | `region-logo-greater-london` | PNG |
+| Region-Logo-Merseyside-and-Cheshire | `region-logo-merseyside-and-cheshire` | PNG |
+| Region-Logo-North-East | `region-logo-north-east` | PNG |
+| Region-Logo-Northern-Ireland | `region-logo-northern-ireland` | PNG |
+| Region-Logo-Scotland | `region-logo-scotland` | PNG |
+| Region-Logo-South-Central | `region-logo-south-central` | PNG |
+| Region-Logo-South-East | `region-logo-south-east` | PNG |
+| Region-Logo-South-West | `region-logo-south-west` | PNG |
+| Region-Logo-Wales | `region-logo-wales` | PNG |
+| Region-Logo-West-Central | `region-logo-west-central` | PNG |
+| Region-Logo-West-Midlands | `region-logo-west-midlands` | PNG |
+| Region-Logo-Yorkshire | `region-logo-yorkshire` | PNG |
 
 ## Sub-brands (6)
 

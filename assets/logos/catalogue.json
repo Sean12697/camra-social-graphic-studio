@@ -1306,68 +1306,100 @@
  ],
  "regions": [
   {
-   "id": "east-anglia",
-   "name": "East Anglia"
+   "id": "region-logo-north-west",
+   "name": "Region Logo North West",
+   "file": "regions/region-logo-north-west.png",
+   "thumb": "thumbs/regions/region-logo-north-west.png"
   },
   {
-   "id": "east-central",
-   "name": "East Central"
+   "id": "region-logo-east-anglia",
+   "name": "Region-Logo-East-Anglia",
+   "file": "regions/region-logo-east-anglia.png",
+   "thumb": "thumbs/regions/region-logo-east-anglia.png"
   },
   {
-   "id": "east-midlands",
-   "name": "East Midlands"
+   "id": "region-logo-east-central",
+   "name": "Region-Logo-East-Central",
+   "file": "regions/region-logo-east-central.png",
+   "thumb": "thumbs/regions/region-logo-east-central.png"
   },
   {
-   "id": "greater-london",
-   "name": "Greater London"
+   "id": "region-logo-east-midlands",
+   "name": "Region-Logo-East-Midlands",
+   "file": "regions/region-logo-east-midlands.png",
+   "thumb": "thumbs/regions/region-logo-east-midlands.png"
   },
   {
-   "id": "merseyside-and-cheshire",
-   "name": "Merseyside and Cheshire"
+   "id": "region-logo-greater-london",
+   "name": "Region-Logo-Greater-London",
+   "file": "regions/region-logo-greater-london.png",
+   "thumb": "thumbs/regions/region-logo-greater-london.png"
   },
   {
-   "id": "north-east",
-   "name": "North East"
+   "id": "region-logo-merseyside-and-cheshire",
+   "name": "Region-Logo-Merseyside-and-Cheshire",
+   "file": "regions/region-logo-merseyside-and-cheshire.png",
+   "thumb": "thumbs/regions/region-logo-merseyside-and-cheshire.png"
   },
   {
-   "id": "north-west",
-   "name": "North West"
+   "id": "region-logo-north-east",
+   "name": "Region-Logo-North-East",
+   "file": "regions/region-logo-north-east.png",
+   "thumb": "thumbs/regions/region-logo-north-east.png"
   },
   {
-   "id": "northern-ireland",
-   "name": "Northern Ireland"
+   "id": "region-logo-northern-ireland",
+   "name": "Region-Logo-Northern-Ireland",
+   "file": "regions/region-logo-northern-ireland.png",
+   "thumb": "thumbs/regions/region-logo-northern-ireland.png"
   },
   {
-   "id": "scotland",
-   "name": "Scotland"
+   "id": "region-logo-scotland",
+   "name": "Region-Logo-Scotland",
+   "file": "regions/region-logo-scotland.png",
+   "thumb": "thumbs/regions/region-logo-scotland.png"
   },
   {
-   "id": "south-central",
-   "name": "South Central"
+   "id": "region-logo-south-central",
+   "name": "Region-Logo-South-Central",
+   "file": "regions/region-logo-south-central.png",
+   "thumb": "thumbs/regions/region-logo-south-central.png"
   },
   {
-   "id": "south-east",
-   "name": "South East"
+   "id": "region-logo-south-east",
+   "name": "Region-Logo-South-East",
+   "file": "regions/region-logo-south-east.png",
+   "thumb": "thumbs/regions/region-logo-south-east.png"
   },
   {
-   "id": "south-west",
-   "name": "South West"
+   "id": "region-logo-south-west",
+   "name": "Region-Logo-South-West",
+   "file": "regions/region-logo-south-west.png",
+   "thumb": "thumbs/regions/region-logo-south-west.png"
   },
   {
-   "id": "wales",
-   "name": "Wales"
+   "id": "region-logo-wales",
+   "name": "Region-Logo-Wales",
+   "file": "regions/region-logo-wales.png",
+   "thumb": "thumbs/regions/region-logo-wales.png"
   },
   {
-   "id": "west-central",
-   "name": "West Central"
+   "id": "region-logo-west-central",
+   "name": "Region-Logo-West-Central",
+   "file": "regions/region-logo-west-central.png",
+   "thumb": "thumbs/regions/region-logo-west-central.png"
   },
   {
-   "id": "west-midlands",
-   "name": "West Midlands"
+   "id": "region-logo-west-midlands",
+   "name": "Region-Logo-West-Midlands",
+   "file": "regions/region-logo-west-midlands.png",
+   "thumb": "thumbs/regions/region-logo-west-midlands.png"
   },
   {
-   "id": "yorkshire",
-   "name": "Yorkshire"
+   "id": "region-logo-yorkshire",
+   "name": "Region-Logo-Yorkshire",
+   "file": "regions/region-logo-yorkshire.png",
+   "thumb": "thumbs/regions/region-logo-yorkshire.png"
   }
  ],
  "subBrands": [
